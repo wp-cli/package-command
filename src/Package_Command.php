@@ -872,5 +872,3 @@ class Package_Command extends WP_CLI_Command {
 		return $this->pool;
 	}
 }
-
-WP_CLI::add_command( 'package', 'Package_Command' );
