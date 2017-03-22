@@ -20,6 +20,7 @@
         "files": [ "package-command.php" ]
     },
     "require": {
+        "wp-cli/wp-cli": "^1.0.0",
         "composer/composer": "^1.2.0"
     },
     "require-dev": {
