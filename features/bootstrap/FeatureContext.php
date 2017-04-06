@@ -59,9 +59,10 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 	 */
 	private static function get_process_env_variables() {
 		// Ensure we're using the expected `wp` binary
-		$bin_dir = getenv( 'WP_CLI_BIN_DIR' ) ?: realpath( __DIR__ . "/../../bin" );
+		$bin_dir = getenv( 'WP_CLI_BIN_DIR' ) ?: realpath( __DIR__ . '/../../bin' );
+		$vendor_dir = realpath( __DIR__ . '/../../vendor/bin' );
 		$env = array(
-			'PATH' =>  $bin_dir . ':' . getenv( 'PATH' ),
+			'PATH' =>  $bin_dir . ':' . $vendor_dir . ':' . getenv( 'PATH' ),
 			'BEHAT_RUN' => 1,
 			'HOME' => '/tmp/wp-cli-home',
 		);
@@ -330,7 +331,8 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 
 	public function create_config( $subdir = '' ) {
 		$params = self::$db_settings;
-		$params['dbprefix'] = $subdir ?: 'wp_';
+		// Replaces all characters that are not alphanumeric or an underscore into an underscore.
+		$params['dbprefix'] = $subdir ? preg_replace( '#[^a-zA-Z\_0-9]#', '_', $subdir ) : 'wp_';
 
 		$params['skip-salts'] = true;
 		$this->proc( 'wp core config', $params, $subdir )->run_check();
