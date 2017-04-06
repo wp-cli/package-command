@@ -21,7 +21,7 @@
         "files": [ "package-command.php" ]
     },
     "require": {
-        "wp-cli/wp-cli": "dev-master",
+        "wp-cli/wp-cli": "*",
         "composer/composer": "^1.2.0"
     },
     "require-dev": {
@@ -29,7 +29,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "1.0.x-dev"
+            "dev-master": "1.x-dev"
         },
         "commands": [
             "package browse",
