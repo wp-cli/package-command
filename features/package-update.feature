@@ -101,7 +101,7 @@ Feature: Update WP-CLI packages
     When I run `wp package update`
     Then STDOUT should contain:
       """
-      Nothing to install or update
+      Package operations: 0 installs, 0 updates, 0 removals
       """
     And STDOUT should contain:
       """
