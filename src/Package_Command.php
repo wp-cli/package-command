@@ -758,7 +758,13 @@ class Package_Command extends WP_CLI_Command {
 			if ( getenv( 'WP_CLI_PACKAGES_DIR' ) ) {
 				$composer_path = rtrim( getenv( 'WP_CLI_PACKAGES_DIR' ), '/' ) . '/composer.json';
 			} else {
-				$composer_path = getenv( 'HOME' ) . '/.wp-cli/packages/composer.json';
+				$home = getenv( 'HOME' );
+				if ( ! $home ) {
+					// In Windows $HOME may not be defined
+					$home = getenv( 'HOMEDRIVE' ) . getenv( 'HOMEPATH' );
+				}
+
+				$composer_path = rtrim( $home, '/\\' ) . '/.wp-cli/packages/composer.json';
 			}
 
 			// `composer.json` and its directory might need to be created
