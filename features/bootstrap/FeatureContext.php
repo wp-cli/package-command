@@ -134,17 +134,15 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 		}
 
 		foreach ( $this->running_procs as $proc ) {
-			self::terminate_proc( $proc );
+			$status = proc_get_status( $proc );
+			self::terminate_proc( $status['pid'] );
 		}
 	}
 
 	/**
 	 * Terminate a process and any of its children.
 	 */
-	private static function terminate_proc( $proc ) {
-		$status = proc_get_status( $proc );
-
-		$master_pid = $status['pid'];
+	private static function terminate_proc( $master_pid ) {
 
 		$output = `ps -o ppid,pid,command | grep $master_pid`;
 
@@ -154,15 +152,17 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 				$child = $matches[2];
 
 				if ( $parent == $master_pid ) {
-					if ( ! posix_kill( (int) $child, 9 ) ) {
-						throw new RuntimeException( posix_strerror( posix_get_last_error() ) );
-					}
+					self::terminate_proc( $child );
 				}
 			}
 		}
 
 		if ( ! posix_kill( (int) $master_pid, 9 ) ) {
-			throw new RuntimeException( posix_strerror( posix_get_last_error() ) );
+			$errno = posix_get_last_error();
+			// Ignore "No such process" error as that's what we want.
+			if ( 3 /*ESRCH*/ !== $errno ) {
+				throw new RuntimeException( posix_strerror( $errno ) );
+			}
 		}
 	}
 
@@ -239,6 +239,32 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 		) )->run_check();
 	}
 
+	public function download_phar( $version = 'same' ) {
+		if ( 'same' === $version ) {
+			$version = WP_CLI_VERSION;
+		}
+
+		$download_url = sprintf(
+			'https://github.com/wp-cli/wp-cli/releases/download/v%1$s/wp-cli-%1$s.phar',
+			$version
+		);
+
+		$this->variables['PHAR_PATH'] = $this->variables['RUN_DIR'] . '/'
+		                                . uniqid( 'wp-cli-download-', true )
+		                                . '.phar';
+
+		Process::create( \WP_CLI\Utils\esc_cmd(
+			'curl -sSL %s > %s',
+			$download_url,
+			$this->variables['PHAR_PATH']
+		) )->run_check();
+
+		Process::create( \WP_CLI\Utils\esc_cmd(
+			'chmod +x %s',
+			$this->variables['PHAR_PATH']
+		) )->run_check();
+	}
+
 	private function set_cache_dir() {
 		$path = sys_get_temp_dir() . '/wp-cli-test-cache';
 		$this->proc( Utils\esc_cmd( 'mkdir -p %s', $path ) )->run_check();
@@ -246,7 +272,7 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 	}
 
 	private static function run_sql( $sql ) {
-		Utils\run_mysql_command( 'mysql --no-defaults', array(
+		Utils\run_mysql_command( '/usr/bin/env mysql --no-defaults', array(
 			'execute' => $sql,
 			'host' => self::$db_settings['dbhost'],
 			'user' => self::$db_settings['dbuser'],
@@ -339,10 +365,11 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 	}
 
 	public function install_wp( $subdir = '' ) {
+		$subdir = $this->replace_variables( $subdir );
+
 		$this->create_db();
 		$this->create_run_dir();
 		$this->download_wp( $subdir );
-
 		$this->create_config( $subdir );
 
 		$install_args = array(
