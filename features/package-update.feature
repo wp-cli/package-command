@@ -28,10 +28,10 @@ Feature: Update WP-CLI packages
   Scenario: Update a package with an update available
     Given an empty directory
 
-    When I run `wp package install wp-cli/scaffold-package-command:0.1.0`
+    When I run `wp package install wp-cli/scaffold-package-command:0.3.0`
     Then STDOUT should contain:
       """
-      Installing package wp-cli/scaffold-package-command (0.1.0)
+      Installing package wp-cli/scaffold-package-command (0.3.0)
       """
     And STDOUT should contain:
       """
@@ -41,7 +41,7 @@ Feature: Update WP-CLI packages
     When I run `cat {PACKAGE_PATH}/composer.json`
     Then STDOUT should contain:
       """
-      "wp-cli/scaffold-package-command": "0.1.0"
+      "wp-cli/scaffold-package-command": "0.3.0"
       """
 
     When I run `wp help scaffold package`
@@ -65,13 +65,13 @@ Feature: Update WP-CLI packages
       | name                            | update    |
       | wp-cli/scaffold-package-command | available |
 
-    When I run `sed -i.bak s/0.1.0/\>=0.1.0/g {PACKAGE_PATH}/composer.json`
+    When I run `sed -i.bak s/0.3.0/\>=0.3.0/g {PACKAGE_PATH}/composer.json`
     Then the return code should be 0
 
     When I run `cat {PACKAGE_PATH}/composer.json`
     Then STDOUT should contain:
       """
-      "wp-cli/scaffold-package-command": ">=0.1.0"
+      "wp-cli/scaffold-package-command": ">=0.3.0"
       """
 
     When I run `wp package list --fields=name,update`
