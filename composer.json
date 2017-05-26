@@ -37,6 +37,9 @@
             "package list",
             "package update",
             "package uninstall"
-        ]
+        ],
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
     }
 }
