@@ -25,7 +25,7 @@
         ]
     },
     "require": {
-        "wp-cli/wp-cli": "*",
+        "wp-cli/wp-cli": "dev-master",
         "composer/composer": "^1.2.0"
     },
     "require-dev": {
