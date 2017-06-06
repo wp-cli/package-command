@@ -32,7 +32,11 @@ if ( file_exists( __DIR__ . '/utils.php' ) ) {
 	require_once __DIR__ . '/../../php/utils.php';
 	require_once __DIR__ . '/../../php/WP_CLI/Process.php';
 	require_once __DIR__ . '/../../php/WP_CLI/ProcessRun.php';
-	require_once __DIR__ . '/../../vendor/autoload.php';
+	if ( file_exists( __DIR__ . '/../../vendor/autoload.php' ) ) {
+		require_once __DIR__ . '/../../vendor/autoload.php';
+	} else if ( file_exists( __DIR__ . '/../../../../autoload.php' ) ) {
+		require_once __DIR__ . '/../../../../autoload.php';
+	}
 }
 
 /**
@@ -68,6 +72,9 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 		);
 		if ( $config_path = getenv( 'WP_CLI_CONFIG_PATH' ) ) {
 			$env['WP_CLI_CONFIG_PATH'] = $config_path;
+		}
+		if ( $term = getenv( 'TERM' ) ) {
+			$env['TERM'] = $term;
 		}
 		return $env;
 	}
@@ -123,8 +130,8 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 	public function afterScenario( $event ) {
 		if ( isset( $this->variables['RUN_DIR'] ) ) {
 			// remove altered WP install, unless there's an error
-			if ( $event->getResult() < 4 ) {
-				$this->proc( Utils\esc_cmd( 'rm -r %s', $this->variables['RUN_DIR'] ) )->run();
+			if ( $event->getResult() < 4 && 0 === strpos( $this->variables['RUN_DIR'], sys_get_temp_dir() ) ) {
+				$this->proc( Utils\esc_cmd( 'rm -rf %s', $this->variables['RUN_DIR'] ) )->run();
 			}
 		}
 
@@ -196,7 +203,11 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 	}
 
 	public function replace_variables( $str ) {
-		return preg_replace_callback( '/\{([A-Z_]+)\}/', array( $this, '_replace_var' ), $str );
+		$ret = preg_replace_callback( '/\{([A-Z_]+)\}/', array( $this, '_replace_var' ), $str );
+		if ( false !== strpos( $str, '{WP_VERSION-' ) ) {
+			$ret = $this->_replace_wp_versions( $ret );
+		}
+		return $ret;
 	}
 
 	private function _replace_var( $matches ) {
@@ -209,6 +220,35 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 		return $cmd;
 	}
 
+	// Substitute "{WP_VERSION-version-latest}" variables.
+	private function _replace_wp_versions( $str ) {
+		static $wp_versions = null;
+		if ( null === $wp_versions ) {
+			$wp_versions = array();
+
+			$response = Requests::get( 'https://api.wordpress.org/core/version-check/1.7/', null, array( 'timeout' => 30 ) );
+			if ( 200 === $response->status_code && ( $body = json_decode( $response->body ) ) && is_object( $body ) && isset( $body->offers ) && is_array( $body->offers ) ) {
+				// Latest version alias.
+				$wp_versions["{WP_VERSION-latest}"] = count( $body->offers ) ? $body->offers[0]->version : '';
+				foreach ( $body->offers as $offer ) {
+					$sub_ver = preg_replace( '/(^[0-9]+\.[0-9]+)\.[0-9]+$/', '$1', $offer->version );
+					$sub_ver_key = "{WP_VERSION-{$sub_ver}-latest}";
+
+					$main_ver = preg_replace( '/(^[0-9]+)\.[0-9]+$/', '$1', $sub_ver );
+					$main_ver_key = "{WP_VERSION-{$main_ver}-latest}";
+
+					if ( ! isset( $wp_versions[ $main_ver_key ] ) ) {
+						$wp_versions[ $main_ver_key ] = $offer->version;
+					}
+					if ( ! isset( $wp_versions[ $sub_ver_key ] ) ) {
+						$wp_versions[ $sub_ver_key ] = $offer->version;
+					}
+				}
+			}
+		}
+		return strtr( $str, $wp_versions );
+	}
+
 	public function create_run_dir() {
 		if ( !isset( $this->variables['RUN_DIR'] ) ) {
 			$this->variables['RUN_DIR'] = sys_get_temp_dir() . '/' . uniqid( "wp-cli-test-run-", TRUE );
@@ -219,12 +259,12 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 	public function build_phar( $version = 'same' ) {
 		$this->variables['PHAR_PATH'] = $this->variables['RUN_DIR'] . '/' . uniqid( "wp-cli-build-", TRUE ) . '.phar';
 
-		// Test running against WP-CLI proper
-		$make_phar_path = __DIR__ . '/../../utils/make-phar.php';
+		// Test running against a package installed as a WP-CLI dependency
+		// WP-CLI installed as a project dependency
+		$make_phar_path = __DIR__ . '/../../../../../utils/make-phar.php';
 		if ( ! file_exists( $make_phar_path ) ) {
-			// Test running against a package installed as a WP-CLI dependency
-			// WP-CLI installed as a project dependency
-			$make_phar_path = __DIR__ . '/../../../../../utils/make-phar.php';
+			// Test running against WP-CLI proper
+			$make_phar_path = __DIR__ . '/../../utils/make-phar.php';
 			if ( ! file_exists( $make_phar_path ) ) {
 				// WP-CLI as a dependency of this project
 				$make_phar_path = __DIR__ . '/../../vendor/wp-cli/wp-cli/utils/make-phar.php';
