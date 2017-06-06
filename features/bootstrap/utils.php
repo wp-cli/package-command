@@ -428,7 +428,7 @@ function run_mysql_command( $cmd, $assoc_args, $descriptors = null ) {
 	$old_pass = getenv( 'MYSQL_PWD' );
 	putenv( 'MYSQL_PWD=' . $pass );
 
-	$final_cmd = $cmd . assoc_args_to_str( $assoc_args );
+	$final_cmd = force_env_on_nix_systems( $cmd ) . assoc_args_to_str( $assoc_args );
 
 	$proc = proc_open( $final_cmd, $descriptors, $pipes );
 	if ( !$proc )
@@ -447,19 +447,6 @@ function run_mysql_command( $cmd, $assoc_args, $descriptors = null ) {
  * IMPORTANT: Automatic HTML escaping is disabled!
  */
 function mustache_render( $template_name, $data = array() ) {
-	// Transform absolute path to relative path inside of Phar
-	if ( inside_phar() && 0 === stripos( $template_name, PHAR_STREAM_PREFIX ) ) {
-		$search = '';
-		$replace = '';
-		if ( file_exists( WP_CLI_ROOT . '/vendor/autoload.php' ) ) {
-			$search = dirname( __DIR__ );
-			$replace = WP_CLI_ROOT;
-		} elseif ( file_exists( dirname( dirname( WP_CLI_ROOT ) ) . '/autoload.php' ) ) {
-			$search = dirname( dirname( dirname( __DIR__ ) ) );
-			$replace = dirname( dirname( dirname( WP_CLI_ROOT ) ) );
-		}
-		$template_name = str_replace( $search, $replace, $template_name );
-	}
 	if ( ! file_exists( $template_name ) )
 		$template_name = WP_CLI_ROOT . "/templates/$template_name";
 
@@ -519,9 +506,11 @@ function parse_url( $url ) {
 
 /**
  * Check if we're running in a Windows environment (cmd.exe).
+ *
+ * @return bool
  */
 function is_windows() {
-	return strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+	return false !== ( $test_is_windows = getenv( 'WP_CLI_TEST_IS_WINDOWS' ) ) ? (bool) $test_is_windows : strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
 }
 
 /**
@@ -570,7 +559,7 @@ function http_request( $method, $url, $data = null, $headers = array(), $options
 	if ( inside_phar() ) {
 		// cURL can't read Phar archives
 		$options['verify'] = extract_from_phar(
-		WP_CLI_ROOT . '/vendor' . $cert_path );
+		WP_CLI_VENDOR_DIR . $cert_path );
 	} else {
 		foreach( get_vendor_paths() as $vendor_path ) {
 			if ( file_exists( $vendor_path . $cert_path ) ) {
@@ -901,6 +890,44 @@ function expand_globs( $paths, $flags = GLOB_BRACE ) {
 }
 
 /**
+ * Get the closest suggestion for a mis-typed target term amongst a list of
+ * options.
+ *
+ * Uses the Levenshtein algorithm to calculate the relative "distance" between
+ * terms.
+ *
+ * If the "distance" to the closest term is higher than the threshold, an empty
+ * string is returned.
+ *
+ * @param string $target    Target term to get a suggestion for.
+ * @param array  $options   Array with possible options.
+ * @param int    $threshold Threshold above which to return an empty string.
+ *
+ * @return string
+ */
+function get_suggestion( $target, array $options, $threshold = 2 ) {
+	if ( empty( $options ) ) {
+		return '';
+	}
+	foreach ( $options as $option ) {
+		$distance = levenshtein( $option, $target );
+		$levenshtein[ $option ] = $distance;
+	}
+
+	// Sort known command strings by distance to user entry.
+	asort( $levenshtein );
+
+	// Fetch the closest command string.
+	reset( $levenshtein );
+	$suggestion = key( $levenshtein );
+
+	// Only return a suggestion if below a given threshold.
+	return $levenshtein[ $suggestion ] <= $threshold && $suggestion !== $target
+		? (string) $suggestion
+		: '';
+}
+
+/**
  * Get a Phar-safe version of a path.
  *
  * For paths inside a Phar, this strips the outer filesystem's location to
@@ -954,4 +981,27 @@ function is_bundled_command( $command ) {
 	return is_string( $command )
 		? array_key_exists( $command, $classes )
 		: false;
+}
+
+/**
+ * Maybe prefix command string with "/usr/bin/env".
+ * Removes (if there) if Windows, adds (if not there) if not.
+ *
+ * @param string $command
+ *
+ * @return string
+ */
+function force_env_on_nix_systems( $command ) {
+	$env_prefix = '/usr/bin/env ';
+	$env_prefix_len = strlen( $env_prefix );
+	if ( is_windows() ) {
+		if ( 0 === strncmp( $command, $env_prefix, $env_prefix_len ) ) {
+			$command = substr( $command, $env_prefix_len );
+		}
+	} else {
+		if ( 0 !== strncmp( $command, $env_prefix, $env_prefix_len ) ) {
+			$command = $env_prefix . $command;
+		}
+	}
+	return $command;
 }
