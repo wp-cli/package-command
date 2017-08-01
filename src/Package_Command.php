@@ -197,7 +197,7 @@ class Package_Command extends WP_CLI_Command {
 
 		$git_package = $dir_package = false;
 		$version = 'dev-master';
-		if ( '.git' === strtolower( substr( $package_name, -4, 4 ) ) ) {
+		if ( $this->is_git_repository( $package_name ) ) {
 			$git_package = $package_name;
 			preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches );
 			if ( ! empty( $matches[1] ) ) {
@@ -245,7 +245,10 @@ class Package_Command extends WP_CLI_Command {
 			if ( false !== strpos( $package_name, ':' ) ) {
 				list( $package_name, $version ) = explode( ':', $package_name );
 			}
-			$package = $this->get_community_package_by_name( $package_name );
+			$package = $this->get_package_by_shortened_identifier( $package_name );
+			if ( $this->is_git_repository( $package ) ) {
+				$git_package = $package;
+			}
 			if ( ! $package ) {
 				WP_CLI::error( "Invalid package." );
 			}
@@ -656,14 +659,27 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get a community package by its name.
+	 * Get a package by its shortened identifier.
+	 *
+	 * A shortened identifier has the form `<vendor>/<package>`.
+	 *
+	 * This method first checks the deprecated package index, for BC reasons,
+	 * and then falls back to the corresponding GitHub URL.
 	 */
-	private function get_community_package_by_name( $package_name ) {
+	private function get_package_by_shortened_identifier( $package_name ) {
+		// Check the package index first, so we don't break existing behavior.
 		foreach( $this->get_community_packages() as $package ) {
 			if ( $package_name == $package->getName() ) {
 				return $package;
 			}
 		}
+
+		// Fall back to GitHub URL if we had no match in the package index.
+		$response = Utils\http_request( 'GET', "https://github.com/{$package_name}.git" );
+		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
+			return "git@github.com:{$package_name}.git";
+		}
+
 		return false;
 	}
 
@@ -876,5 +892,16 @@ class Package_Command extends WP_CLI_Command {
 			$this->pool->addRepository(new CompositeRepository($composer->getRepositoryManager()->getRepositories()));
 		}
 		return $this->pool;
+	}
+
+	/**
+	 * Check whether a given package is a git repository.
+	 *
+	 * @param string $package Package name to check.
+	 *
+	 * @return bool Whether the package is a git repository.
+	 */
+	private function is_git_repository( $package ) {
+		return '.git' === strtolower( substr( $package, -4, 4 ) );
 	}
 }
