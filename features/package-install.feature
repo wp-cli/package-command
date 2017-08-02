@@ -170,6 +170,50 @@ Feature: Install WP-CLI packages
       wp-cli/google-sitemap-generator-cli
       """
 
+  @github-api @shortened
+  Scenario: Install a package from Git using a shortened package identifier
+    Given an empty directory
+
+    When I run `wp package install wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli/google-sitemap-generator-cli (dev-master)
+      Updating {PACKAGE_PATH}composer.json to require the package...
+      Registering git@github.com:wp-cli/google-sitemap-generator-cli.git as a VCS repository...
+      Using Composer to install the package...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package list --fields=name`
+    Then STDOUT should be a table containing rows:
+      | name                                |
+      | wp-cli/google-sitemap-generator-cli |
+
+    When I run `wp google-sitemap`
+    Then STDOUT should contain:
+      """
+      usage: wp google-sitemap rebuild
+      """
+
+    When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Removing require statement from {PACKAGE_PATH}composer.json
+      """
+    And STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+
+    When I run `wp package list --fields=name`
+    Then STDOUT should not contain:
+      """
+      wp-cli/google-sitemap-generator-cli
+      """
+
   Scenario: Install a package in a local zip
     Given an empty directory
     And I run `wget -O google-sitemap-generator-cli.zip https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
