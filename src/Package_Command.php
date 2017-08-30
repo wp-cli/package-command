@@ -203,7 +203,7 @@ class Package_Command extends WP_CLI_Command {
 			if ( ! empty( $matches[1] ) ) {
 				$package_name = $matches[1];
 				$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/master/composer.json';
-				$composer_content_as_array = json_decode( $this->get_data_from_url( $raw_content_url ), true );
+				$composer_content_as_array = json_decode( WP_CLI\Utils\http_request( 'GET', $raw_content_url )->body, true );
 				$package_name_on_repo = $composer_content_as_array['name'];
 				if ( $package_name !== $package_name_on_repo ) {
 					WP_CLI::error( 'Package names mismatch.' );
@@ -909,32 +909,5 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function is_git_repository( $package ) {
 		return '.git' === strtolower( substr( $package, -4, 4 ) );
-	}
-
-	/**
-	 * Gets data of a page using URL.
-	 *
-	 * @param  string $url URL of the Git repository.
-	 * @return string
-	 */
-	private function get_data_from_url( $url ) {
-		if ( function_exists( 'curl_exec' ) ) {
-			if ( ! function_exists( 'curl_init' ) ) {
-				WP_CLI::error( 'CURL is not installed.' );
-			}
-			$curl = curl_init();
-			curl_setopt( $curl, CURLOPT_URL, $url );
-			curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true );
-			$data_as_string = curl_exec( $curl );
-			curl_close( $curl );
-		} elseif ( function_exists( 'file_get_contents' ) ) {
-			$data_as_string = file_get_contents( $url );
-		} elseif ( function_exists( 'fopen' ) && function_exists( 'stream_get_contents' ) ) {
-			$handle = fopen( $url, 'r' );
-			$data_as_string = stream_get_contents( $handle );
-		} else {
-			$data_as_string = false;
-		}
-		return $data_as_string;
 	}
 }
