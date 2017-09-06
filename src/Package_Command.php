@@ -214,10 +214,8 @@ class Package_Command extends WP_CLI_Command {
 
 				// If package name and repository name are not identical, then fix it.
 				if ( $package_name !== $package_name_on_repo ) {
-					$set_package_name = $package_name_on_repo;
+					$package_name = $package_name_on_repo;
 					WP_CLI::warning( 'Package name mismatch...Updating the name with correct value.' );
-				} else {
-					$set_package_name = $package_name;
 				}
 			} else {
 				WP_CLI::error( "Couldn't parse package name from expected path '<name>/<package>'." );
@@ -281,12 +279,12 @@ class Package_Command extends WP_CLI_Command {
 		$json_manipulator = new JsonManipulator( $composer_backup );
 		$json_manipulator->addMainKey( 'name', 'wp-cli/wp-cli' );
 		$json_manipulator->addMainKey( 'version', self::get_wp_cli_version_composer() );
-		$json_manipulator->addLink( 'require', $set_package_name, $version );
+		$json_manipulator->addLink( 'require', $package_name, $version );
 		$json_manipulator->addConfigSetting( 'secure-http', true );
 
 		if ( $git_package ) {
 			WP_CLI::log( sprintf( 'Registering %s as a VCS repository...', $git_package ) );
-			$json_manipulator->addRepository( $set_package_name, array( 'type' => 'vcs', 'url' => $git_package ) );
+			$json_manipulator->addRepository( $package_name, array( 'type' => 'vcs', 'url' => $git_package ) );
 		} else if ( $dir_package ) {
 			WP_CLI::log( sprintf( 'Registering %s as a path repository...', $dir_package ) );
 			$json_manipulator->addRepository( $package_name, array( 'type' => 'path', 'url' => $dir_package ) );
