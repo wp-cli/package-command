@@ -122,6 +122,15 @@ Feature: Install WP-CLI packages
 
   @github-api
   Scenario: Install a package from a Git URL
+    When I run `wp package install git@github.com:sidsector9/ee-command.git`
+    And STDOUT should contain:
+      """
+      Package name mismatch...Updating the name with correct value.
+      """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      "this/that": "dev-master"
+      """
     Given an empty directory
 
     When I try `wp package install git@github.com:wp-cli.git`
