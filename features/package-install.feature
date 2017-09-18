@@ -158,6 +158,7 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Removing require statement from {PACKAGE_PATH}composer.json
+      Removing repository details from {PACKAGE_PATH}composer.json
       """
     And STDOUT should contain:
       """
