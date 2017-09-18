@@ -135,6 +135,9 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 */
 	public function browse( $_, $assoc_args ) {
+		WP_CLI::line( WP_CLI::colorize( '%CAlthough the package index will remain in place for backward compatibility reasons, it has been deprecated and will not be updated further.
+Please refer to https://github.com/wp-cli/ideas/issues/51 to read about its potential replacement.%n' ) );
+
 		$this->show_packages( 'browse', $this->get_community_packages(), $assoc_args );
 	}
 
