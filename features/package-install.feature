@@ -160,6 +160,16 @@ Feature: Install WP-CLI packages
       Removing require statement from {PACKAGE_PATH}composer.json
       Removing repository details from {PACKAGE_PATH}composer.json
       """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      "require": {
+        "wp-cli/google-sitemap-generator-cli": "dev-master"
+      },
+      "wp-cli/google-sitemap-generator-cli": {
+          "type": "vcs",
+          "url": "git@github.com:wp-cli/google-sitemap-generator-cli.git"
+      }
+      """
     And STDOUT should contain:
       """
       Success: Uninstalled package.
