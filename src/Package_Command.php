@@ -116,6 +116,11 @@ class Package_Command extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     $ wp package browse --format=yaml
+	 *
+	 *     Although the package index will remain in place for backward compatibility
+	 *     reasons, it has been deprecated and will not be updated further. Please
+	 *     refer to https://github.com/wp-cli/ideas/issues/51 to read about its potential
+	 *     replacement.
 	 *     ---
 	 *     10up/mu-migration:
 	 *       name: 10up/mu-migration
@@ -132,11 +137,6 @@ class Package_Command extends WP_CLI_Command {
 	 *       description: WP-CLI command for using the WordPress HTTP API
 	 *       authors: Evan Mattson
 	 *       version: dev-master
-	 *
-	 * Although the package index will remain in place for backward compatibility
-	 * reasons, it has been deprecated and will not be updated further. Please
-	 * refer to https://github.com/wp-cli/ideas/issues/51 to read about its potential
-	 * replacement.
 	 */
 	public function browse( $_, $assoc_args ) {
 		WP_CLI::line( WP_CLI::colorize( '%CAlthough the package index will remain in place for backward compatibility reasons, it has been deprecated and will not be updated further.
