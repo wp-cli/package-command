@@ -483,7 +483,6 @@ class Package_Command extends WP_CLI_Command {
 		$composer_backup = file_get_contents( $composer_json_obj->getPath() );
 		$manipulator = new JsonManipulator( $composer_backup );
 		$manipulator->removeSubNode( 'require', $package_name );
-		$manipulator->removeSubNode( 'repositories', $package_name );
 		$composer_json_array = json_decode( $composer_backup );
 
 		// Remove the 'repository' details from composer.json.
