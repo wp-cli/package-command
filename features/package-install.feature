@@ -158,6 +158,15 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Removing require statement from {PACKAGE_PATH}composer.json
+      Removing repository details from {PACKAGE_PATH}composer.json
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      "wp-cli/google-sitemap-generator-cli": "dev-master"
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      "url": "git@github.com:wp-cli/google-sitemap-generator-cli.git"
       """
     And STDOUT should contain:
       """
