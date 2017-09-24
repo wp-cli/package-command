@@ -477,21 +477,29 @@ class Package_Command extends WP_CLI_Command {
 
 		$composer_json_obj = $this->get_composer_json();
 
-		// Remove the 'require' from composer.json
+		// Remove the 'require' from composer.json.
 		$json_path = $composer_json_obj->getPath();
 		WP_CLI::log( sprintf( 'Removing require statement from %s', $json_path ) );
 		$composer_backup = file_get_contents( $composer_json_obj->getPath() );
 		$manipulator = new JsonManipulator( $composer_backup );
 		$manipulator->removeSubNode( 'require', $package_name );
+		$composer_json_array = json_decode( $composer_backup );
+
+		// Remove the 'repository' details from composer.json.
+		if ( is_object( $composer_json_array ) && property_exists( $composer_json_array->repositories, $package_name ) ) {
+			WP_CLI::log( sprintf( 'Removing repository details from %s', $json_path ) );
+			$manipulator->removeRepository( $package_name );
+		}
+
 		file_put_contents( $composer_json_obj->getPath(), $manipulator->getContents() );
 
 		try {
 			$composer = $this->get_composer();
-		} catch( Exception $e ) {
+		} catch ( Exception $e ) {
 			WP_CLI::error( $e->getMessage() );
 		}
 
-		// Set up the installer
+		// Set up the installer.
 		$install = Installer::create( new NullIO, $composer );
 		$install->setUpdate( true ); // Installer class will only override composer.lock with this flag
 		$install->setPreferSource( true ); // Use VCS when VCS for easier contributions.
