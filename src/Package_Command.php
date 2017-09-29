@@ -149,6 +149,9 @@ class Package_Command extends WP_CLI_Command {
 	 * * Path to a directory on the local machine.
 	 * * Local or remote .zip file.
 	 *
+	 * Packages are installed to `~/.wp-cli/packages/` by default. Use the
+	 * `WP_CLI_PACKAGES_DIR` environment variable to provide a custom path.
+	 *
 	 * When installing a local directory, WP-CLI simply registers a
 	 * reference to the directory. If you move or delete the directory, WP-CLI's
 	 * reference breaks.
