@@ -84,6 +84,9 @@ class Package_Command extends WP_CLI_Command {
 	 * Browse WP-CLI packages available for installation.
 	 *
 	 * Lists packages available for installation from the [Package Index](http://wp-cli.org/package-index/).
+	 * Although the package index will remain in place for backward compatibility reasons, it has been
+	 * deprecated and will not be updated further. Please refer to https://github.com/wp-cli/ideas/issues/51
+	 * to read about its potential replacement.
 	 *
 	 * ## OPTIONS
 	 *
@@ -132,9 +135,11 @@ class Package_Command extends WP_CLI_Command {
 	 *       description: WP-CLI command for using the WordPress HTTP API
 	 *       authors: Evan Mattson
 	 *       version: dev-master
-	 *
 	 */
 	public function browse( $_, $assoc_args ) {
+		if ( empty( $assoc_args['format'] ) || 'table' === $assoc_args['format'] ) {
+			WP_CLI::line( WP_CLI::colorize( '%CAlthough the package index will remain in place for backward compatibility reasons, it has been deprecated and will not be updated further. Please refer to https://github.com/wp-cli/ideas/issues/51 to read about its potential replacement.%n' ) );
+		}
 		$this->show_packages( 'browse', $this->get_community_packages(), $assoc_args );
 	}
 
