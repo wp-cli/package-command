@@ -210,6 +210,21 @@ class Package_Command extends WP_CLI_Command {
 			preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches );
 			if ( ! empty( $matches[1] ) ) {
 				$package_name = $matches[1];
+
+				// Generate raw git URL of composer.json file.
+				$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/master/composer.json';
+
+				// Convert composer.json JSON to Array.
+				$composer_content_as_array = json_decode( WP_CLI\Utils\http_request( 'GET', $raw_content_url )->body, true );
+
+				// Package name in composer.json that is hosted on GitHub.
+				$package_name_on_repo = $composer_content_as_array['name'];
+
+				// If package name and repository name are not identical, then fix it.
+				if ( $package_name !== $package_name_on_repo ) {
+					$package_name = $package_name_on_repo;
+					WP_CLI::warning( 'Package name mismatch...Updating the name with correct value.' );
+				}
 			} else {
 				WP_CLI::error( "Couldn't parse package name from expected path '<name>/<package>'." );
 			}
@@ -282,7 +297,6 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::log( sprintf( 'Registering %s as a path repository...', $dir_package ) );
 			$json_manipulator->addRepository( $package_name, array( 'type' => 'path', 'url' => $dir_package ) );
 		}
-
 		$composer_backup_decoded = json_decode( $composer_backup, true );
 		// If the composer file does not contain the current package index repository, refresh the repository definition.
 		if ( empty( $composer_backup_decoded['repositories']['wp-cli']['url'] ) || self::PACKAGE_INDEX_URL != $composer_backup_decoded['repositories']['wp-cli']['url'] ) {
@@ -300,7 +314,6 @@ class Package_Command extends WP_CLI_Command {
 		// Set up the EventSubscriber
 		$event_subscriber = new \WP_CLI\PackageManagerEventSubscriber;
 		$composer->getEventDispatcher()->addSubscriber( $event_subscriber );
-
 		// Set up the installer
 		$install = Installer::create( new ComposerIO, $composer );
 		$install->setUpdate( true ); // Installer class will only override composer.lock with this flag
