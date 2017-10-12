@@ -334,7 +334,8 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::success( "Package installed." );
 		} else {
 			file_put_contents( $composer_json_obj->getPath(), $composer_backup );
-			WP_CLI::error( "Package installation failed (Composer return code {$res}). Reverted composer.json" );
+			$res_msg = false !== $res ? " (Composer return code {$res})" : '';
+			WP_CLI::error( "Package installation failed{$res_msg}. Reverted composer.json" );
 		}
 	}
 
@@ -464,7 +465,8 @@ class Package_Command extends WP_CLI_Command {
 		if ( 0 === $res ) {
 			WP_CLI::success( "Packages updated." );
 		} else {
-			WP_CLI::error( "Failed to update packages (Composer return code {$res})." );
+			$res_msg = false !== $res ? " (Composer return code {$res})" : '';
+			WP_CLI::error( "Failed to update packages{$res_msg}." );
 		}
 	}
 
@@ -537,7 +539,8 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::success( "Uninstalled package." );
 		} else {
 			file_put_contents( $composer_json_obj->getPath(), $composer_backup );
-			WP_CLI::error( "Package removal failed (Composer return code {$res})." );
+			$res_msg = false !== $res ? " (Composer return code {$res})" : '';
+			WP_CLI::error( "Package removal failed{$res_msg}." );
 		}
 	}
 
