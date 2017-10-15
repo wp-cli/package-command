@@ -725,7 +725,6 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::error( $e->getMessage() );
 		}
 		$repo = $composer->getRepositoryManager()->getLocalRepository();
-		$installed_packages = array();
 		$existing = json_decode( file_get_contents( $this->get_composer_json_path() ), true );
 		$installed_package_keys = ! empty( $existing['require'] ) ? array_keys( $existing['require'] ) : array();
 		if ( empty( $installed_package_keys ) ) {
