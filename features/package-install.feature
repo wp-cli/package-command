@@ -123,7 +123,7 @@ Feature: Install WP-CLI packages
   @github-api
   Scenario: Install a package from a Git URL
     When I run `wp package install git@github.com:wp-cli-test/repository-name.git`
-    And STDOUT should contain:
+    And STDERR should contain:
       """
       Package name mismatch...Updating the name with correct value.
       """
