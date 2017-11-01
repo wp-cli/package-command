@@ -194,7 +194,8 @@ Feature: Install WP-CLI packages
       wp-cli/google-sitemap-generator-cli
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier
     Given an empty directory
 
@@ -238,7 +239,8 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier with a version requirement
     Given an empty directory
 
@@ -282,7 +284,8 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier with a specific version
     Given an empty directory
 
@@ -326,7 +329,8 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier and a specific commit hash
     Given an empty directory
 
@@ -370,7 +374,8 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier and a branch
     Given an empty directory
 
