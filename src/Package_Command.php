@@ -137,6 +137,7 @@ class Package_Command extends WP_CLI_Command {
 	 *       version: dev-master
 	 */
 	public function browse( $_, $assoc_args ) {
+		$this->set_composer_auth_env_var();
 		if ( empty( $assoc_args['format'] ) || 'table' === $assoc_args['format'] ) {
 			WP_CLI::line( WP_CLI::colorize( '%CAlthough the package index will remain in place for backward compatibility reasons, it has been deprecated and will not be updated further. Please refer to https://github.com/wp-cli/ideas/issues/51 to read about its potential replacement.%n' ) );
 		}
@@ -201,6 +202,7 @@ class Package_Command extends WP_CLI_Command {
 	 *     $ wp package install google-sitemap-generator-cli.zip
 	 */
 	public function install( $args, $assoc_args ) {
+		$this->set_composer_auth_env_var();
 		list( $package_name ) = $args;
 
 		$git_package = $dir_package = false;
@@ -213,9 +215,11 @@ class Package_Command extends WP_CLI_Command {
 
 				// Generate raw git URL of composer.json file.
 				$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/master/composer.json';
+				$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
+				$headers = $github_token ? array( 'Authorization' => 'token ' . $github_token ) : array();
 
 				// Convert composer.json JSON to Array.
-				$composer_content_as_array = json_decode( WP_CLI\Utils\http_request( 'GET', $raw_content_url )->body, true );
+				$composer_content_as_array = json_decode( WP_CLI\Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers )->body, true );
 
 				// Package name in composer.json that is hosted on GitHub.
 				$package_name_on_repo = $composer_content_as_array['name'];
@@ -314,6 +318,7 @@ class Package_Command extends WP_CLI_Command {
 		// Set up the EventSubscriber
 		$event_subscriber = new \WP_CLI\PackageManagerEventSubscriber;
 		$composer->getEventDispatcher()->addSubscriber( $event_subscriber );
+
 		// Set up the installer
 		$install = Installer::create( new ComposerIO, $composer );
 		$install->setUpdate( true ); // Installer class will only override composer.lock with this flag
@@ -385,6 +390,7 @@ class Package_Command extends WP_CLI_Command {
 	 * @subcommand list
 	 */
 	public function list_( $args, $assoc_args ) {
+		$this->set_composer_auth_env_var();
 		$this->show_packages( 'list', $this->get_installed_packages(), $assoc_args );
 	}
 
@@ -439,6 +445,7 @@ class Package_Command extends WP_CLI_Command {
 	 *     Success: Packages updated.
 	 */
 	public function update() {
+		$this->set_composer_auth_env_var();
 		try {
 			$composer = $this->get_composer();
 		} catch( Exception $e ) {
@@ -487,6 +494,7 @@ class Package_Command extends WP_CLI_Command {
 	 *     Success: Uninstalled package.
 	 */
 	public function uninstall( $args ) {
+		$this->set_composer_auth_env_var();
 		list( $package_name ) = $args;
 
 		try {
@@ -707,9 +715,12 @@ class Package_Command extends WP_CLI_Command {
 		}
 
 		// Fall back to GitHub URL if we had no match in the package index.
-		$response = Utils\http_request( 'GET', "https://github.com/{$package_name}.git" );
+		$url = "https://github.com/{$package_name}.git";
+		$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
+		$headers = $github_token ? array( 'Authorization' => 'token ' . $github_token ) : array();
+		$response = Utils\http_request( 'GET', $url, null /*data*/, $headers );
 		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
-			return "git@github.com:{$package_name}.git";
+			return $url;
 		}
 
 		return false;
@@ -934,5 +945,25 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function is_git_repository( $package ) {
 		return '.git' === strtolower( substr( $package, -4, 4 ) );
+	}
+
+	/**
+	 * Set `COMPOSER_AUTH` environment variable (which Composer merges into the config setup in `Composer\Factory::createConfig()`) depending on available environment variables.
+	 * Avoids authorization failures when accessing various sites.
+	 */
+	private function set_composer_auth_env_var() {
+		$changed = false;
+		$composer_auth = getenv( 'COMPOSER_AUTH' );
+		if ( ! $composer_auth || ! ( $composer_auth = json_decode( $composer_auth, true /*assoc*/ ) ) || ! is_array( $composer_auth ) ) {
+			$composer_auth = array();
+		}
+		// TODO: bitbucket-oauth, gitlab-oauth, gitlab-token and http-basic.
+		if ( ! isset( $composer_auth['github-oauth'] ) && ( $github_token = getenv( 'GITHUB_TOKEN' ) ) ) {
+			$composer_auth['github-oauth'] = array( 'github.com' => $github_token );
+			$changed = true;
+		}
+		if ( $changed ) {
+			putenv( 'COMPOSER_AUTH=' . json_encode( $composer_auth ) );
+		}
 	}
 }
