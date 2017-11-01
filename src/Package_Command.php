@@ -202,9 +202,9 @@ class Package_Command extends WP_CLI_Command {
 	 *     $ wp package install google-sitemap-generator-cli.zip
 	 */
 	public function install( $args, $assoc_args ) {
-		$this->set_composer_auth_env_var();
 		list( $package_name ) = $args;
 
+		$this->set_composer_auth_env_var();
 		$git_package = $dir_package = false;
 		$version = 'dev-master';
 		if ( $this->is_git_repository( $package_name ) ) {
@@ -318,7 +318,6 @@ class Package_Command extends WP_CLI_Command {
 		// Set up the EventSubscriber
 		$event_subscriber = new \WP_CLI\PackageManagerEventSubscriber;
 		$composer->getEventDispatcher()->addSubscriber( $event_subscriber );
-
 		// Set up the installer
 		$install = Installer::create( new ComposerIO, $composer );
 		$install->setUpdate( true ); // Installer class will only override composer.lock with this flag
@@ -494,9 +493,9 @@ class Package_Command extends WP_CLI_Command {
 	 *     Success: Uninstalled package.
 	 */
 	public function uninstall( $args ) {
-		$this->set_composer_auth_env_var();
 		list( $package_name ) = $args;
 
+		$this->set_composer_auth_env_var();
 		try {
 			$composer = $this->get_composer();
 		} catch( Exception $e ) {
