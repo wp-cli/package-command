@@ -122,16 +122,22 @@ Feature: Install WP-CLI packages
 
   @github-api
   Scenario: Install a package from a Git URL
-    When I run `wp package install git@github.com:wp-cli-test/repository-name.git`
+    Given an empty directory
+
+    When I try `wp package install git@github.com:wp-cli-test/repository-name.git`
+    Then the return code should be 0
     And STDERR should contain:
       """
-      Package name mismatch...Updating the name with correct value.
+      Warning: Package name mismatch...Updating the name with correct value.
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
       """
     And the {PACKAGE_PATH}composer.json file should contain:
       """
       "wp-cli-test/package-name": "dev-master"
       """
-    Given an empty directory
 
     When I try `wp package install git@github.com:wp-cli.git`
     Then STDERR should be:
@@ -188,7 +194,8 @@ Feature: Install WP-CLI packages
       wp-cli/google-sitemap-generator-cli
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier
     Given an empty directory
 
@@ -197,7 +204,7 @@ Feature: Install WP-CLI packages
       """
       Installing package schlessera/test-command (dev-master)
       Updating {PACKAGE_PATH}composer.json to require the package...
-      Registering git@github.com:schlessera/test-command.git as a VCS repository...
+      Registering https://github.com/schlessera/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -232,7 +239,8 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier with a version requirement
     Given an empty directory
 
@@ -241,7 +249,7 @@ Feature: Install WP-CLI packages
       """
       Installing package schlessera/test-command (^0)
       Updating {PACKAGE_PATH}composer.json to require the package...
-      Registering git@github.com:schlessera/test-command.git as a VCS repository...
+      Registering https://github.com/schlessera/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -276,7 +284,8 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier with a specific version
     Given an empty directory
 
@@ -285,7 +294,7 @@ Feature: Install WP-CLI packages
       """
       Installing package schlessera/test-command (0.1.0)
       Updating {PACKAGE_PATH}composer.json to require the package...
-      Registering git@github.com:schlessera/test-command.git as a VCS repository...
+      Registering https://github.com/schlessera/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -320,7 +329,8 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier and a specific commit hash
     Given an empty directory
 
@@ -329,7 +339,7 @@ Feature: Install WP-CLI packages
       """
       Installing package schlessera/test-command (dev-master#8e99bba16a65a3cde7405178a6badbb49349f554)
       Updating {PACKAGE_PATH}composer.json to require the package...
-      Registering git@github.com:schlessera/test-command.git as a VCS repository...
+      Registering https://github.com/schlessera/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -364,7 +374,8 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
-  @github-api @shortened
+  # Current releases of schlessera/test-command are PHP 5.5 dependent.
+  @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier and a branch
     Given an empty directory
 
@@ -373,7 +384,7 @@ Feature: Install WP-CLI packages
       """
       Installing package schlessera/test-command (dev-custom-branch)
       Updating {PACKAGE_PATH}composer.json to require the package...
-      Registering git@github.com:schlessera/test-command.git as a VCS repository...
+      Registering https://github.com/schlessera/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
