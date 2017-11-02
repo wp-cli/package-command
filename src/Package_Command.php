@@ -956,7 +956,6 @@ class Package_Command extends WP_CLI_Command {
 		if ( ! $composer_auth || ! ( $composer_auth = json_decode( $composer_auth, true /*assoc*/ ) ) || ! is_array( $composer_auth ) ) {
 			$composer_auth = array();
 		}
-		// TODO: bitbucket-oauth, gitlab-oauth, gitlab-token and http-basic.
 		if ( ! isset( $composer_auth['github-oauth'] ) && ( $github_token = getenv( 'GITHUB_TOKEN' ) ) ) {
 			$composer_auth['github-oauth'] = array( 'github.com' => $github_token );
 			$changed = true;
