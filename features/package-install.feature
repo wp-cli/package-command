@@ -194,6 +194,54 @@ Feature: Install WP-CLI packages
       wp-cli/google-sitemap-generator-cli
       """
 
+  @github-api
+  Scenario: Install a package from a Git URL with mixed case git name but lower case composer.json name
+    Given an empty directory
+
+    When I try `wp package install https://github.com/CapitalWPCLI/examplecommand.git`
+    Then the return code should be 0
+    And STDERR should contain:
+      """
+      Warning: Package name mismatch...Updating the name with correct value.
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package list --fields=name,pretty_name`
+    Then STDOUT should be a table containing rows:
+      | name                        | pretty_name                 |
+      | capitalwpcli/examplecommand | capitalwpcli/examplecommand |
+
+    When I run `wp hello-world`
+    Then STDOUT should contain:
+      """
+      Success: Hello world.
+      """
+
+  @github-api
+  Scenario: Install a package from a Git URL with mixed case git name and the same mixed case composer.json name
+    Given an empty directory
+
+    When I run `wp package install https://github.com/gitlost/TestMixedCaseCommand.git`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package list --fields=name,pretty_name`
+    Then STDOUT should be a table containing rows:
+      | name                         | pretty_name                  |
+      | gitlost/testmixedcasecommand | gitlost/TestMixedCaseCommand |
+
+    When I run `wp TestMixedCaseCommand`
+    Then STDOUT should contain:
+      """
+      Success: Test Mixed Case Command Name
+      """
+
   # Current releases of schlessera/test-command are PHP 5.5 dependent.
   @github-api @shortened @require-php-5.5
   Scenario: Install a package from Git using a shortened package identifier
