@@ -114,7 +114,9 @@ class Package_Command extends WP_CLI_Command {
 	 * * authors
 	 * * version
 	 *
-	 * There are no optionally available fields.
+	 * These fields are optionally available:
+	 *
+	 * * pretty_name
 	 *
 	 * ## EXAMPLES
 	 *
@@ -376,6 +378,7 @@ class Package_Command extends WP_CLI_Command {
 	 * These fields are optionally available:
 	 *
 	 * * description
+	 * * pretty_name
 	 *
 	 * ## EXAMPLES
 	 *
@@ -681,6 +684,7 @@ class Package_Command extends WP_CLI_Command {
 				}
 				$package_output['update'] = $update;
 				$package_output['update_version'] = $update_version;
+				$package_output['pretty_name'] = $package->getPrettyName();
 				$list[ $package_output['name'] ] = $package_output;
 			}
 		}
@@ -742,7 +746,8 @@ class Package_Command extends WP_CLI_Command {
 		}
 		$installed_packages = array();
 		foreach( $repo->getCanonicalPackages() as $package ) {
-			if ( in_array( $package->getName(), $installed_package_keys, true ) ) {
+			// Use pretty name as it's case sensitive.
+			if ( in_array( $package->getPrettyName(), $installed_package_keys, true ) ) {
 				$installed_packages[] = $package;
 			}
 		}
