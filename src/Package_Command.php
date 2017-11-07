@@ -8,7 +8,6 @@ use \Composer\Factory;
 use \Composer\IO\NullIO;
 use \Composer\Installer;
 use \Composer\Json\JsonFile;
-use \Composer\Json\JsonManipulator;
 use \Composer\Package;
 use \Composer\Package\BasePackage;
 use \Composer\Package\PackageInterface;
@@ -22,6 +21,7 @@ use \Composer\Util\Filesystem;
 use \WP_CLI\ComposerIO;
 use \WP_CLI\Extractor;
 use \WP_CLI\Utils;
+use \WP_CLI\JsonManipulator;
 
 /**
  * Runs WP-CLI package manager commands.
@@ -114,9 +114,7 @@ class Package_Command extends WP_CLI_Command {
 	 * * authors
 	 * * version
 	 *
-	 * These fields are optionally available:
-	 *
-	 * * pretty_name
+	 * There are no optionally available fields.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -228,8 +226,8 @@ class Package_Command extends WP_CLI_Command {
 
 				// If package name and repository name are not identical, then fix it.
 				if ( $package_name !== $package_name_on_repo ) {
+					WP_CLI::warning( sprintf( "Package name mismatch...Updating from git name '%s' to composer.json name '%s'.", $package_name, $package_name_on_repo ) );
 					$package_name = $package_name_on_repo;
-					WP_CLI::warning( 'Package name mismatch...Updating the name with correct value.' );
 				}
 			} else {
 				WP_CLI::error( "Couldn't parse package name from expected path '<name>/<package>'." );
@@ -293,15 +291,15 @@ class Package_Command extends WP_CLI_Command {
 		$json_manipulator = new JsonManipulator( $composer_backup );
 		$json_manipulator->addMainKey( 'name', 'wp-cli/wp-cli' );
 		$json_manipulator->addMainKey( 'version', self::get_wp_cli_version_composer() );
-		$json_manipulator->addLink( 'require', $package_name, $version );
+		$json_manipulator->addLink( 'require', $package_name, $version, false /*sortPackages*/, true /*caseInsensitive*/ );
 		$json_manipulator->addConfigSetting( 'secure-http', true );
 
 		if ( $git_package ) {
 			WP_CLI::log( sprintf( 'Registering %s as a VCS repository...', $git_package ) );
-			$json_manipulator->addRepository( $package_name, array( 'type' => 'vcs', 'url' => $git_package ) );
+			$json_manipulator->addSubNode( 'repositories', $package_name, array( 'type' => 'vcs', 'url' => $git_package ), true /*caseInsensitive*/ );
 		} else if ( $dir_package ) {
 			WP_CLI::log( sprintf( 'Registering %s as a path repository...', $dir_package ) );
-			$json_manipulator->addRepository( $package_name, array( 'type' => 'path', 'url' => $dir_package ) );
+			$json_manipulator->addSubNode( 'repositories', $package_name, array( 'type' => 'path', 'url' => $dir_package ), true /*caseInsensitive*/ );
 		}
 		$composer_backup_decoded = json_decode( $composer_backup, true );
 		// If the composer file does not contain the current package index repository, refresh the repository definition.
@@ -378,7 +376,6 @@ class Package_Command extends WP_CLI_Command {
 	 * These fields are optionally available:
 	 *
 	 * * description
-	 * * pretty_name
 	 *
 	 * ## EXAMPLES
 	 *
@@ -507,6 +504,7 @@ class Package_Command extends WP_CLI_Command {
 		if ( false === ( $package = $this->get_installed_package_by_name( $package_name ) ) ) {
 			WP_CLI::error( "Package not installed." );
 		}
+		$package_name = $package->getPrettyName(); // Make sure package name is what's in composer.json.
 
 		$composer_json_obj = $this->get_composer_json();
 
@@ -515,14 +513,11 @@ class Package_Command extends WP_CLI_Command {
 		WP_CLI::log( sprintf( 'Removing require statement from %s', $json_path ) );
 		$composer_backup = file_get_contents( $composer_json_obj->getPath() );
 		$manipulator = new JsonManipulator( $composer_backup );
-		$manipulator->removeSubNode( 'require', $package_name );
-		$composer_json_array = json_decode( $composer_backup );
+		$manipulator->removeSubNode( 'require', $package_name, true /*caseInsensitive*/ );
 
 		// Remove the 'repository' details from composer.json.
-		if ( is_object( $composer_json_array ) && property_exists( $composer_json_array->repositories, $package_name ) ) {
-			WP_CLI::log( sprintf( 'Removing repository details from %s', $json_path ) );
-			$manipulator->removeRepository( $package_name );
-		}
+		WP_CLI::log( sprintf( 'Removing repository details from %s', $json_path ) );
+		$manipulator->removeSubNode( 'repositories', $package_name, true /*caseInsensitive*/ );
 
 		file_put_contents( $composer_json_obj->getPath(), $manipulator->getContents() );
 
@@ -664,12 +659,12 @@ class Package_Command extends WP_CLI_Command {
 
 		$list = array();
 		foreach ( $packages as $package ) {
-			$name = $package->getName();
+			$name = $package->getPrettyName();
 			if ( isset( $list[ $name ] ) ) {
 				$list[ $name ]['version'][] = $package->getPrettyVersion();
 			} else {
 				$package_output = array();
-				$package_output['name'] = $package->getName();
+				$package_output['name'] = $package->getPrettyName();
 				$package_output['description'] = $package->getDescription();
 				$package_output['authors'] = implode( ', ', array_column( (array) $package->getAuthors(), 'name' ) );
 				$package_output['version'] = array( $package->getPrettyVersion() );
@@ -684,7 +679,6 @@ class Package_Command extends WP_CLI_Command {
 				}
 				$package_output['update'] = $update;
 				$package_output['update_version'] = $update_version;
-				$package_output['pretty_name'] = $package->getPrettyName();
 				$list[ $package_output['name'] ] = $package_output;
 			}
 		}
@@ -712,7 +706,7 @@ class Package_Command extends WP_CLI_Command {
 	private function get_package_by_shortened_identifier( $package_name ) {
 		// Check the package index first, so we don't break existing behavior.
 		foreach( $this->get_community_packages() as $package ) {
-			if ( $package_name == $package->getName() ) {
+			if ( $package_name == $package->getPrettyName() ) {
 				return $package;
 			}
 		}
@@ -744,10 +738,15 @@ class Package_Command extends WP_CLI_Command {
 		if ( empty( $installed_package_keys ) ) {
 			return array();
 		}
+		// For use by legacy incorrect name check.
+		$lc_installed_package_keys = array_map( 'strtolower', $installed_package_keys );
 		$installed_packages = array();
 		foreach( $repo->getCanonicalPackages() as $package ) {
-			// Use pretty name as it's case sensitive.
+			// Use pretty name as it's case sensitive and what's in composer.json (or at least should be).
 			if ( in_array( $package->getPrettyName(), $installed_package_keys, true ) ) {
+				$installed_packages[] = $package;
+			} elseif ( false !== ( $idx = array_search( $package->getName(), $lc_installed_package_keys, true ) ) ) { // Legacy incorrect name check.
+				WP_CLI::warning( sprintf( "Found package '%s' misnamed '%s' in '%s'.", $package->getPrettyName(), $installed_package_keys[ $idx ], $this->get_composer_json_path() ) );
 				$installed_packages[] = $package;
 			}
 		}
@@ -759,7 +758,11 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function get_installed_package_by_name( $package_name ) {
 		foreach( $this->get_installed_packages() as $package ) {
-			if ( $package_name == $package->getName() ) {
+			if ( $package_name === $package->getPrettyName() ) {
+				return $package;
+			}
+			// Also check non-pretty (lowercase) name in case of legacy incorrect name.
+			if ( $package_name === $package->getName() ) {
 				return $package;
 			}
 		}
@@ -911,7 +914,7 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function find_latest_package( PackageInterface $package, Composer $composer, $phpVersion, $minorOnly = false ) {
 		// find the latest version allowed in this pool
-		$name = $package->getName();
+		$name = $package->getPrettyName();
 		$versionSelector = new VersionSelector($this->get_pool($composer));
 		$stability = $composer->getPackage()->getMinimumStability();
 		$flags = $composer->getPackage()->getStabilityFlags();

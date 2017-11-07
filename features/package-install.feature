@@ -128,7 +128,7 @@ Feature: Install WP-CLI packages
     Then the return code should be 0
     And STDERR should contain:
       """
-      Warning: Package name mismatch...Updating the name with correct value.
+      Warning: Package name mismatch...Updating from git name 'wp-cli-test/repository-name' to composer.json name 'wp-cli-test/package-name'.
       """
     And STDOUT should contain:
       """
@@ -202,22 +202,158 @@ Feature: Install WP-CLI packages
     Then the return code should be 0
     And STDERR should contain:
       """
-      Warning: Package name mismatch...Updating the name with correct value.
+      Warning: Package name mismatch...Updating from git name 'CapitalWPCLI/examplecommand' to composer.json name 'capitalwpcli/examplecommand'.
       """
     And STDOUT should contain:
       """
       Success: Package installed.
       """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      "capitalwpcli/examplecommand"
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      "CapitalWPCLI/examplecommand"
+      """
 
-    When I run `wp package list --fields=name,pretty_name`
+    When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
-      | name                        | pretty_name                 |
-      | capitalwpcli/examplecommand | capitalwpcli/examplecommand |
+      | name                        |
+      | capitalwpcli/examplecommand |
 
     When I run `wp hello-world`
     Then STDOUT should contain:
       """
       Success: Hello world.
+      """
+
+  @github-api
+  Scenario: Legacy install a package from a Git URL with mixed case git name and the same mixed case composer.json name
+    Given an empty directory
+    And download:
+      | path                          | url                                                                         |
+      | {CACHE_DIR}/wp-cli-1.3.0.phar | https://github.com/wp-cli/wp-cli/releases/download/v1.3.0/wp-cli-1.3.0.phar |
+
+	# First legacy install it and current uninstall it
+    When I run `php {CACHE_DIR}/wp-cli-1.3.0.phar package install https://github.com/CapitalWPCLI/examplecommand.git`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      "CapitalWPCLI/examplecommand"
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      "capitalwpcli/examplecommand"
+      """
+
+    When I try `wp package list --fields=name`
+    Then the return code should be 0
+    And STDERR should contain:
+      """
+      Warning: Found package 'capitalwpcli/examplecommand' misnamed 'CapitalWPCLI/examplecommand'
+      """
+    And STDOUT should be a table containing rows:
+      | name                        |
+      | capitalwpcli/examplecommand |
+
+    When I run `wp hello-world`
+    Then STDOUT should contain:
+      """
+      Success: Hello world.
+      """
+
+    When I try `wp package uninstall capitalwpcli/examplecommand`
+    Then the return code should be 0
+    And STDERR should contain:
+      """
+      Warning: Found package 'capitalwpcli/examplecommand' misnamed 'CapitalWPCLI/examplecommand'
+      """
+    And STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      examplecommand
+      """
+
+	# Now legacy install it and current install it and current uninstall it
+    When I run `php {CACHE_DIR}/wp-cli-1.3.0.phar package install https://github.com/CapitalWPCLI/examplecommand.git`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      "CapitalWPCLI/examplecommand"
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      "capitalwpcli/examplecommand"
+      """
+
+    When I try `wp package list --fields=name`
+    Then the return code should be 0
+    And STDERR should contain:
+      """
+      Warning: Found package 'capitalwpcli/examplecommand' misnamed 'CapitalWPCLI/examplecommand'
+      """
+    And STDOUT should be a table containing rows:
+      | name                        |
+      | capitalwpcli/examplecommand |
+
+    When I run `wp hello-world`
+    Then STDOUT should contain:
+      """
+      Success: Hello world.
+      """
+
+    When I try `wp package install https://github.com/CapitalWPCLI/examplecommand.git`
+    Then the return code should be 0
+    And STDERR should contain:
+      """
+      Warning: Package name mismatch...Updating from git name 'CapitalWPCLI/examplecommand' to composer.json name 'capitalwpcli/examplecommand'.
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      "CapitalWPCLI/examplecommand"
+      """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      "capitalwpcli/examplecommand"
+      """
+
+    When I run `wp package list --fields=name`
+    Then STDERR should be empty
+    And STDOUT should be a table containing rows:
+      | name                        |
+      | capitalwpcli/examplecommand |
+
+    When I run `wp hello-world`
+    Then STDOUT should contain:
+      """
+      Success: Hello world.
+      """
+
+    When I run `wp package uninstall capitalwpcli/examplecommand`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      examplecommand
       """
 
   @github-api
@@ -231,10 +367,10 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
-    When I run `wp package list --fields=name,pretty_name`
+    When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
-      | name                         | pretty_name                  |
-      | gitlost/testmixedcasecommand | gitlost/TestMixedCaseCommand |
+      | name                         |
+      | gitlost/TestMixedCaseCommand |
 
     When I run `wp TestMixedCaseCommand`
     Then STDOUT should contain:
