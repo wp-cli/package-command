@@ -668,7 +668,7 @@ class Package_Command extends WP_CLI_Command {
 				}
 				$package_output['update'] = $update;
 				$package_output['update_version'] = $update_version;
-				$package_output['pretty_name'] = $package->getPrettyName(); // Deprecated but kept for BC with package-command 1.0.9.
+				$package_output['pretty_name'] = $package->getPrettyName(); // Deprecated but kept for BC with package-command 1.0.8.
 				$list[ $package_output['name'] ] = $package_output;
 			}
 		}
