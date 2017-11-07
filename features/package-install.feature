@@ -235,7 +235,7 @@ Feature: Install WP-CLI packages
       | path                          | url                                                                         |
       | {CACHE_DIR}/wp-cli-1.3.0.phar | https://github.com/wp-cli/wp-cli/releases/download/v1.3.0/wp-cli-1.3.0.phar |
 
-	# First legacy install it and current uninstall it
+    # First legacy install it and current uninstall it
     When I run `php {CACHE_DIR}/wp-cli-1.3.0.phar package install https://github.com/CapitalWPCLI/examplecommand.git`
     Then STDERR should be empty
     And STDOUT should contain:
@@ -282,7 +282,7 @@ Feature: Install WP-CLI packages
       examplecommand
       """
 
-	# Now legacy install it and current install it and current uninstall it
+    # Now legacy install it and current install it and current uninstall it
     When I run `php {CACHE_DIR}/wp-cli-1.3.0.phar package install https://github.com/CapitalWPCLI/examplecommand.git`
     Then STDERR should be empty
     And STDOUT should contain:
