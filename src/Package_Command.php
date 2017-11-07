@@ -211,24 +211,7 @@ class Package_Command extends WP_CLI_Command {
 			$git_package = $package_name;
 			preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches );
 			if ( ! empty( $matches[1] ) ) {
-				$package_name = $matches[1];
-
-				// Generate raw git URL of composer.json file.
-				$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/master/composer.json';
-				$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
-				$headers = $github_token ? array( 'Authorization' => 'token ' . $github_token ) : array();
-
-				// Convert composer.json JSON to Array.
-				$composer_content_as_array = json_decode( WP_CLI\Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers )->body, true );
-
-				// Package name in composer.json that is hosted on GitHub.
-				$package_name_on_repo = $composer_content_as_array['name'];
-
-				// If package name and repository name are not identical, then fix it.
-				if ( $package_name !== $package_name_on_repo ) {
-					WP_CLI::warning( sprintf( "Package name mismatch...Updating from git name '%s' to composer.json name '%s'.", $package_name, $package_name_on_repo ) );
-					$package_name = $package_name_on_repo;
-				}
+				$package_name = $this->check_git_package_name( $matches[1] );
 			} else {
 				WP_CLI::error( "Couldn't parse package name from expected path '<name>/<package>'." );
 			}
@@ -273,11 +256,17 @@ class Package_Command extends WP_CLI_Command {
 				list( $package_name, $version ) = explode( ':', $package_name );
 			}
 			$package = $this->get_package_by_shortened_identifier( $package_name );
-			if ( $this->is_git_repository( $package ) ) {
-				$git_package = $package;
-			}
 			if ( ! $package ) {
 				WP_CLI::error( "Invalid package." );
+			}
+			if ( is_string( $package ) ) {
+				if ( $this->is_git_repository( $package ) ) {
+					$git_package = $package;
+					$package_name = $this->check_git_package_name( $package_name );
+				}
+			} elseif ( $package_name !== $package->getPrettyName() ) {
+				// BC support for specifying lowercase names for mixed-case package index packages - don't bother warning.
+				$package_name = $package->getPrettyName();
 			}
 		}
 
@@ -679,6 +668,7 @@ class Package_Command extends WP_CLI_Command {
 				}
 				$package_output['update'] = $update;
 				$package_output['update_version'] = $update_version;
+				$package_output['pretty_name'] = $package->getPrettyName(); // Deprecated but kept for BC with package-command 1.0.9.
 				$list[ $package_output['name'] ] = $package_output;
 			}
 		}
@@ -705,8 +695,13 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function get_package_by_shortened_identifier( $package_name ) {
 		// Check the package index first, so we don't break existing behavior.
+		$lc_package_name = strtolower( $package_name ); // For BC check.
 		foreach( $this->get_community_packages() as $package ) {
-			if ( $package_name == $package->getPrettyName() ) {
+			if ( $package_name === $package->getPrettyName() ) {
+				return $package;
+			}
+			// For BC allow getting by lowercase name.
+			if ( $lc_package_name === $package->getName() ) {
 				return $package;
 			}
 		}
@@ -952,6 +947,37 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function is_git_repository( $package ) {
 		return '.git' === strtolower( substr( $package, -4, 4 ) );
+	}
+
+	/**
+	 * Check that `$package_name` matches the name in the repo composer.json, and return corrected value if not.
+	 */
+	private function check_git_package_name( $package_name ) {
+		// Generate raw git URL of composer.json file.
+		$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/master/composer.json';
+		$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
+		$headers = $github_token ? array( 'Authorization' => 'token ' . $github_token ) : array();
+
+		$response = WP_CLI\Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers );
+		if ( 20 != substr( $response->status_code, 0, 2 ) ) {
+			WP_CLI::error( sprintf( "Couldn't download package from '%s' (HTTP code %d).", $raw_content_url, $response->status_code ) );
+		}
+
+		// Convert composer.json JSON to Array.
+		$composer_content_as_array = json_decode( $response->body, true );
+		if ( null === $composer_content_as_array ) {
+			WP_CLI::error( sprintf( "Failed to parse '%s' as json.", $raw_content_url ) );
+		}
+
+		// Package name in composer.json that is hosted on GitHub.
+		$package_name_on_repo = $composer_content_as_array['name'];
+
+		// If package name and repository name are not identical, then fix it.
+		if ( $package_name !== $package_name_on_repo ) {
+			WP_CLI::warning( sprintf( "Package name mismatch...Updating from git name '%s' to composer.json name '%s'.", $package_name, $package_name_on_repo ) );
+			$package_name = $package_name_on_repo;
+		}
+		return $package_name;
 	}
 
 	/**
