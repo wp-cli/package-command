@@ -128,7 +128,7 @@ Feature: Install WP-CLI packages
     Then the return code should be 0
     And STDERR should contain:
       """
-      Warning: Package name mismatch...Updating the name with correct value.
+      Warning: Package name mismatch...Updating from git name 'wp-cli-test/repository-name' to composer.json name 'wp-cli-test/package-name'.
       """
     And STDOUT should contain:
       """
@@ -195,24 +195,39 @@ Feature: Install WP-CLI packages
       """
 
   @github-api
-  Scenario: Install a package from a Git URL with mixed case git name but lower case composer.json name
+  Scenario: Install a package from a Git URL with mixed-case git name but lowercase composer.json name
     Given an empty directory
 
     When I try `wp package install https://github.com/CapitalWPCLI/examplecommand.git`
     Then the return code should be 0
     And STDERR should contain:
       """
-      Warning: Package name mismatch...Updating the name with correct value.
+      Warning: Package name mismatch...Updating from git name 'CapitalWPCLI/examplecommand' to composer.json name 'capitalwpcli/examplecommand'.
+      """
+    And STDOUT should contain:
+      """
+      Installing package capitalwpcli/examplecommand (dev-master)
+      Updating {PACKAGE_PATH}composer.json to require the package...
+      Registering https://github.com/CapitalWPCLI/examplecommand.git as a VCS repository...
+      Using Composer to install the package...
       """
     And STDOUT should contain:
       """
       Success: Package installed.
       """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      "capitalwpcli/examplecommand"
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      "CapitalWPCLI/examplecommand"
+      """
 
-    When I run `wp package list --fields=name,pretty_name`
+    When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
-      | name                        | pretty_name                 |
-      | capitalwpcli/examplecommand | capitalwpcli/examplecommand |
+      | name                        |
+      | capitalwpcli/examplecommand |
 
     When I run `wp hello-world`
     Then STDOUT should contain:
@@ -221,7 +236,7 @@ Feature: Install WP-CLI packages
       """
 
   @github-api
-  Scenario: Install a package from a Git URL with mixed case git name and the same mixed case composer.json name
+  Scenario: Install a package from a Git URL with mixed-case git name and the same mixed-case composer.json name
     Given an empty directory
 
     When I run `wp package install https://github.com/gitlost/TestMixedCaseCommand.git`
@@ -230,11 +245,19 @@ Feature: Install WP-CLI packages
       """
       Success: Package installed.
       """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      "gitlost/TestMixedCaseCommand"
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      mixed
+      """
 
-    When I run `wp package list --fields=name,pretty_name`
+    When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
-      | name                         | pretty_name                  |
-      | gitlost/testmixedcasecommand | gitlost/TestMixedCaseCommand |
+      | name                         |
+      | gitlost/TestMixedCaseCommand |
 
     When I run `wp TestMixedCaseCommand`
     Then STDOUT should contain:
@@ -467,6 +490,103 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
+  Scenario: Install a package from the wp-cli package index with a mixed-case name
+    Given an empty directory
+
+    # Install and uninstall with case-sensitive name
+    When I run `wp package install GeekPress/wp-rocket-cli`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      Installing package GeekPress/wp-rocket-cli (dev-master)
+      Updating {PACKAGE_PATH}composer.json to require the package...
+      Using Composer to install the package...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      GeekPress/wp-rocket-cli
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      geek
+      """
+
+    When I run `wp package list --fields=name`
+    Then STDOUT should be a table containing rows:
+      | name                    |
+      | GeekPress/wp-rocket-cli |
+
+    When I run `wp help rocket`
+    Then STDOUT should contain:
+      """
+      wp rocket
+      """
+
+    When I run `wp package uninstall GeekPress/wp-rocket-cli`
+    Then STDOUT should contain:
+      """
+      Removing require statement from {PACKAGE_PATH}composer.json
+      """
+    And STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      rocket
+      """
+
+    # Install with lowercase name (for BC - no warning) and uninstall with lowercase name (for BC and convenience)
+    When I run `wp package install geekpress/wp-rocket-cli`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      Installing package GeekPress/wp-rocket-cli (dev-master)
+      Updating {PACKAGE_PATH}composer.json to require the package...
+      Using Composer to install the package...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      GeekPress/wp-rocket-cli
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      geek
+      """
+
+    When I run `wp package list --fields=name`
+    Then STDOUT should be a table containing rows:
+      | name                    |
+      | GeekPress/wp-rocket-cli |
+
+    When I run `wp help rocket`
+    Then STDOUT should contain:
+      """
+      wp rocket
+      """
+
+    When I run `wp package uninstall geekpress/wp-rocket-cli`
+    Then STDOUT should contain:
+      """
+      Removing require statement from {PACKAGE_PATH}composer.json
+      """
+    And STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      rocket
+      """
+
   Scenario: Install a package in a local zip
     Given an empty directory
     And I run `wget -O google-sitemap-generator-cli.zip https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
@@ -509,6 +629,60 @@ Feature: Install WP-CLI packages
     Then STDOUT should not contain:
       """
       wp-cli/google-sitemap-generator-cli
+      """
+
+  Scenario: Install a package from Git using a shortened mixed-case package identifier but lowercase composer.json name
+    Given an empty directory
+
+    When I try `wp package install CapitalWPCLI/examplecommand`
+    Then the return code should be 0
+    And STDERR should contain:
+      """
+      Warning: Package name mismatch...Updating from git name 'CapitalWPCLI/examplecommand' to composer.json name 'capitalwpcli/examplecommand'.
+      """
+    And STDOUT should contain:
+      """
+      Installing package capitalwpcli/examplecommand (dev-master)
+      Updating {PACKAGE_PATH}composer.json to require the package...
+      Registering https://github.com/CapitalWPCLI/examplecommand.git as a VCS repository...
+      Using Composer to install the package...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And the {PACKAGE_PATH}composer.json file should contain:
+      """
+      "capitalwpcli/examplecommand"
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      "CapitalWPCLI/examplecommand"
+      """
+
+    When I run `wp package list --fields=name`
+    Then STDOUT should be a table containing rows:
+      | name                        |
+      | capitalwpcli/examplecommand |
+
+    When I run `wp hello-world`
+    Then STDOUT should contain:
+      """
+      Success: Hello world.
+      """
+
+    When I run `wp package uninstall capitalwpcli/examplecommand`
+    Then STDOUT should contain:
+      """
+      Removing require statement from {PACKAGE_PATH}composer.json
+      """
+    And STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+    And the {PACKAGE_PATH}composer.json file should not contain:
+      """
+      capital
       """
 
   Scenario: Install a package from a remote ZIP
