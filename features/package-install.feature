@@ -691,7 +691,7 @@ Feature: Install WP-CLI packages
     When I try `wp package install https://github.com/wp-cli/google-sitemap-generator.zip`
     Then STDERR should be:
       """
-      Error: Couldn't download package.
+      Error: Couldn't download package from 'https://github.com/wp-cli/google-sitemap-generator.zip' (HTTP code 404).
       """
 
     When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
@@ -1006,3 +1006,66 @@ Feature: Install WP-CLI packages
       """
       "version": "0.23.0-alpha",
       """
+
+  Scenario: Try to install bad packages
+    Given an empty directory
+    And a package-dir/composer.json file:
+      """
+      {
+      }
+      """
+    And a package-dir-bad-composer/composer.json file:
+      """
+      {
+      """
+    And a package-dir/zero.zip file:
+      """
+      """
+
+    When I try `wp package install https://github.com/non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf.git`
+    Then the return code should be 1
+    And STDERR should be:
+      """
+      Error: Couldn't download composer.json file from 'https://raw.githubusercontent.com/non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf/master/composer.json' (HTTP code 404).
+      """
+    And STDOUT should be empty
+
+    When I try `wp package install non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf`
+    Then the return code should be 1
+    And STDERR should be:
+      """
+      Error: Invalid package: shortened identifier 'non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf' not found.
+      """
+    And STDOUT should be empty
+
+    When I try `wp package install https://example.com/non-existent-zip-asdfasdf.zip`
+    Then the return code should be 1
+    And STDERR should be:
+      """
+      Error: Couldn't download package from 'https://example.com/non-existent-zip-asdfasdf.zip' (HTTP code 404).
+      """
+    And STDOUT should be empty
+
+    When I try `wp package install package-dir-bad-composer`
+    Then the return code should be 1
+    And STDERR should be:
+      """
+      Error: Invalid package: failed to parse composer.json file '{RUN_DIR}/package-dir-bad-composer/composer.json' as json.
+      """
+    And STDOUT should be empty
+
+    When I try `wp package install package-dir`
+    Then the return code should be 1
+    And STDERR should be:
+      """
+      Error: Invalid package: no name in composer.json file '{RUN_DIR}/package-dir/composer.json'.
+      """
+    And STDOUT should be empty
+
+    When I try `wp package install package-dir/zero.zip`
+    Then the return code should be 1
+    And STDERR should be:
+      """
+      Error: ZipArchive failed to unzip 'package-dir/zero.zip': Not a zip archive (19).
+      """
+    And STDOUT should be empty

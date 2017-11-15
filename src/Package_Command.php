@@ -218,22 +218,28 @@ class Package_Command extends WP_CLI_Command {
 		} else if ( ( false !== strpos( $package_name, '://' ) && false !== stripos( $package_name, '.zip' ) )
 			|| ( pathinfo( $package_name, PATHINFO_EXTENSION ) === 'zip' && is_file( $package_name ) ) ) {
 			// Download the remote ZIP file to a temp directory
+			$temp = false;
 			if ( false !== strpos( $package_name, '://' ) ) {
-				$temp = Utils\get_temp_dir() . uniqid('package_') . ".zip";
+				$temp = Utils\get_temp_dir() . uniqid( 'wp-cli-package_', true /*more_entropy*/ ) . ".zip";
 				$options = array(
 					'timeout' => 600,
 					'filename' => $temp
 				);
 				$response = Utils\http_request( 'GET', $package_name, null, array(), $options );
 				if ( 20 != substr( $response->status_code, 0, 2 ) ) {
-					WP_CLI::error( "Couldn't download package." );
+					@unlink( $temp ); // @codingStandardsIgnoreLine
+					WP_CLI::error( sprintf( "Couldn't download package from '%s' (HTTP code %d).", $package_name, $response->status_code ) );
 				}
 				$package_name = $temp;
 			}
-			$dir_package = Utils\get_temp_dir() . uniqid( 'package_' );
+			$dir_package = Utils\get_temp_dir() . uniqid( 'wp-cli-package_', true /*more_entropy*/ );
 			try {
 				// Extract the package to get the package name
 				Extractor::extract( $package_name, $dir_package );
+				if ( $temp ) {
+					unlink( $temp );
+					$temp = false;
+				}
 				list( $package_name, $version ) = self::get_package_name_and_version_from_dir_package( $dir_package );
 				// Move to a location based on the package name
 				$local_dir = rtrim( WP_CLI::get_runner()->get_packages_dir_path(), '/' ) . '/local/';
@@ -243,6 +249,16 @@ class Package_Command extends WP_CLI_Command {
 				// Behold, the extracted package
 				$dir_package = $actual_dir_package;
 			} catch ( Exception $e ) {
+				if ( $temp ) {
+					unlink( $temp );
+				}
+				if ( file_exists( $dir_package ) ) {
+					try {
+						Extractor::rmdir( $dir_package );
+					} catch ( Exception $rmdir_e ) {
+						// Ignore.
+					}
+				}
 				WP_CLI::error( $e->getMessage() );
 			}
 		} else if ( is_dir( $package_name ) && file_exists( $package_name . '/composer.json' ) ) {
@@ -257,7 +273,7 @@ class Package_Command extends WP_CLI_Command {
 			}
 			$package = $this->get_package_by_shortened_identifier( $package_name );
 			if ( ! $package ) {
-				WP_CLI::error( "Invalid package." );
+				WP_CLI::error( sprintf( "Invalid package: shortened identifier '%s' not found.", $package_name ) );
 			}
 			if ( is_string( $package ) ) {
 				if ( $this->is_git_repository( $package ) ) {
@@ -327,7 +343,7 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::success( "Package installed." );
 		} else {
 			file_put_contents( $composer_json_obj->getPath(), $composer_backup );
-			$res_msg = false !== $res ? " (Composer return code {$res})" : '';
+			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
 			WP_CLI::error( "Package installation failed{$res_msg}. Reverted composer.json" );
 		}
 	}
@@ -460,7 +476,7 @@ class Package_Command extends WP_CLI_Command {
 		if ( 0 === $res ) {
 			WP_CLI::success( "Packages updated." );
 		} else {
-			$res_msg = false !== $res ? " (Composer return code {$res})" : '';
+			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
 			WP_CLI::error( "Failed to update packages{$res_msg}." );
 		}
 	}
@@ -533,7 +549,7 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::success( "Uninstalled package." );
 		} else {
 			file_put_contents( $composer_json_obj->getPath(), $composer_backup );
-			$res_msg = false !== $res ? " (Composer return code {$res})" : '';
+			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
 			WP_CLI::error( "Package removal failed{$res_msg}." );
 		}
 	}
@@ -779,23 +795,24 @@ class Package_Command extends WP_CLI_Command {
 	 * Get the name of the package from the composer.json in a directory path
 	 *
 	 * @param string $dir_package
-	 * @return string
+	 * @return array Two-element array containing package name and version.
 	 */
 	private static function get_package_name_and_version_from_dir_package( $dir_package ) {
 		$composer_file = $dir_package . '/composer.json';
-		$package_name = '';
-		$version = 'dev-master';
-		if ( file_exists( $composer_file ) ) {
-			$composer_data = json_decode( file_get_contents( $composer_file ), true );
-			if ( ! empty( $composer_data['name'] ) ) {
-				$package_name = $composer_data['name'];
-			}
-			if ( ! empty( $composer_data['version'] ) ) {
-				$version = $composer_data['version'];
-			}
+		if ( ! file_exists( $composer_file ) ) {
+			WP_CLI::error( sprintf( "Invalid package: composer.json file '%s' not found.", $composer_file ) );
 		}
-		if ( empty( $package_name ) ) {
-			WP_CLI::error( "Invalid package." );
+		$composer_data = json_decode( file_get_contents( $composer_file ), true );
+		if ( null === $composer_data ) {
+			WP_CLI::error( sprintf( "Invalid package: failed to parse composer.json file '%s' as json.", $composer_file ) );
+		}
+		if ( empty( $composer_data['name'] ) ) {
+			WP_CLI::error( sprintf( "Invalid package: no name in composer.json file '%s'.", $composer_file ) );
+		}
+		$package_name = $composer_data['name'];
+		$version = 'dev-master';
+		if ( ! empty( $composer_data['version'] ) ) {
+			$version = $composer_data['version'];
 		}
 		return array( $package_name, $version );
 	}
@@ -960,13 +977,16 @@ class Package_Command extends WP_CLI_Command {
 
 		$response = WP_CLI\Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers );
 		if ( 20 != substr( $response->status_code, 0, 2 ) ) {
-			WP_CLI::error( sprintf( "Couldn't download package from '%s' (HTTP code %d).", $raw_content_url, $response->status_code ) );
+			WP_CLI::error( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d).", $raw_content_url, $response->status_code ) );
 		}
 
 		// Convert composer.json JSON to Array.
 		$composer_content_as_array = json_decode( $response->body, true );
 		if ( null === $composer_content_as_array ) {
 			WP_CLI::error( sprintf( "Failed to parse '%s' as json.", $raw_content_url ) );
+		}
+		if ( empty( $composer_content_as_array['name'] ) ) {
+			WP_CLI::error( sprintf( "Invalid package: no name in composer.json file '%s'.", $raw_content_url ) );
 		}
 
 		// Package name in composer.json that is hosted on GitHub.
