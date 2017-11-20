@@ -28,7 +28,7 @@ Feature: Install WP-CLI packages
 	    "description": "This is a dummy package we will install instead of actually installing the real package. This prevents the test from hanging indefinitely for some reason, even though it passes. The 'name' must match a real package as it is checked against the package index."
 	  }
 	  """
-    When I run `WP_CLI_PACKAGES_DIR=. wp package install wp-cli/restful --debug`
+    When I run `WP_CLI_PACKAGES_DIR=. wp package install wp-cli/restful`
     Then STDOUT should contain:
 	  """
 	  Updating package index repository url...
@@ -589,7 +589,7 @@ Feature: Install WP-CLI packages
 
   Scenario: Install a package in a local zip
     Given an empty directory
-    And I run `wget -O google-sitemap-generator-cli.zip https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
+    And I run `wget -q -O google-sitemap-generator-cli.zip https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
 
     When I run `wp package install google-sitemap-generator-cli.zip`
     Then STDOUT should contain:
