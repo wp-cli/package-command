@@ -490,6 +490,7 @@ Feature: Install WP-CLI packages
       schlessera/test-command
       """
 
+  @github-api
   Scenario: Install a package from the wp-cli package index with a mixed-case name
     Given an empty directory
 
@@ -631,6 +632,7 @@ Feature: Install WP-CLI packages
       wp-cli/google-sitemap-generator-cli
       """
 
+  @github-api
   Scenario: Install a package from Git using a shortened mixed-case package identifier but lowercase composer.json name
     Given an empty directory
 
@@ -685,6 +687,7 @@ Feature: Install WP-CLI packages
       capital
       """
 
+  @github-api
   Scenario: Install a package from a remote ZIP
     Given an empty directory
 
