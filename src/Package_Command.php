@@ -81,7 +81,7 @@ class Package_Command extends WP_CLI_Command {
 	private $pool = false;
 
 	/**
-	 * Browse WP-CLI packages available for installation.
+	 * Browses WP-CLI packages available for installation.
 	 *
 	 * Lists packages available for installation from the [Package Index](http://wp-cli.org/package-index/).
 	 * Although the package index will remain in place for backward compatibility reasons, it has been
@@ -145,7 +145,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Install a WP-CLI package.
+	 * Installs a WP-CLI package.
 	 *
 	 * Packages are required to be a valid Composer package, and can be
 	 * specified as:
@@ -349,7 +349,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * List installed WP-CLI packages.
+	 * Lists installed WP-CLI packages.
 	 *
 	 * ## OPTIONS
 	 *
@@ -399,7 +399,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get the path to an installed WP-CLI package, or the package directory.
+	 * Gets the path to an installed WP-CLI package, or the package directory.
 	 *
 	 * If you want to contribute to a package, this is a great way to jump to it.
 	 *
@@ -430,7 +430,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Update all installed WP-CLI packages to their latest version.
+	 * Updates all installed WP-CLI packages to their latest version.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -482,7 +482,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Uninstall a WP-CLI package.
+	 * Uninstalls a WP-CLI package.
 	 *
 	 * ## OPTIONS
 	 *
@@ -555,7 +555,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Check whether a package is a WP-CLI community package based
+	 * Checks whether a package is a WP-CLI community package based
 	 * on membership in our package index.
 	 *
 	 * @param object      $package     A package object
@@ -566,7 +566,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get a Composer instance.
+	 * Gets a Composer instance.
 	 */
 	private function get_composer() {
 		$composer_path = $this->get_composer_json_path();
@@ -583,7 +583,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get all of the community packages.
+	 * Gets all of the community packages.
 	 *
 	 * @return array
 	 */
@@ -602,7 +602,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get the package index instance
+	 * Gets the package index instance
 	 *
 	 * We need to construct the instance manually, because there's no way to select
 	 * a particular instance using $composer->getRepositoryManager()
@@ -633,7 +633,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Display a set of packages
+	 * Displays a set of packages
 	 *
 	 * @param string $context
 	 * @param array
@@ -702,7 +702,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get a package by its shortened identifier.
+	 * Gets a package by its shortened identifier.
 	 *
 	 * A shortened identifier has the form `<vendor>/<package>`.
 	 *
@@ -735,7 +735,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get the installed community packages.
+	 * Gets the installed community packages.
 	 */
 	private function get_installed_packages() {
 		try {
@@ -765,7 +765,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get an installed package by its name.
+	 * Gets an installed package by its name.
 	 */
 	private function get_installed_package_by_name( $package_name ) {
 		foreach( $this->get_installed_packages() as $package ) {
@@ -781,7 +781,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Check if the package name provided is already installed.
+	 * Checks if the package name provided is already installed.
 	 */
 	private function is_package_installed( $package_name ) {
 		if ( $this->get_installed_package_by_name( $package_name ) ) {
@@ -792,7 +792,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get the name of the package from the composer.json in a directory path
+	 * Gets the name of the package from the composer.json in a directory path
 	 *
 	 * @param string $dir_package
 	 * @return array Two-element array containing package name and version.
@@ -818,14 +818,14 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get the composer.json object
+	 * Gets the composer.json object
 	 */
 	private function get_composer_json() {
 		return new JsonFile( $this->get_composer_json_path() );
 	}
 
 	/**
-	 * Get the path to composer.json
+	 * Gets the path to composer.json
 	 */
 	private function get_composer_json_path() {
 		static $composer_path;
@@ -854,7 +854,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get the WP-CLI version for composer.json
+	 * Gets the WP-CLI version for composer.json
 	 */
 	private static function get_wp_cli_version_composer() {
 		preg_match( '#^[0-9\.]+(-(alpha|beta)[^-]{0,})?#', WP_CLI_VERSION, $matches );
@@ -862,7 +862,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Create a default composer.json, should one not already exist
+	 * Creates a default composer.json, should one not already exist
 	 *
 	 * @param string $composer_path Where the composer.json should be created
 	 * @return true|WP_Error
@@ -956,7 +956,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Check whether a given package is a git repository.
+	 * Checks whether a given package is a git repository.
 	 *
 	 * @param string $package Package name to check.
 	 *
@@ -967,7 +967,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Check that `$package_name` matches the name in the repo composer.json, and return corrected value if not.
+	 * Checks that `$package_name` matches the name in the repo composer.json, and return corrected value if not.
 	 */
 	private function check_git_package_name( $package_name ) {
 		// Generate raw git URL of composer.json file.
@@ -1001,7 +1001,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Set `COMPOSER_AUTH` environment variable (which Composer merges into the config setup in `Composer\Factory::createConfig()`) depending on available environment variables.
+	 * Sets `COMPOSER_AUTH` environment variable (which Composer merges into the config setup in `Composer\Factory::createConfig()`) depending on available environment variables.
 	 * Avoids authorization failures when accessing various sites.
 	 */
 	private function set_composer_auth_env_var() {
