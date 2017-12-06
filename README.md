@@ -1,7 +1,7 @@
 wp-cli/package-command
 ======================
 
-Manage WP-CLI packages.
+Lists, installs, and removes WP-CLI packages.
 
 [![Build Status](https://travis-ci.org/wp-cli/package-command.svg?branch=master)](https://travis-ci.org/wp-cli/package-command)
 
@@ -11,9 +11,63 @@ Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contr
 
 This package implements the following commands:
 
+### wp package
+
+Lists, installs, and removes WP-CLI packages.
+
+~~~
+wp package
+~~~
+
+WP-CLI packages are community-maintained projects built on WP-CLI. They can
+contain WP-CLI commands, but they can also just extend WP-CLI in some way.
+
+Installable packages are listed in the
+[Package Index](http://wp-cli.org/package-index/).
+
+Learn how to create your own command from the
+[Commands Cookbook](http://wp-cli.org/docs/commands-cookbook/)
+
+**EXAMPLES**
+
+    # List installed packages
+    $ wp package list
+    +-----------------------+------------------------------------------+---------+------------+
+    | name                  | description                              | authors | version    |
+    +-----------------------+------------------------------------------+---------+------------+
+    | wp-cli/server-command | Start a development server for WordPress |         | dev-master |
+    +-----------------------+------------------------------------------+---------+------------+
+
+    # Install the latest development version of the package
+    $ wp package install wp-cli/server-command
+    Installing package wp-cli/server-command (dev-master)
+    Updating /home/person/.wp-cli/packages/composer.json to require the package...
+    Using Composer to install the package...
+    ---
+    Loading composer repositories with package information
+    Updating dependencies
+    Resolving dependencies through SAT
+    Dependency resolution completed in 0.005 seconds
+    Analyzed 732 packages to resolve dependencies
+    Analyzed 1034 rules to resolve dependencies
+     - Installing package
+    Writing lock file
+    Generating autoload files
+    ---
+    Success: Package installed.
+
+    # Uninstall package
+    $ wp package uninstall wp-cli/server-command
+    Removing require statement from /home/person/.wp-cli/packages/composer.json
+    Deleting package directory /home/person/.wp-cli/packages/vendor/wp-cli/server-command
+    Regenerating Composer autoload.
+    Success: Uninstalled package.
+
+
+
 ### wp package browse
 
-Browse WP-CLI packages available for installation.
+Browses WP-CLI packages available for installation.
 
 ~~~
 wp package browse [--fields=<fields>] [--format=<format>]
@@ -76,7 +130,7 @@ There are no optionally available fields.
 
 ### wp package install
 
-Install a WP-CLI package.
+Installs a WP-CLI package.
 
 ~~~
 wp package install <name|git|path|zip>
@@ -140,7 +194,7 @@ When installing a .zip file, WP-CLI extracts the package to
 
 ### wp package list
 
-List installed WP-CLI packages.
+Lists installed WP-CLI packages.
 
 ~~~
 wp package list [--fields=<fields>] [--format=<format>]
@@ -190,7 +244,7 @@ These fields are optionally available:
 
 ### wp package update
 
-Update all installed WP-CLI packages to their latest version.
+Updates all installed WP-CLI packages to their latest version.
 
 ~~~
 wp package update 
@@ -216,7 +270,7 @@ wp package update
 
 ### wp package uninstall
 
-Uninstall a WP-CLI package.
+Uninstalls a WP-CLI package.
 
 ~~~
 wp package uninstall <name>
