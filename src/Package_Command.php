@@ -24,7 +24,7 @@ use \WP_CLI\Utils;
 use \WP_CLI\JsonManipulator;
 
 /**
- * Runs WP-CLI package manager commands.
+ * Lists, installs, and removes WP-CLI packages.
  *
  * WP-CLI packages are community-maintained projects built on WP-CLI. They can
  * contain WP-CLI commands, but they can also just extend WP-CLI in some way.

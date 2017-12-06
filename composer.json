@@ -1,6 +1,6 @@
 {
     "name": "wp-cli/package-command",
-    "description": "Manage WP-CLI packages.",
+    "description": "Lists, installs, and removes WP-CLI packages.",
     "type": "wp-cli-package",
     "homepage": "https://github.com/wp-cli/package-command",
     "support": {
@@ -36,6 +36,7 @@
             "dev-master": "1.x-dev"
         },
         "commands": [
+            "package",
             "package browse",
             "package install",
             "package list",
