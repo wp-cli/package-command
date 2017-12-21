@@ -676,10 +676,14 @@ class Package_Command extends WP_CLI_Command {
 				$update = 'none';
 				$update_version = '';
 				if ( 'list' === $context ) {
-					$latest = $this->find_latest_package( $package, $this->get_composer(), null );
-					if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
-						$update = 'available';
-						$update_version = $latest->getPrettyVersion();
+					try {
+						$latest = $this->find_latest_package( $package, $this->get_composer(), null );
+						if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
+							$update = 'available';
+							$update_version = $latest->getPrettyVersion();
+						}
+					} catch (\Exception $e) {
+						$update = $update_version = 'Error whith Github Driver';
 					}
 				}
 				$package_output['update'] = $update;
