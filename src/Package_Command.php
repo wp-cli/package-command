@@ -682,8 +682,9 @@ class Package_Command extends WP_CLI_Command {
 							$update = 'available';
 							$update_version = $latest->getPrettyVersion();
 						}
-					} catch (Exception $e) {
-						$update = $update_version = 'Error whith Github Driver';
+					} catch ( Exception $e ) {
+						WP_CLI::warning( $e->getMessage() );
+						$update = $update_version = 'error';
 					}
 				}
 				$package_output['update'] = $update;
