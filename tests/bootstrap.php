@@ -17,3 +17,4 @@ if ( file_exists( WP_CLI_ROOT . '/vendor/autoload.php' ) ) {
 
 require_once WP_CLI_VENDOR_DIR . '/autoload.php';
 
+define( 'WP_CLI_VERSION', trim( file_get_contents( WP_CLI_VENDOR_DIR . '/wp-cli/wp-cli/VERSION' ) ) );
