@@ -57,20 +57,6 @@ Feature: Manage WP-CLI packages
     When I run `wp --require=bad-command.php package list`
     Then STDERR should be empty
 
-  Scenario: Run package commands without hitting Composer plugin errors in Phar files
-    Given an empty directory
-    And a new Phar with the same version
-
-    When I run `{PHAR_PATH} package list`
-    Then STDERR should not contain:
-      """
-      failed to open stream
-      """
-    And STDERR should not contain:
-      """
-      is not a file in phar
-      """
-
   Scenario: Revert the WP-CLI packages composer.json when fail to install/uninstall a package due to memory limit
     Given an empty directory
     #When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=32M} package install danielbachhuber/wp-cli-reset-post-date-command`
