@@ -97,7 +97,7 @@ Feature: Manage WP-CLI packages
 
     # Create a default composer.json first to compare.
     When I run `WP_CLI_PACKAGES_DIR={RUN_DIR}/mypackages wp package list`
-	Then the {RUN_DIR}/mypackages/composer.json file should exist
+    Then the {RUN_DIR}/mypackages/composer.json file should exist
     And save the {RUN_DIR}/mypackages/composer.json file as {MYPACKAGES_COMPOSER_JSON}
 
     #When I try `WP_CLI_PACKAGES_DIR={RUN_DIR}/mypackages {INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=32M} package install danielbachhuber/wp-cli-reset-post-date-command`
