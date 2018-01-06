@@ -842,7 +842,7 @@ class Package_Command extends WP_CLI_Command {
 				$composer_path = realpath( $composer_path );
 				if ( false === $composer_path ) {
 					$error = error_get_last();
-					WP_CLI::error( sprintf( "Composer directory '%s' for packages not found: %s", $composer_dir, $error['message'] ) );
+					WP_CLI::error( sprintf( "Composer path '%s' for packages/composer.json not found: %s", $composer_path, $error['message'] ) );
 				}
 			}
 		}
