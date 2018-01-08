@@ -1010,7 +1010,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get the version to use for raw github request.
+	 * Get the version to use for raw github request. Very basic.
 	 *
 	 * @string $version Package version.
 	 * @string Version to use for github request.
