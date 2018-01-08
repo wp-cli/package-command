@@ -600,43 +600,43 @@ Feature: Install WP-CLI packages
   Scenario: Install a package with a composer.json that differs between versions
     Given an empty directory
 
-    When I run `wp package install gitlost/test-version-composer-json-different:v1.0.0`
+    When I run `wp package install wp-cli-test/version-composer-json-different:v1.0.0`
     Then STDOUT should contain:
       """
-      Installing package gitlost/test-version-composer-json-different (v1.0.0)
+      Installing package wp-cli-test/version-composer-json-different (v1.0.0)
       Updating {PACKAGE_PATH}composer.json to require the package...
       """
     And STDOUT should contain:
       """
       Success: Package installed.
       """
-    And the {PACKAGE_PATH}/vendor/gitlost/test-version-composer-json-different/composer.json file should exist
-    And the {PACKAGE_PATH}/vendor/gitlost/test-version-composer-json-different/composer.json file should contain:
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should exist
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should contain:
       """
       1.0.0
       """
-    And the {PACKAGE_PATH}/vendor/gitlost/test-version-composer-json-different/composer.json file should not contain:
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should not contain:
       """
       1.0.1
       """
     And the {PACKAGE_PATH}/vendor/wp-cli/profile-command directory should not exist
 
-    When I run `wp package install gitlost/test-version-composer-json-different:v1.0.1`
+    When I run `wp package install wp-cli-test/version-composer-json-different:v1.0.1`
     Then STDOUT should contain:
       """
-      Installing package gitlost/test-version-composer-json-different (v1.0.1)
+      Installing package wp-cli-test/version-composer-json-different (v1.0.1)
       Updating {PACKAGE_PATH}composer.json to require the package...
       """
     And STDOUT should contain:
       """
       Success: Package installed.
       """
-    And the {PACKAGE_PATH}/vendor/gitlost/test-version-composer-json-different/composer.json file should exist
-    And the {PACKAGE_PATH}/vendor/gitlost/test-version-composer-json-different/composer.json file should contain:
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should exist
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should contain:
       """
       1.0.1
       """
-    And the {PACKAGE_PATH}/vendor/gitlost/test-version-composer-json-different/composer.json file should not contain:
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should not contain:
       """
       1.0.0
       """
