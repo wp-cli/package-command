@@ -59,7 +59,7 @@ Feature: Manage WP-CLI packages
 
   Scenario: Revert the WP-CLI packages composer.json when fail to install/uninstall a package due to memory limit
     Given an empty directory
-    When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=32M} package install danielbachhuber/wp-cli-reset-post-date-command`
+    When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=32M -ddisable_functions=ini_set} package install danielbachhuber/wp-cli-reset-post-date-command`
     Then the return code should not be 0
     And STDERR should contain:
       """
@@ -72,7 +72,7 @@ Feature: Manage WP-CLI packages
       Success: Package installed.
       """
 
-    When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=32M} package uninstall danielbachhuber/wp-cli-reset-post-date-command`
+    When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=32M -ddisable_functions=ini_set} package uninstall danielbachhuber/wp-cli-reset-post-date-command`
     Then the return code should not be 0
     And STDERR should contain:
       """
@@ -84,7 +84,7 @@ Feature: Manage WP-CLI packages
     Then the {RUN_DIR}/mypackages/composer.json file should exist
     And save the {RUN_DIR}/mypackages/composer.json file as {MYPACKAGES_COMPOSER_JSON}
 
-    When I try `WP_CLI_PACKAGES_DIR={RUN_DIR}/mypackages {INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=32M} package install danielbachhuber/wp-cli-reset-post-date-command`
+    When I try `WP_CLI_PACKAGES_DIR={RUN_DIR}/mypackages {INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=32M -ddisable_functions=ini_set} package install danielbachhuber/wp-cli-reset-post-date-command`
     Then the return code should not be 0
     And STDERR should contain:
       """
