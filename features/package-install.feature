@@ -600,7 +600,6 @@ Feature: Install WP-CLI packages
   Scenario: Install a package with a composer.json that differs between versions
     Given an empty directory
 
-    # Need to give Composer "dev-master#v1.0.0" apparently.
     When I run `wp package install gitlost/test-version-composer-json-different:v1.0.0`
     Then STDOUT should contain:
       """
