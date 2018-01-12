@@ -288,11 +288,15 @@ class Package_Command extends WP_CLI_Command {
 
 		WP_CLI::log( sprintf( "Installing package %s (%s)", $package_name, $version ) );
 
-		$composer_json_obj = $this->get_composer_json();
+		// Read the WP-CLI packages composer.json and do some initial error checking.
+		list( $json_path, $composer_backup, $composer_backup_decoded ) = $this->get_composer_json_path_backup_decoded();
+
+		// Revert on shutdown if `$revert` is true (set to false on success).
+		$revert = true;
+		$this->register_revert_shutdown_function( $json_path, $composer_backup, $revert );
 
 		// Add the 'require' to composer.json
-		WP_CLI::log( sprintf( "Updating %s to require the package...", $composer_json_obj->getPath() ) );
-		$composer_backup = file_get_contents( $composer_json_obj->getPath() );
+		WP_CLI::log( sprintf( "Updating %s to require the package...", $json_path ) );
 		$json_manipulator = new JsonManipulator( $composer_backup );
 		$json_manipulator->addMainKey( 'name', 'wp-cli/wp-cli' );
 		$json_manipulator->addMainKey( 'version', self::get_wp_cli_version_composer() );
@@ -306,19 +310,14 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::log( sprintf( 'Registering %s as a path repository...', $dir_package ) );
 			$json_manipulator->addSubNode( 'repositories', $package_name, array( 'type' => 'path', 'url' => $dir_package ), true /*caseInsensitive*/ );
 		}
-		$composer_backup_decoded = json_decode( $composer_backup, true );
 		// If the composer file does not contain the current package index repository, refresh the repository definition.
 		if ( empty( $composer_backup_decoded['repositories']['wp-cli']['url'] ) || self::PACKAGE_INDEX_URL != $composer_backup_decoded['repositories']['wp-cli']['url'] ) {
 			WP_CLI::log( 'Updating package index repository url...' );
 			$json_manipulator->addRepository( 'wp-cli', array( 'type' => 'composer', 'url' => self::PACKAGE_INDEX_URL ) );
 		}
 
-		file_put_contents( $composer_json_obj->getPath(), $json_manipulator->getContents() );
-		try {
-			$composer = $this->get_composer();
-		} catch( Exception $e ) {
-			WP_CLI::error( $e->getMessage() );
-		}
+		file_put_contents( $json_path, $json_manipulator->getContents() );
+		$composer = $this->get_composer();
 
 		// Set up the EventSubscriber
 		$event_subscriber = new \WP_CLI\PackageManagerEventSubscriber;
@@ -340,11 +339,11 @@ class Package_Command extends WP_CLI_Command {
 		WP_CLI::log( '---' );
 
 		if ( 0 === $res ) {
+			$revert = false;
 			WP_CLI::success( "Package installed." );
 		} else {
-			file_put_contents( $composer_json_obj->getPath(), $composer_backup );
 			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
-			WP_CLI::error( "Package installation failed{$res_msg}. Reverted composer.json" );
+			WP_CLI::error( "Package installation failed{$res_msg}." );
 		}
 	}
 
@@ -450,11 +449,8 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	public function update() {
 		$this->set_composer_auth_env_var();
-		try {
-			$composer = $this->get_composer();
-		} catch( Exception $e ) {
-			WP_CLI::error( $e->getMessage() );
-		}
+		$composer = $this->get_composer();
+
 		// Set up the EventSubscriber
 		$event_subscriber = new \WP_CLI\PackageManagerEventSubscriber;
 		$composer->getEventDispatcher()->addSubscriber( $event_subscriber );
@@ -501,22 +497,20 @@ class Package_Command extends WP_CLI_Command {
 		list( $package_name ) = $args;
 
 		$this->set_composer_auth_env_var();
-		try {
-			$composer = $this->get_composer();
-		} catch( Exception $e ) {
-			WP_CLI::error( $e->getMessage() );
-		}
 		if ( false === ( $package = $this->get_installed_package_by_name( $package_name ) ) ) {
 			WP_CLI::error( "Package not installed." );
 		}
 		$package_name = $package->getPrettyName(); // Make sure package name is what's in composer.json.
 
-		$composer_json_obj = $this->get_composer_json();
+		// Read the WP-CLI packages composer.json and do some initial error checking.
+		list( $json_path, $composer_backup, $composer_backup_decoded ) = $this->get_composer_json_path_backup_decoded();
+
+		// Revert on shutdown if `$revert` is true (set to false on success).
+		$revert = true;
+		$this->register_revert_shutdown_function( $json_path, $composer_backup, $revert );
 
 		// Remove the 'require' from composer.json.
-		$json_path = $composer_json_obj->getPath();
 		WP_CLI::log( sprintf( 'Removing require statement from %s', $json_path ) );
-		$composer_backup = file_get_contents( $composer_json_obj->getPath() );
 		$manipulator = new JsonManipulator( $composer_backup );
 		$manipulator->removeSubNode( 'require', $package_name, true /*caseInsensitive*/ );
 
@@ -524,13 +518,8 @@ class Package_Command extends WP_CLI_Command {
 		WP_CLI::log( sprintf( 'Removing repository details from %s', $json_path ) );
 		$manipulator->removeSubNode( 'repositories', $package_name, true /*caseInsensitive*/ );
 
-		file_put_contents( $composer_json_obj->getPath(), $manipulator->getContents() );
-
-		try {
-			$composer = $this->get_composer();
-		} catch ( Exception $e ) {
-			WP_CLI::error( $e->getMessage() );
-		}
+		file_put_contents( $json_path, $manipulator->getContents() );
+		$composer = $this->get_composer();
 
 		// Set up the installer.
 		$install = Installer::create( new NullIO, $composer );
@@ -546,9 +535,9 @@ class Package_Command extends WP_CLI_Command {
 		}
 
 		if ( 0 === $res ) {
+			$revert = false;
 			WP_CLI::success( "Uninstalled package." );
 		} else {
-			file_put_contents( $composer_json_obj->getPath(), $composer_backup );
 			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
 			WP_CLI::error( "Package removal failed{$res_msg}." );
 		}
@@ -569,17 +558,22 @@ class Package_Command extends WP_CLI_Command {
 	 * Gets a Composer instance.
 	 */
 	private function get_composer() {
-		$composer_path = $this->get_composer_json_path();
+		try {
+			$composer_path = $this->get_composer_json_path();
 
-		// Composer's auto-load generating code makes some assumptions about where
-		// the 'vendor-dir' is, and where Composer is running from.
-		// Best to just pretend we're installing a package from ~/.wp-cli or similar
-		chdir( pathinfo( $composer_path, PATHINFO_DIRNAME ) );
+			// Composer's auto-load generating code makes some assumptions about where
+			// the 'vendor-dir' is, and where Composer is running from.
+			// Best to just pretend we're installing a package from ~/.wp-cli or similar
+			chdir( pathinfo( $composer_path, PATHINFO_DIRNAME ) );
 
-		// Prevent DateTime error/warning when no timezone set
-		date_default_timezone_set( @date_default_timezone_get() );
+			// Prevent DateTime error/warning when no timezone set
+			date_default_timezone_set( @date_default_timezone_get() );
 
-		return Factory::create( new NullIO, $composer_path );
+			$composer = Factory::create( new NullIO, $composer_path );
+		} catch ( Exception $e ) {
+			WP_CLI::error( sprintf( 'Failed to get composer instance: %s', $e->getMessage() ) );
+		}
+		return $composer;
 	}
 
 	/**
@@ -662,6 +656,7 @@ class Package_Command extends WP_CLI_Command {
 		);
 		$assoc_args = array_merge( $defaults, $assoc_args );
 
+		$composer = $this->get_composer();
 		$list = array();
 		foreach ( $packages as $package ) {
 			$name = $package->getPrettyName();
@@ -677,7 +672,7 @@ class Package_Command extends WP_CLI_Command {
 				$update_version = '';
 				if ( 'list' === $context ) {
 					try {
-						$latest = $this->find_latest_package( $package, $this->get_composer(), null );
+						$latest = $this->find_latest_package( $package, $composer, null );
 						if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
 							$update = 'available';
 							$update_version = $latest->getPrettyVersion();
@@ -743,11 +738,8 @@ class Package_Command extends WP_CLI_Command {
 	 * Gets the installed community packages.
 	 */
 	private function get_installed_packages() {
-		try {
-			$composer = $this->get_composer();
-		} catch( Exception $e ) {
-			WP_CLI::error( $e->getMessage() );
-		}
+		$composer = $this->get_composer();
+
 		$repo = $composer->getRepositoryManager()->getLocalRepository();
 		$existing = json_decode( file_get_contents( $this->get_composer_json_path() ), true );
 		$installed_package_keys = ! empty( $existing['require'] ) ? array_keys( $existing['require'] ) : array();
@@ -823,35 +815,35 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Gets the composer.json object
+	 * Gets the WP-CLI packages composer.json object.
 	 */
 	private function get_composer_json() {
 		return new JsonFile( $this->get_composer_json_path() );
 	}
 
 	/**
-	 * Gets the path to composer.json
+	 * Gets the absolute path to the WP-CLI packages composer.json.
 	 */
 	private function get_composer_json_path() {
 		static $composer_path;
 
-		if ( null === $composer_path ) {
+		if ( null === $composer_path || getenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' ) ) {
 
 			if ( getenv( 'WP_CLI_PACKAGES_DIR' ) ) {
-				$composer_path = rtrim( getenv( 'WP_CLI_PACKAGES_DIR' ), '/' ) . '/composer.json';
+				$composer_path = Utils\trailingslashit( getenv( 'WP_CLI_PACKAGES_DIR' ) ) . 'composer.json';
 			} else {
-				$home = getenv( 'HOME' );
-				if ( ! $home ) {
-					// In Windows $HOME may not be defined
-					$home = getenv( 'HOMEDRIVE' ) . getenv( 'HOMEPATH' );
-				}
-
-				$composer_path = rtrim( $home, '/\\' ) . '/.wp-cli/packages/composer.json';
+				$composer_path = Utils\trailingslashit( Utils\get_home_dir() ) . '.wp-cli/packages/composer.json';
 			}
 
 			// `composer.json` and its directory might need to be created
 			if ( ! file_exists( $composer_path ) ) {
-				$this->create_default_composer_json( $composer_path );
+				$composer_path = $this->create_default_composer_json( $composer_path );
+			} else {
+				$composer_path = realpath( $composer_path );
+				if ( false === $composer_path ) {
+					$error = error_get_last();
+					WP_CLI::error( sprintf( "Composer path '%s' for packages/composer.json not found: %s", $composer_path, $error['message'] ) );
+				}
 			}
 		}
 
@@ -867,21 +859,28 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Creates a default composer.json, should one not already exist
+	 * Creates a default WP-CLI packages composer.json.
 	 *
 	 * @param string $composer_path Where the composer.json should be created
-	 * @return true|WP_Error
+	 * @return string Returns the absolute path of the newly created default WP-CLI packages composer.json.
 	 */
 	private function create_default_composer_json( $composer_path ) {
 
 		$composer_dir = pathinfo( $composer_path, PATHINFO_DIRNAME );
 		if ( ! is_dir( $composer_dir ) ) {
-			\WP_CLI\Process::create( WP_CLI\Utils\esc_cmd( 'mkdir -p %s', $composer_dir ) )->run();
+			if ( ! @mkdir( $composer_dir, 0777, true ) ) { // @codingStandardsIgnoreLine
+				$error = error_get_last();
+				WP_CLI::error( sprintf( "Composer directory '%s' for packages couldn't be created: %s", $composer_dir, $error['message'] ) );
+			}
 		}
 
-		if ( ! is_dir( $composer_dir ) ) {
-			WP_CLI::error( "Composer directory for packages couldn't be created." );
+		$composer_dir = realpath( $composer_dir );
+		if ( false === $composer_dir ) {
+			$error = error_get_last();
+			WP_CLI::error( sprintf( "Composer directory '%s' for packages not found: %s", $composer_dir, $error['message'] ) );
 		}
+
+		$composer_path = Utils\trailingslashit( $composer_dir ) . Utils\basename( $composer_path );
 
 		$json_file = new JsonFile( $composer_path );
 
@@ -916,7 +915,7 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::error( $e->getMessage() );
 		}
 
-		return true;
+		return $composer_path;
 	}
 
 	/**
@@ -1052,5 +1051,50 @@ class Package_Command extends WP_CLI_Command {
 		if ( $changed ) {
 			putenv( 'COMPOSER_AUTH=' . json_encode( $composer_auth ) );
 		}
+	}
+
+	/**
+	 * Reads the WP-CLI packages composer.json, checking validity and returning array containing its path, contents, and decoded contents.
+	 *
+	 * @return array Indexed array containing the path, the contents, and the decoded contents of the WP-CLI packages composer.json.
+	 */
+	private function get_composer_json_path_backup_decoded() {
+		$composer_json_obj = $this->get_composer_json();
+		$json_path = $composer_json_obj->getPath();
+		$composer_backup = file_get_contents( $json_path );
+		if ( false === $composer_backup ) {
+			$error = error_get_last();
+			WP_CLI::error( sprintf( "Failed to read '%s': %s", $json_path, $error['message'] ) );
+		}
+		try {
+			$composer_backup_decoded = $composer_json_obj->read();
+		} catch ( Exception $e ) {
+			WP_CLI::error( sprintf( "Failed to parse '%s' as json: %s", $json_path, $e->getMessage() ) );
+		}
+
+		return array( $json_path, $composer_backup, $composer_backup_decoded );
+	}
+
+	/**
+	 * Registers a PHP shutdown function to revert composer.json unless referenced `$revert` flag is false.
+	 *
+	 * @param string $json_path Path to composer.json.
+	 * @param string $json_path Original contents of composer.json.
+	 * @param bool &$revert Flags whether to revert or not.
+	 */
+	private function register_revert_shutdown_function( $json_path, $composer_backup, &$revert ) {
+		// Allocate all needed memory beforehand as much as possible.
+		$revert_msg = "Reverted composer.json." . PHP_EOL;
+		$revert_fail_msg = "Failed to revert composer.json." . PHP_EOL;
+
+		register_shutdown_function( function () use ( $json_path, $composer_backup, &$revert, $revert_msg, $revert_fail_msg ) {
+			if ( $revert ) {
+				if ( false === file_put_contents( $json_path, $composer_backup ) ) {
+					fwrite( STDERR,  $revert_fail_msg );
+				} else {
+					fwrite( STDERR, $revert_msg );
+				}
+			}
+		} );
 	}
 }
