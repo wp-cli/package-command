@@ -588,7 +588,7 @@ Feature: Install WP-CLI packages
       rocket
       """
 
-  Scenario: Install a package in a local zip
+  Scenario: Install a package from a local zip
     Given an empty directory
     And I run `wget -q -O google-sitemap-generator-cli.zip https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
 
