@@ -278,7 +278,7 @@ class Package_Command extends WP_CLI_Command {
 			if ( is_string( $package ) ) {
 				if ( $this->is_git_repository( $package ) ) {
 					$git_package = $package;
-					$package_name = $this->check_git_package_name( $package_name );
+					$package_name = $this->check_git_package_name( $package_name, $version );
 				}
 			} elseif ( $package_name !== $package->getPrettyName() ) {
 				// BC support for specifying lowercase names for mixed-case package index packages - don't bother warning.
@@ -972,10 +972,14 @@ class Package_Command extends WP_CLI_Command {
 
 	/**
 	 * Checks that `$package_name` matches the name in the repo composer.json, and return corrected value if not.
+	 *
+	 * @string $package_name Package name to check.
+	 * @string $version Optional. Package version. Default 'master'.
+	 * @string Package name, possibly changed to match that in repo.
 	 */
-	private function check_git_package_name( $package_name ) {
+	private function check_git_package_name( $package_name, $version = '' ) {
 		// Generate raw git URL of composer.json file.
-		$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/master/composer.json';
+		$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/' . $this->get_raw_git_version( $version ) . '/composer.json';
 		$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
 		$headers = $github_token ? array( 'Authorization' => 'token ' . $github_token ) : array();
 
@@ -1002,6 +1006,32 @@ class Package_Command extends WP_CLI_Command {
 			$package_name = $package_name_on_repo;
 		}
 		return $package_name;
+	}
+
+	/**
+	 * Get the version to use for raw github request. Very basic.
+	 *
+	 * @string $version Package version.
+	 * @string Version to use for github request.
+	 */
+	private function get_raw_git_version( $version ) {
+		if ( '' !== $version ) {
+			// If Composer hash given then just use whatever's after it.
+			if ( false !== ( $hash_pos = strpos( $version, '#' ) ) ) {
+				$version = substr( $version, $hash_pos + 1 );
+			} else {
+				// Strip any Composer 'dev-' prefix.
+				if ( 0 === strncmp( $version, 'dev-', 4 ) ) {
+					$version = substr( $version, 4 );
+				}
+				// Ignore/strip any relative suffixes.
+				if ( false !== ( $rel_pos = strpos( $version, '^' ) ) || false !== ( $rel_pos = strpos( $version, '~' ) ) ) {
+					$version = substr( $version, 0, $rel_pos );
+				}
+			}
+		}
+		// Default to master.
+		return '' === $version ? 'master' : $version;
 	}
 
 	/**
