@@ -855,7 +855,14 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private static function get_wp_cli_version_composer() {
 		preg_match( '#^[0-9\.]+(-(alpha|beta)[^-]{0,})?#', WP_CLI_VERSION, $matches );
-		return isset( $matches[0] ) ? $matches[0] : '';
+		$version = isset( $matches[0] ) ? $matches[0] : '';
+		if ( 0 === strpos( $version, '2' ) ) {
+			// Fake a v1.x.x version for v2.x.x framework for now, as the
+			// command package are not yet accepting v2.x.x to meet their
+			// dependency requirements.
+			$version = '1.99.99-alpha';
+		}
+		return $version;
 	}
 
 	/**
