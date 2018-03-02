@@ -558,6 +558,7 @@ class Package_Command extends WP_CLI_Command {
 	 * Gets a Composer instance.
 	 */
 	private function get_composer() {
+		$this->avoid_composer_ca_bundle();
 		try {
 			$composer_path = $this->get_composer_json_path();
 
@@ -585,6 +586,7 @@ class Package_Command extends WP_CLI_Command {
 		static $community_packages;
 
 		if ( null === $community_packages ) {
+			$this->avoid_composer_ca_bundle();
 			try {
 				$community_packages = $this->package_index()->getPackages();
 			} catch( Exception $e ) {
@@ -1057,6 +1059,16 @@ class Package_Command extends WP_CLI_Command {
 		}
 		if ( $changed ) {
 			putenv( 'COMPOSER_AUTH=' . json_encode( $composer_auth ) );
+		}
+	}
+
+	/**
+	 * Avoid using default Composer CA bundle if in phar as we don't include it.
+	 * See https://github.com/composer/ca-bundle/blob/1.1.0/src/CaBundle.php#L64
+	 */
+	private function avoid_composer_ca_bundle() {
+		if ( Utils\inside_phar() && ! getenv( 'SSL_CERT_FILE' ) && ! getenv( 'SSL_CERT_DIR' ) && ! ini_get( 'openssl.cafile' ) && ! ini_get( 'openssl.capath' ) ) {
+			putenv( 'SSL_CERT_FILE=phar://wp-cli.phar/vendor/rmccue/requests/library/Requests/Transport/cacert.pem' );
 		}
 	}
 

@@ -1009,7 +1009,8 @@ Feature: Install WP-CLI packages
       }
       """
 
-    When I run `{PHAR_PATH} package install path-command`
+    # Allow for composer/ca-bundle using `openssl_x509_parse()` which throws PHP warnings on old versions of PHP.
+    When I try `{PHAR_PATH} package install path-command`
     Then STDOUT should contain:
       """
       Success: Package installed.
@@ -1051,7 +1052,8 @@ Feature: Install WP-CLI packages
       }
       """
 
-    When I run `{PHAR_PATH} package install path-command`
+    # Allow for composer/ca-bundle using `openssl_x509_parse()` which throws PHP warnings on old versions of PHP.
+    When I try `{PHAR_PATH} package install path-command`
     Then STDOUT should contain:
       """
       Success: Package installed.
