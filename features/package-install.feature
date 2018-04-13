@@ -1089,6 +1089,12 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should be empty
 
+    When I try `wp package install https://github.com/wp-cli-tests/private-repository.git`
+    Then STDOUT should contain:
+      """
+      Warning: Couldn't download composer.json file from 'https://raw.githubusercontent.com/wp-cli-tests/private-repository/master/composer.json' (HTTP code 404). Presuming package name is 'private-repository'.
+      """
+
     When I try `wp package install non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf`
     Then the return code should be 1
     And STDERR should be:

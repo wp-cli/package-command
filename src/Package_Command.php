@@ -994,7 +994,10 @@ class Package_Command extends WP_CLI_Command {
 
 		$response = WP_CLI\Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers );
 		if ( 20 != substr( $response->status_code, 0, 2 ) ) {
-			WP_CLI::error( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d).", $raw_content_url, $response->status_code ) );
+			// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
+			$package_name = explode( '/', $package_name )[1];
+			WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_url, $response->status_code, $package_name ) );
+			return $package_name;
 		}
 
 		// Convert composer.json JSON to Array.
