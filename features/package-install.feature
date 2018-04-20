@@ -149,7 +149,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli/google-sitemap-generator-cli (dev-master)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering git@github.com:wp-cli/google-sitemap-generator-cli.git as a VCS repository...
       Using Composer to install the package...
       """
@@ -207,7 +214,14 @@ Feature: Install WP-CLI packages
     And STDOUT should contain:
       """
       Installing package capitalwpcli/examplecommand (dev-master)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering https://github.com/CapitalWPCLI/examplecommand.git as a VCS repository...
       Using Composer to install the package...
       """
@@ -273,7 +287,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli-test/test-command (dev-master)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
@@ -318,7 +339,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli-test/test-command (^0)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
@@ -371,7 +399,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli-test/test-command (v0.1.0)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
@@ -416,7 +451,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli-test/test-command (dev-master#8e99bba16a65a3cde7405178a6badbb49349f554)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
@@ -461,7 +503,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli-test/test-command (dev-custom-branch)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
       Using Composer to install the package...
       """
@@ -507,7 +556,14 @@ Feature: Install WP-CLI packages
     And STDOUT should contain:
       """
       Installing package GeekPress/wp-rocket-cli (dev-master)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -554,7 +610,14 @@ Feature: Install WP-CLI packages
     And STDOUT should contain:
       """
       Installing package GeekPress/wp-rocket-cli (dev-master)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -603,7 +666,11 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli-test/version-composer-json-different (v1.0.0)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
       """
     And STDOUT should contain:
       """
@@ -624,7 +691,11 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli-test/version-composer-json-different (v1.0.1)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
       """
     And STDOUT should contain:
       """
@@ -649,7 +720,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli/google-sitemap-generator-cli (dev-master)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering {PACKAGE_PATH}local/wp-cli-google-sitemap-generator-cli as a path repository...
       Using Composer to install the package...
       """
@@ -698,7 +776,14 @@ Feature: Install WP-CLI packages
     And STDOUT should contain:
       """
       Installing package capitalwpcli/examplecommand (dev-master)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering https://github.com/CapitalWPCLI/examplecommand.git as a VCS repository...
       Using Composer to install the package...
       """
@@ -754,7 +839,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli/google-sitemap-generator-cli (dev-master)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering {PACKAGE_PATH}local/wp-cli-google-sitemap-generator-cli as a path repository...
       Using Composer to install the package...
       """
@@ -824,7 +916,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli/community-command (dev-master)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering {CURRENT_PATH}/path-command as a path repository...
       Using Composer to install the package...
       """
@@ -896,7 +995,14 @@ Feature: Install WP-CLI packages
     Then STDOUT should contain:
       """
       Installing package wp-cli/community-command (0.2.0-beta)
-      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    # This path is sometimes changed on Macs to prefix with /private
+    And STDOUT should contain:
+      """
+      {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
       Registering {CURRENT_PATH}/path-command as a path repository...
       Using Composer to install the package...
       """
