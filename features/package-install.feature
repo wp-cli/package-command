@@ -453,7 +453,7 @@ Feature: Install WP-CLI packages
     When I run `wp package install wp-cli-test/test-command:dev-master#e1b60d6d2af5799231ce7c84f2089c16dd845be1`
     Then STDOUT should contain:
       """
-      Installing package wp-cli-test/test-command (dev-master#8e99bba16a65a3cde7405178a6badbb49349f554)
+      Installing package wp-cli-test/test-command (dev-master#e1b60d6d2af5799231ce7c84f2089c16dd845be1)
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
