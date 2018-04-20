@@ -359,10 +359,18 @@ Feature: Install WP-CLI packages
   Scenario: Install a package from Git using a shortened package identifier with a specific version
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/test-command:0.1.0`
+    # Need to specify actual tag.
+    When I try `wp package install wp-cli-test/test-command:0.1.0`
+    Then STDERR should contain:
+      """
+      Error: Couldn't download composer.json file from 'https://raw.githubusercontent.com/wp-cli-test/test-command/0.1.0/composer.json' (HTTP code 404).
+      """
+    And STDOUT should be empty
+
+    When I run `wp package install wp-cli-test/test-command:v0.1.0`
     Then STDOUT should contain:
       """
-      Installing package wp-cli-test/test-command (0.1.0)
+      Installing package wp-cli-test/test-command (v0.1.0)
       Updating {PACKAGE_PATH}composer.json to require the package...
       Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
       Using Composer to install the package...
@@ -586,6 +594,52 @@ Feature: Install WP-CLI packages
       """
       rocket
       """
+
+  @github-api
+  Scenario: Install a package with a composer.json that differs between versions
+    Given an empty directory
+
+    When I run `wp package install wp-cli-test/version-composer-json-different:v1.0.0`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli-test/version-composer-json-different (v1.0.0)
+      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should exist
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should contain:
+      """
+      1.0.0
+      """
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should not contain:
+      """
+      1.0.1
+      """
+    And the {PACKAGE_PATH}/vendor/wp-cli/profile-command directory should not exist
+
+    When I run `wp package install wp-cli-test/version-composer-json-different:v1.0.1`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli-test/version-composer-json-different (v1.0.1)
+      Updating {PACKAGE_PATH}composer.json to require the package...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should exist
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should contain:
+      """
+      1.0.1
+      """
+    And the {PACKAGE_PATH}/vendor/wp-cli-test/version-composer-json-different/composer.json file should not contain:
+      """
+      1.0.0
+      """
+    And the {PACKAGE_PATH}/vendor/wp-cli/profile-command directory should exist
 
   Scenario: Install a package from a local zip
     Given an empty directory
@@ -954,7 +1008,8 @@ Feature: Install WP-CLI packages
       }
       """
 
-    When I run `{PHAR_PATH} package install path-command`
+    # Allow for composer/ca-bundle using `openssl_x509_parse()` which throws PHP warnings on old versions of PHP.
+    When I try `{PHAR_PATH} package install path-command`
     Then STDOUT should contain:
       """
       Success: Package installed.
@@ -996,7 +1051,8 @@ Feature: Install WP-CLI packages
       }
       """
 
-    When I run `{PHAR_PATH} package install path-command`
+    # Allow for composer/ca-bundle using `openssl_x509_parse()` which throws PHP warnings on old versions of PHP.
+    When I try `{PHAR_PATH} package install path-command`
     Then STDOUT should contain:
       """
       Success: Package installed.
@@ -1026,11 +1082,16 @@ Feature: Install WP-CLI packages
 
     When I try `wp package install https://github.com/non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf.git`
     Then the return code should be 1
-    And STDERR should be:
+    And STDERR should contain:
       """
-      Error: Couldn't download composer.json file from 'https://raw.githubusercontent.com/non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf/master/composer.json' (HTTP code 404).
+      Warning: Couldn't download composer.json file from 'https://raw.githubusercontent.com/non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf/master/composer.json' (HTTP code 404). Presuming package name is 'non-existent-git-repo-asdfasdf'.
       """
-    And STDOUT should be empty
+
+    When I try `wp package install https://github.com/wp-cli-tests/private-repository.git`
+    Then STDERR should contain:
+      """
+      Warning: Couldn't download composer.json file from 'https://raw.githubusercontent.com/wp-cli-tests/private-repository/master/composer.json' (HTTP code 404). Presuming package name is 'private-repository'.
+      """
 
     When I try `wp package install non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf`
     Then the return code should be 1
