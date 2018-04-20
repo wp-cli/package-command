@@ -396,7 +396,6 @@ Feature: Install WP-CLI packages
       """
       Warning: Couldn't download composer.json file from 'https://raw.githubusercontent.com/wp-cli-test/test-command/0.1.0/composer.json' (HTTP code 404).
       """
-    And STDOUT should be empty
 
     When I run `wp package install wp-cli-test/test-command:v0.1.0`
     Then STDOUT should contain:
