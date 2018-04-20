@@ -179,8 +179,11 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
-      Removing repository details from {PACKAGE_PATH}composer.json
+      Removing require statement from
+      """
+    Then STDOUT should contain:
+      """
+      Removing repository details from
       """
     And the {PACKAGE_PATH}composer.json file should not contain:
       """
@@ -317,7 +320,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -369,7 +372,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -429,7 +432,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -481,7 +484,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -533,7 +536,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -593,7 +596,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall GeekPress/wp-rocket-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -647,7 +650,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall geekpress/wp-rocket-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -750,7 +753,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -814,7 +817,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall capitalwpcli/examplecommand`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -869,7 +872,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -946,7 +949,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/community-command`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
@@ -1025,7 +1028,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/community-command`
     Then STDOUT should contain:
       """
-      Removing require statement from {PACKAGE_PATH}composer.json
+      Removing require statement from
       """
     And STDOUT should contain:
       """
