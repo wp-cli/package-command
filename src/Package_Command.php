@@ -278,7 +278,7 @@ class Package_Command extends WP_CLI_Command {
 			if ( is_string( $package ) ) {
 				if ( $this->is_git_repository( $package ) ) {
 					$git_package = $package;
-					$package_name = $this->check_git_package_name( $package_name );
+					$package_name = $this->check_git_package_name( $package_name, $version );
 				}
 			} elseif ( $package_name !== $package->getPrettyName() ) {
 				// BC support for specifying lowercase names for mixed-case package index packages - don't bother warning.
@@ -558,6 +558,7 @@ class Package_Command extends WP_CLI_Command {
 	 * Gets a Composer instance.
 	 */
 	private function get_composer() {
+		$this->avoid_composer_ca_bundle();
 		try {
 			$composer_path = $this->get_composer_json_path();
 
@@ -585,6 +586,7 @@ class Package_Command extends WP_CLI_Command {
 		static $community_packages;
 
 		if ( null === $community_packages ) {
+			$this->avoid_composer_ca_bundle();
 			try {
 				$community_packages = $this->package_index()->getPackages();
 			} catch( Exception $e ) {
@@ -855,7 +857,14 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private static function get_wp_cli_version_composer() {
 		preg_match( '#^[0-9\.]+(-(alpha|beta)[^-]{0,})?#', WP_CLI_VERSION, $matches );
-		return isset( $matches[0] ) ? $matches[0] : '';
+		$version = isset( $matches[0] ) ? $matches[0] : '';
+		if ( 0 === strpos( $version, '2' ) ) {
+			// Fake a v1.x.x version for v2.x.x framework for now, as the
+			// command package are not yet accepting v2.x.x to meet their
+			// dependency requirements.
+			$version = '1.99.99-alpha';
+		}
+		return $version;
 	}
 
 	/**
@@ -972,16 +981,24 @@ class Package_Command extends WP_CLI_Command {
 
 	/**
 	 * Checks that `$package_name` matches the name in the repo composer.json, and return corrected value if not.
+	 *
+	 * @string $package_name Package name to check.
+	 * @string $version Optional. Package version. Default 'master'.
+	 * @string Package name, possibly changed to match that in repo.
 	 */
-	private function check_git_package_name( $package_name ) {
+	private function check_git_package_name( $package_name, $version = '' ) {
 		// Generate raw git URL of composer.json file.
-		$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/master/composer.json';
+		$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/' . $this->get_raw_git_version( $version ) . '/composer.json';
 		$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
 		$headers = $github_token ? array( 'Authorization' => 'token ' . $github_token ) : array();
 
 		$response = WP_CLI\Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers );
 		if ( 20 != substr( $response->status_code, 0, 2 ) ) {
-			WP_CLI::error( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d).", $raw_content_url, $response->status_code ) );
+			// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
+			$package_name = explode( '/', $package_name );
+			$package_name = $package_name[1];
+			WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_url, $response->status_code, $package_name ) );
+			return $package_name;
 		}
 
 		// Convert composer.json JSON to Array.
@@ -1005,6 +1022,32 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
+	 * Get the version to use for raw github request. Very basic.
+	 *
+	 * @string $version Package version.
+	 * @string Version to use for github request.
+	 */
+	private function get_raw_git_version( $version ) {
+		if ( '' !== $version ) {
+			// If Composer hash given then just use whatever's after it.
+			if ( false !== ( $hash_pos = strpos( $version, '#' ) ) ) {
+				$version = substr( $version, $hash_pos + 1 );
+			} else {
+				// Strip any Composer 'dev-' prefix.
+				if ( 0 === strncmp( $version, 'dev-', 4 ) ) {
+					$version = substr( $version, 4 );
+				}
+				// Ignore/strip any relative suffixes.
+				if ( false !== ( $rel_pos = strpos( $version, '^' ) ) || false !== ( $rel_pos = strpos( $version, '~' ) ) ) {
+					$version = substr( $version, 0, $rel_pos );
+				}
+			}
+		}
+		// Default to master.
+		return '' === $version ? 'master' : $version;
+	}
+
+	/**
 	 * Sets `COMPOSER_AUTH` environment variable (which Composer merges into the config setup in `Composer\Factory::createConfig()`) depending on available environment variables.
 	 * Avoids authorization failures when accessing various sites.
 	 */
@@ -1020,6 +1063,16 @@ class Package_Command extends WP_CLI_Command {
 		}
 		if ( $changed ) {
 			putenv( 'COMPOSER_AUTH=' . json_encode( $composer_auth ) );
+		}
+	}
+
+	/**
+	 * Avoid using default Composer CA bundle if in phar as we don't include it.
+	 * See https://github.com/composer/ca-bundle/blob/1.1.0/src/CaBundle.php#L64
+	 */
+	private function avoid_composer_ca_bundle() {
+		if ( Utils\inside_phar() && ! getenv( 'SSL_CERT_FILE' ) && ! getenv( 'SSL_CERT_DIR' ) && ! ini_get( 'openssl.cafile' ) && ! ini_get( 'openssl.capath' ) ) {
+			putenv( 'SSL_CERT_FILE=phar://wp-cli.phar/vendor/rmccue/requests/library/Requests/Transport/cacert.pem' );
 		}
 	}
 
