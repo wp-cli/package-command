@@ -77,6 +77,7 @@ use \WP_CLI\JsonManipulator;
 class Package_Command extends WP_CLI_Command {
 
 	const PACKAGE_INDEX_URL = 'https://wp-cli.org/package-index/';
+	const SSL_CERTIFICATE   = '/rmccue/requests/library/Requests/Transport/cacert.pem';
 
 	private $pool = false;
 
@@ -1072,7 +1073,8 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function avoid_composer_ca_bundle() {
 		if ( Utils\inside_phar() && ! getenv( 'SSL_CERT_FILE' ) && ! getenv( 'SSL_CERT_DIR' ) && ! ini_get( 'openssl.cafile' ) && ! ini_get( 'openssl.capath' ) ) {
-			putenv( 'SSL_CERT_FILE=phar://wp-cli.phar/vendor/rmccue/requests/library/Requests/Transport/cacert.pem' );
+			$certificate = Utils\extract_from_phar( WP_CLI_VENDOR_DIR . self::SSL_CERTIFICATE );
+			putenv( "SSL_CERT_FILE={$certificate}" );
 		}
 	}
 
