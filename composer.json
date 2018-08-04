@@ -20,7 +20,8 @@
         "wp-cli/scaffold-command": "^1.2"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "process-timeout": 7200
     },
     "extra": {
         "branch-alias": {
