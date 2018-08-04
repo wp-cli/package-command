@@ -1,11 +1,8 @@
 {
     "name": "wp-cli/package-command",
-    "description": "Lists, installs, and removes WP-CLI packages.",
     "type": "wp-cli-package",
+    "description": "Lists, installs, and removes WP-CLI packages.",
     "homepage": "https://github.com/wp-cli/package-command",
-    "support": {
-        "issues": "https://github.com/wp-cli/package-command/issues"
-    },
     "license": "MIT",
     "authors": [
         {
@@ -14,20 +11,15 @@
             "homepage": "https://runcommand.io"
         }
     ],
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "autoload": {
-        "psr-4": {
-            "": "src/"
-        },
-        "files": [ "package-command.php" ]
-    },
     "require": {
         "composer/composer": "^1.2.0",
         "wp-cli/wp-cli": "^2"
     },
     "require-dev": {
         "wp-cli/wp-cli-tests": "^0"
+    },
+    "config": {
+        "sort-packages": true
     },
     "extra": {
         "branch-alias": {
@@ -43,11 +35,21 @@
             "package uninstall"
         ]
     },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        },
+        "files": [
+            "package-command.php"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "scripts": {
+        "behat": "run-behat-tests",
         "lint": "run-linter-tests",
         "phpcs": "run-phpcs-tests",
         "phpunit": "run-php-unit-tests",
-        "behat": "run-behat-tests",
         "prepare-tests": "install-package-tests",
         "test": [
             "@lint",
@@ -55,5 +57,8 @@
             "@phpunit",
             "@behat"
         ]
+    },
+    "support": {
+        "issues": "https://github.com/wp-cli/package-command/issues"
     }
 }
