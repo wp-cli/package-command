@@ -28,10 +28,10 @@ Feature: Update WP-CLI packages
   Scenario: Update a package with an update available
     Given an empty directory
 
-    When I run `wp package install wp-cli/scaffold-package-command:0.3.0`
+    When I run `wp package install wp-cli-test/updateable-package:v1.0.0`
     Then STDOUT should contain:
       """
-      Installing package wp-cli/scaffold-package-command (0.3.0)
+      Installing package wp-cli-test/updateable-package (v1.0.0)
       """
     And STDOUT should contain:
       """
@@ -41,13 +41,13 @@ Feature: Update WP-CLI packages
     When I run `cat {PACKAGE_PATH}/composer.json`
     Then STDOUT should contain:
       """
-      "wp-cli/scaffold-package-command": "0.3.0"
+      "wp-cli-test/updateable-package": "v1.0.0"
       """
 
-    When I run `wp help scaffold package`
+    When I run `wp help updateable-package v1`
     Then STDOUT should contain:
       """
-      wp scaffold package <name>
+      wp updateable-package v1
       """
 
     When I run `wp package update`
@@ -62,22 +62,22 @@ Feature: Update WP-CLI packages
 
     When I run `wp package list --fields=name,update`
     Then STDOUT should be a table containing rows:
-      | name                            | update    |
-      | wp-cli/scaffold-package-command | available |
+      | name                           | update    |
+      | wp-cli-test/updateable-package | available |
 
-    When I run `sed -i.bak s/0.3.0/\>=0.3.0/g {PACKAGE_PATH}/composer.json`
+    When I run `sed -i.bak s/v1.0.0/\>=1.0.0/g {PACKAGE_PATH}/composer.json`
     Then the return code should be 0
 
     When I run `cat {PACKAGE_PATH}/composer.json`
     Then STDOUT should contain:
       """
-      "wp-cli/scaffold-package-command": ">=0.3.0"
+      "wp-cli-test/updateable-package": ">=1.0.0"
       """
 
     When I run `wp package list --fields=name,update`
     Then STDOUT should be a table containing rows:
-      | name                            | update     |
-      | wp-cli/scaffold-package-command | available  |
+      | name                           | update     |
+      | wp-cli-test/updateable-package | available  |
 
     When I run `wp package update`
     Then STDOUT should contain:
@@ -95,13 +95,13 @@ Feature: Update WP-CLI packages
 
     When I run `wp package list --fields=name,update`
     Then STDOUT should be a table containing rows:
-      | name                            | update  |
-      | wp-cli/scaffold-package-command | none    |
+      | name                           | update  |
+      | wp-cli-test/updateable-package | none    |
 
     When I run `wp package update`
     Then STDOUT should contain:
       """
-      Package operations: 0 installs, 0 updates, 0 removals
+      Nothing to install or update
       """
     And STDOUT should contain:
       """
