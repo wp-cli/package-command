@@ -76,7 +76,6 @@ use \WP_CLI\JsonManipulator;
  */
 class Package_Command extends WP_CLI_Command {
 
-	const PACKAGE_INDEX_URL = 'https://wp-cli.org/package-index/';
 	const SSL_CERTIFICATE   = '/rmccue/requests/library/Requests/Transport/cacert.pem';
 
 	private $pool = false;
@@ -311,11 +310,7 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::log( sprintf( 'Registering %s as a path repository...', $dir_package ) );
 			$json_manipulator->addSubNode( 'repositories', $package_name, array( 'type' => 'path', 'url' => $dir_package ), true /*caseInsensitive*/ );
 		}
-		// If the composer file does not contain the current package index repository, refresh the repository definition.
-		if ( empty( $composer_backup_decoded['repositories']['wp-cli']['url'] ) || self::PACKAGE_INDEX_URL != $composer_backup_decoded['repositories']['wp-cli']['url'] ) {
-			WP_CLI::log( 'Updating package index repository url...' );
-			$json_manipulator->addRepository( 'wp-cli', array( 'type' => 'composer', 'url' => self::PACKAGE_INDEX_URL ) );
-		}
+		
 
 		file_put_contents( $json_path, $json_manipulator->getContents() );
 		$composer = $this->get_composer();
@@ -598,36 +593,7 @@ class Package_Command extends WP_CLI_Command {
 		return $community_packages;
 	}
 
-	/**
-	 * Gets the package index instance
-	 *
-	 * We need to construct the instance manually, because there's no way to select
-	 * a particular instance using $composer->getRepositoryManager()
-	 *
-	 * @return ComposerRepository
-	 */
-	private function package_index() {
-		static $package_index;
-
-		if ( !$package_index ) {
-			$config = new Config();
-			$config->merge( array(
-				'config' => array(
-					'secure-http' => true,
-					'home' => dirname( $this->get_composer_json_path() ),
-				)
-			));
-			$config->setConfigSource( new JsonConfigSource( $this->get_composer_json() ) );
-
-			try {
-				$package_index = new ComposerRepository( array( 'url' => self::PACKAGE_INDEX_URL ), new NullIO, $config );
-			} catch ( Exception $e ) {
-				WP_CLI::error( $e->getMessage() );
-			}
-		}
-
-		return $package_index;
-	}
+	
 
 	/**
 	 * Displays a set of packages
@@ -888,36 +854,6 @@ class Package_Command extends WP_CLI_Command {
 
 		$json_file = new JsonFile( $composer_path );
 
-		$author = (object)array(
-			'name'   => 'WP-CLI',
-			'email'  => 'noreply@wpcli.org'
-		);
-
-		$repositories = (object)array(
-			'wp-cli'     => (object)array(
-				'type'      => 'composer',
-				'url'       => self::PACKAGE_INDEX_URL,
-			),
-		);
-
-		$options = array(
-			'name' => 'wp-cli/wp-cli',
-			'description' => 'Installed community packages used by WP-CLI',
-			'version' => self::get_wp_cli_version_composer(),
-			'authors' => array( $author ),
-			'homepage' => self::PACKAGE_INDEX_URL,
-			'require' => new stdClass,
-			'require-dev' => new stdClass,
-			'minimum-stability' => 'dev',
-			'license' => 'MIT',
-			'repositories' => $repositories,
-		);
-
-		try {
-			$json_file->write( $options );
-		} catch( Exception $e ) {
-			WP_CLI::error( $e->getMessage() );
-		}
 
 		return $composer_path;
 	}
