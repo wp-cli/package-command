@@ -1087,17 +1087,27 @@ Feature: Install WP-CLI packages
 
     When I try `wp package install package-dir-bad-composer`
     Then the return code should be 1
-    And STDERR should be:
+    And STDERR should contain:
       """
-      Error: Invalid package: failed to parse composer.json file '{RUN_DIR}/package-dir-bad-composer/composer.json' as json.
+      Error: Invalid package: failed to parse composer.json file
+      """
+    # Split string up to get around Mac OS X inconsistencies with RUN_DIR
+    And STDERR should contain:
+      """
+      /package-dir-bad-composer/composer.json' as json.
       """
     And STDOUT should be empty
 
     When I try `wp package install package-dir`
     Then the return code should be 1
-    And STDERR should be:
+    And STDERR should contain:
       """
-      Error: Invalid package: no name in composer.json file '{RUN_DIR}/package-dir/composer.json'.
+      Error: Invalid package: no name in composer.json file
+      """
+    # Split string up to get around Mac OS X inconsistencies with RUN_DIR
+    And STDERR should contain:
+      """
+      /package-dir/composer.json'.
       """
     And STDOUT should be empty
 
