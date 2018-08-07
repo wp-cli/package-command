@@ -1151,24 +1151,47 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Registers a PHP shutdown function to revert composer.json unless referenced `$revert` flag is false.
+	 * Registers a PHP shutdown function to revert composer.json unless
+	 * referenced `$revert` flag is false.
 	 *
-	 * @param string $json_path Path to composer.json.
-	 * @param string $json_path Original contents of composer.json.
-	 * @param bool &$revert Flags whether to revert or not.
+	 * @param string $json_path       Path to composer.json.
+	 * @param string $composer_backup Original contents of composer.json.
+	 * @param bool   &$revert         Flags whether to revert or not.
 	 */
 	private function register_revert_shutdown_function( $json_path, $composer_backup, &$revert ) {
 		// Allocate all needed memory beforehand as much as possible.
-		$revert_msg = "Reverted composer.json." . PHP_EOL;
-		$revert_fail_msg = "Failed to revert composer.json." . PHP_EOL;
+		$revert_msg      = "Reverted composer.json.\n";
+		$revert_fail_msg = "Failed to revert composer.json.\n";
+		$memory_msg      = "WP-CLI ran out of memory. Please see https://bit.ly/wpclimem for further help.\n";
+		$memory_string   = 'Allowed memory size of';
+		$error_array     = array(
+			'type'    => 42,
+			'message' => 'Some random dummy string to take up memory',
+			'file'    => 'Another random string, which would be a filename this time',
+			'line'    => 314,
+		);
 
-		register_shutdown_function( function () use ( $json_path, $composer_backup, &$revert, $revert_msg, $revert_fail_msg ) {
+		register_shutdown_function( function () use (
+			$json_path,
+			$composer_backup,
+			&$revert,
+			$revert_msg,
+			$revert_fail_msg,
+			$memory_msg,
+			$memory_string,
+			$error_array
+		) {
 			if ( $revert ) {
-				if ( false === file_put_contents( $json_path, $composer_backup ) ) {
-					fwrite( STDERR,  $revert_fail_msg );
+				if ( false === file_put_contents( $json_path,
+						$composer_backup ) ) {
+					fwrite( STDERR, $revert_fail_msg );
 				} else {
 					fwrite( STDERR, $revert_msg );
 				}
+			}
+			$error_array = error_get_last();
+			if ( false !== strpos( $error_array['message'], $memory_string ) ) {
+				fwrite( STDERR, $memory_msg );
 			}
 		} );
 	}
