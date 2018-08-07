@@ -1050,11 +1050,7 @@ class Package_Command extends WP_CLI_Command {
 		}
 
 		// Ignore/strip any relative suffixes.
-		if ( false !== ( $rel_pos = strpos( $version, '^' ) ) || false !== ( $rel_pos = strpos( $version, '~' ) ) ) {
-			$version = substr( $version, 0, $rel_pos );
-		}
-
-		return $version;
+		return str_replace( array( '^', '~' ), '', $version );
 	}
 
 	/**
