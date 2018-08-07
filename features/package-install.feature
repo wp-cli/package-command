@@ -337,7 +337,7 @@ Feature: Install WP-CLI packages
   Scenario: Install a package from Git using a shortened package identifier with a version requirement
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/github-test-command:^0`
+    When I try `wp package install wp-cli-test/github-test-command:^0`
     Then STDOUT should contain:
       """
       Installing package wp-cli-test/github-test-command (^0)
