@@ -446,10 +446,10 @@ Feature: Install WP-CLI packages
   Scenario: Install a package from Git using a shortened package identifier and a specific commit hash
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/github-test-command:dev-master#e1b60d6d2af5799231ce7c84f2089c16dd845be1`
+    When I run `wp package install wp-cli-test/github-test-command:dev-master#bcfac95e2193e9f5f8fbd3004fab9d902a5e4de3`
     Then STDOUT should contain:
       """
-      Installing package wp-cli-test/github-test-command (dev-master#e1b60d6d2af5799231ce7c84f2089c16dd845be1)
+      Installing package wp-cli-test/github-test-command (dev-master#bcfac95e2193e9f5f8fbd3004fab9d902a5e4de3)
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
