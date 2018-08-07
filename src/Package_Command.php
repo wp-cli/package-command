@@ -279,6 +279,10 @@ class Package_Command extends WP_CLI_Command {
 			if ( is_string( $package ) ) {
 				if ( $this->is_git_repository( $package ) ) {
 					$git_package = $package;
+					if ( '@stable' === $version ) {
+						$tag     = $this->get_github_latest_release_tag( $package_name );
+						$version = $this->guess_version_constraint_from_tag( $tag );
+					}
 					$package_name = $this->check_git_package_name( $package_name, $version );
 				}
 			} elseif ( $package_name !== $package->getPrettyName() ) {
@@ -344,6 +348,7 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::success( "Package installed." );
 		} else {
 			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
+			WP_CLI::debug( "composer.json content:\n" . file_get_contents( $json_path ), 'packages' );
 			WP_CLI::error( "Package installation failed{$res_msg}." );
 		}
 	}
@@ -725,7 +730,14 @@ class Package_Command extends WP_CLI_Command {
 			}
 		}
 
-		// Fall back to GitHub URL if we had no match in the package index.
+		// Check if the package exists on Packagist.
+		$url = "https://repo.packagist.org/p/{$package_name}.json";
+		$response = Utils\http_request( 'GET', $url );
+		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
+			return $package_name;
+		}
+
+		// Fall back to GitHub URL if we had no match yet.
 		$url = "https://github.com/{$package_name}.git";
 		$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
 		$headers = $github_token ? array( 'Authorization' => 'token ' . $github_token ) : array();
@@ -909,6 +921,7 @@ class Package_Command extends WP_CLI_Command {
 			'require' => new stdClass,
 			'require-dev' => new stdClass,
 			'minimum-stability' => 'dev',
+			'prefer-stable' => true,
 			'license' => 'MIT',
 			'repositories' => $repositories,
 		);
@@ -990,8 +1003,6 @@ class Package_Command extends WP_CLI_Command {
 		$response = WP_CLI\Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers );
 		if ( 20 != substr( $response->status_code, 0, 2 ) ) {
 			// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
-			$package_name = explode( '/', $package_name );
-			$package_name = $package_name[1];
 			WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_url, $response->status_code, $package_name ) );
 			return $package_name;
 		}
@@ -1023,23 +1034,68 @@ class Package_Command extends WP_CLI_Command {
 	 * @string Version to use for github request.
 	 */
 	private function get_raw_git_version( $version ) {
-		if ( '' !== $version ) {
-			// If Composer hash given then just use whatever's after it.
-			if ( false !== ( $hash_pos = strpos( $version, '#' ) ) ) {
-				$version = substr( $version, $hash_pos + 1 );
-			} else {
-				// Strip any Composer 'dev-' prefix.
-				if ( 0 === strncmp( $version, 'dev-', 4 ) ) {
-					$version = substr( $version, 4 );
-				}
-				// Ignore/strip any relative suffixes.
-				if ( false !== ( $rel_pos = strpos( $version, '^' ) ) || false !== ( $rel_pos = strpos( $version, '~' ) ) ) {
-					$version = substr( $version, 0, $rel_pos );
-				}
-			}
+		if ( '' === $version ) {
+			return 'master';
 		}
-		// Default to master.
-		return '' === $version ? 'master' : $version;
+
+		// If Composer hash given then just use whatever's after it.
+		if ( false !== ( $hash_pos = strpos( $version, '#' ) ) ) {
+			return substr( $version, $hash_pos + 1 );
+		}
+
+		// Strip any Composer 'dev-' prefix.
+		if ( 0 === strncmp( $version, 'dev-', 4 ) ) {
+			$version = substr( $version, 4 );
+		}
+
+		// Ignore/strip any relative suffixes.
+		return str_replace( array( '^', '~' ), '', $version );
+	}
+
+	/**
+	 * Gets the release tag for the latest stable release of a GitHub repository.
+	 *
+	 * @param string $package_name Name of the repository.
+	 *
+	 * @return string Release tag.
+	 */
+	private function get_github_latest_release_tag( $package_name ) {
+		$url = "https://api.github.com/repos/{$package_name}/releases/latest";
+		$response = Utils\http_request( 'GET', $url );
+		if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
+			WP_CLI::warning( 'Could not guess stable version from GitHub repository, falling back to master branch' );
+			return 'master';
+		}
+
+		$package_data = json_decode( $response->body );
+		if ( JSON_ERROR_NONE !== json_last_error() ) {
+			WP_CLI::warning( 'Could not guess stable version from GitHub repository, falling back to master branch' );
+			return 'master';
+		}
+
+		$tag = $package_data->tag_name;
+		WP_CLI::debug( "Extracted latest stable release tag: {$tag}", 'packages' );
+
+		return $tag;
+	}
+
+	/**
+	 * Guesses the version constraint from a release tag.
+	 *
+	 * @param string $tag Release tag to guess the version constraint from.
+	 *
+	 * @return string Version constraint.
+	 */
+	private function guess_version_constraint_from_tag( $tag ) {
+		$matches = array();
+		if ( 1 !== preg_match( "/(?:version|v)\s*((?:[0-9]+\.?)+)(?:-.*)/i", $tag, $matches ) ) {
+			return $tag;
+		}
+
+		$constraint = "^{$matches[1]}";
+		WP_CLI::debug( "Guessing version constraint to use: {$constraint}", 'packages' );
+
+		return $constraint;
 	}
 
 	/**
