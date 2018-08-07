@@ -311,7 +311,7 @@ Feature: Install WP-CLI packages
       | name                            | version    |
       | wp-cli-test/github-test-command | dev-master |
 
-    When I run `wp github-test-command`
+    When I run `wp test-command`
     Then STDOUT should contain:
       """
       Success: Version E.
@@ -362,7 +362,7 @@ Feature: Install WP-CLI packages
       | name                            | version |
       | wp-cli-test/github-test-command | v0.2.0  |
 
-    When I run `wp github-test-command`
+    When I run `wp test-command`
     Then STDOUT should contain:
       """
       Success: Version C.
@@ -420,7 +420,7 @@ Feature: Install WP-CLI packages
       | name                            | version |
       | wp-cli-test/github-test-command | v0.1.0  |
 
-    When I run `wp github-test-command`
+    When I run `wp test-command`
     Then STDOUT should contain:
       """
       Success: Version A.
@@ -471,7 +471,7 @@ Feature: Install WP-CLI packages
       | name                            | version    |
       | wp-cli-test/github-test-command | dev-master |
 
-    When I run `wp github-test-command`
+    When I run `wp test-command`
     Then STDOUT should contain:
       """
       Success: Version B.
@@ -522,7 +522,7 @@ Feature: Install WP-CLI packages
       | name                            | version           |
       | wp-cli-test/github-test-command | dev-custom-branch |
 
-    When I run `wp github-test-command`
+    When I run `wp test-command`
     Then STDOUT should contain:
       """
       Success: Version D.
