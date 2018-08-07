@@ -286,10 +286,10 @@ Feature: Install WP-CLI packages
   Scenario: Install a package from Git using a shortened package identifier
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/test-command`
+    When I run `wp package install wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
-      Installing package wp-cli-test/test-command (dev-master)
+      Installing package wp-cli-test/github-test-command (dev-master)
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
@@ -298,7 +298,7 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should contain:
       """
-      Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
+      Registering https://github.com/wp-cli-test/github-test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -308,16 +308,16 @@ Feature: Install WP-CLI packages
 
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
-      | name                     | version    |
-      | wp-cli-test/test-command | dev-master |
+      | name                            | version    |
+      | wp-cli-test/github-test-command | dev-master |
 
-    When I run `wp test-command`
+    When I run `wp github-test-command`
     Then STDOUT should contain:
       """
       Success: Version E.
       """
 
-    When I run `wp package uninstall wp-cli-test/test-command`
+    When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
       Removing require statement from
@@ -330,18 +330,17 @@ Feature: Install WP-CLI packages
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
       """
-      wp-cli-test/test-command
+      wp-cli-test/github-test-command
       """
 
-  # Older releases of wp-cli-test/test-command are PHP 5.5 dependent.
-  @github-api @shortened @require-php-5.5
+  @github-api @shortened
   Scenario: Install a package from Git using a shortened package identifier with a version requirement
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/test-command:^0`
+    When I run `wp package install wp-cli-test/github-test-command:^0`
     Then STDOUT should contain:
       """
-      Installing package wp-cli-test/test-command (^0)
+      Installing package wp-cli-test/github-test-command (^0)
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
@@ -350,7 +349,7 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should contain:
       """
-      Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
+      Registering https://github.com/wp-cli-test/github-test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -360,16 +359,16 @@ Feature: Install WP-CLI packages
 
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
-      | name                     | version |
-      | wp-cli-test/test-command | v0.2.0  |
+      | name                            | version |
+      | wp-cli-test/github-test-command | v0.2.0  |
 
-    When I run `wp test-command`
+    When I run `wp github-test-command`
     Then STDOUT should contain:
       """
       Success: Version C.
       """
 
-    When I run `wp package uninstall wp-cli-test/test-command`
+    When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
       Removing require statement from
@@ -382,25 +381,24 @@ Feature: Install WP-CLI packages
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
       """
-      wp-cli-test/test-command
+      wp-cli-test/github-test-command
       """
 
-  # Older releases of wp-cli-test/test-command are PHP 5.5 dependent.
-  @github-api @shortened @require-php-5.5
+  @github-api @shortened
   Scenario: Install a package from Git using a shortened package identifier with a specific version
     Given an empty directory
 
     # Need to specify actual tag.
-    When I try `wp package install wp-cli-test/test-command:0.1.0`
+    When I try `wp package install wp-cli-test/github-test-command:0.1.0`
     Then STDERR should contain:
       """
-      Warning: Couldn't download composer.json file from 'https://raw.githubusercontent.com/wp-cli-test/test-command/0.1.0/composer.json' (HTTP code 404).
+      Warning: Couldn't download composer.json file from 'https://raw.githubusercontent.com/wp-cli-test/github-test-command/0.1.0/composer.json' (HTTP code 404).
       """
 
-    When I run `wp package install wp-cli-test/test-command:v0.1.0`
+    When I run `wp package install wp-cli-test/github-test-command:v0.1.0`
     Then STDOUT should contain:
       """
-      Installing package wp-cli-test/test-command (v0.1.0)
+      Installing package wp-cli-test/github-test-command (v0.1.0)
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
@@ -409,7 +407,7 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should contain:
       """
-      Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
+      Registering https://github.com/wp-cli-test/github-test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -419,16 +417,16 @@ Feature: Install WP-CLI packages
 
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
-      | name                     | version |
-      | wp-cli-test/test-command | v0.1.0  |
+      | name                            | version |
+      | wp-cli-test/github-test-command | v0.1.0  |
 
-    When I run `wp test-command`
+    When I run `wp github-test-command`
     Then STDOUT should contain:
       """
       Success: Version A.
       """
 
-    When I run `wp package uninstall wp-cli-test/test-command`
+    When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
       Removing require statement from
@@ -441,18 +439,17 @@ Feature: Install WP-CLI packages
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
       """
-      wp-cli-test/test-command
+      wp-cli-test/github-test-command
       """
 
-  # Older releases of wp-cli-test/test-command are PHP 5.5 dependent.
-  @github-api @shortened @require-php-5.5
+  @github-api @shortened
   Scenario: Install a package from Git using a shortened package identifier and a specific commit hash
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/test-command:dev-master#e1b60d6d2af5799231ce7c84f2089c16dd845be1`
+    When I run `wp package install wp-cli-test/github-test-command:dev-master#e1b60d6d2af5799231ce7c84f2089c16dd845be1`
     Then STDOUT should contain:
       """
-      Installing package wp-cli-test/test-command (dev-master#e1b60d6d2af5799231ce7c84f2089c16dd845be1)
+      Installing package wp-cli-test/github-test-command (dev-master#e1b60d6d2af5799231ce7c84f2089c16dd845be1)
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
@@ -461,7 +458,7 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should contain:
       """
-      Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
+      Registering https://github.com/wp-cli-test/github-test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -471,16 +468,16 @@ Feature: Install WP-CLI packages
 
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
-      | name                     | version    |
-      | wp-cli-test/test-command | dev-master |
+      | name                            | version    |
+      | wp-cli-test/github-test-command | dev-master |
 
-    When I run `wp test-command`
+    When I run `wp github-test-command`
     Then STDOUT should contain:
       """
       Success: Version B.
       """
 
-    When I run `wp package uninstall wp-cli-test/test-command`
+    When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
       Removing require statement from
@@ -493,18 +490,17 @@ Feature: Install WP-CLI packages
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
       """
-      wp-cli-test/test-command
+      wp-cli-test/github-test-command
       """
 
-  # Older releases of wp-cli-test/test-command are PHP 5.5 dependent.
-  @github-api @shortened @require-php-5.5
+  @github-api @shortened
   Scenario: Install a package from Git using a shortened package identifier and a branch
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/test-command:dev-custom-branch`
+    When I run `wp package install wp-cli-test/github-test-command:dev-custom-branch`
     Then STDOUT should contain:
       """
-      Installing package wp-cli-test/test-command (dev-custom-branch)
+      Installing package wp-cli-test/github-test-command (dev-custom-branch)
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
@@ -513,7 +509,7 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should contain:
       """
-      Registering https://github.com/wp-cli-test/test-command.git as a VCS repository...
+      Registering https://github.com/wp-cli-test/github-test-command.git as a VCS repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -523,16 +519,16 @@ Feature: Install WP-CLI packages
 
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
-      | name                     | version           |
-      | wp-cli-test/test-command | dev-custom-branch |
+      | name                            | version           |
+      | wp-cli-test/github-test-command | dev-custom-branch |
 
-    When I run `wp test-command`
+    When I run `wp github-test-command`
     Then STDOUT should contain:
       """
       Success: Version D.
       """
 
-    When I run `wp package uninstall wp-cli-test/test-command`
+    When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
       Removing require statement from
@@ -545,7 +541,7 @@ Feature: Install WP-CLI packages
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
       """
-      wp-cli-test/test-command
+      wp-cli-test/github-test-command
       """
 
   @github-api
