@@ -22,7 +22,7 @@ Feature: Manage WP-CLI packages
       """
     And STDERR should contain:
       """
-      Warning: No WordPress install found.
+      Warning: No WordPress install
       """
 
     When I run `wp package list`
