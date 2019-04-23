@@ -1,6 +1,8 @@
 <?php
 
 use WP_CLI\Utils;
+use WP_CLI\ExitException;
+use WP_CLI\Loggers\Execution;
 
 require_once VENDOR_DIR . '/wp-cli/wp-cli/php/utils.php';
 require_once VENDOR_DIR . '/wp-cli/wp-cli/php/class-wp-cli.php';
@@ -21,7 +23,7 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		$class_wp_cli_logger->setAccessible( true );
 		$this->prev_logger = $class_wp_cli_logger->getValue();
 
-		$this->logger = new \WP_CLI\Loggers\Execution();
+		$this->logger = new Execution();
 		WP_CLI::set_logger( $this->logger );
 
 		// Enable exit exception.
@@ -58,7 +60,7 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		$exception = null;
 		try {
 			$actual = $create_default_composer_json->invoke( $package, '' );
-		} catch ( \WP_CLI\ExitException $ex ) {
+		} catch ( ExitException $ex ) {
 			$exception = $ex;
 		}
 		$this->assertTrue( null !== $exception );
@@ -142,7 +144,7 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		$exception = null;
 		try {
 			$actual = $get_composer_json_path_backup_decoded->invoke( $package );
-		} catch ( \WP_CLI\ExitException $ex ) {
+		} catch ( ExitException $ex ) {
 			$exception = $ex;
 		}
 		$this->assertTrue( null !== $exception );
