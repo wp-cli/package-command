@@ -8,10 +8,10 @@ require_once VENDOR_DIR . '/wp-cli/wp-cli/php/class-wp-cli-command.php';
 
 class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 
-	var $logger = null;
-	var $prev_logger = null;
-	var $prev_capture_exit = null;
-	var $temp_dir = null;
+	private $logger            = null;
+	private $prev_logger       = null;
+	private $prev_capture_exit = null;
+	private $temp_dir          = null;
 
 	public function setUp() {
 		parent::setUp();
@@ -21,7 +21,7 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		$class_wp_cli_logger->setAccessible( true );
 		$this->prev_logger = $class_wp_cli_logger->getValue();
 
-		$this->logger = new \WP_CLI\Loggers\Execution;
+		$this->logger = new \WP_CLI\Loggers\Execution();
 		WP_CLI::set_logger( $this->logger );
 
 		// Enable exit exception.
@@ -48,11 +48,11 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		parent::tearDown();
 	}
 
-	function test_create_default_composer_json() {
+	public function test_create_default_composer_json() {
 		$create_default_composer_json = new \ReflectionMethod( 'Package_Command', 'create_default_composer_json' );
 		$create_default_composer_json->setAccessible( true );
 
-		$package = new Package_Command;
+		$package = new Package_Command();
 
 		// Fail with bad directory.
 		$exception = null;
@@ -68,22 +68,22 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 
 		// Succeed.
 		$expected = $this->temp_dir . 'packages/composer.json';
-		$actual = $create_default_composer_json->invoke( $package, $expected );
+		$actual   = $create_default_composer_json->invoke( $package, $expected );
 		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );
 		unlink( $actual );
 		rmdir( dirname( $actual ) );
 	}
 
-	function test_get_composer_json_path() {
-		$env_test = getenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' );
-		$env_home = getenv( 'HOME' );
+	public function test_get_composer_json_path() {
+		$env_test                = getenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' );
+		$env_home                = getenv( 'HOME' );
 		$env_wp_cli_packages_dir = getenv( 'WP_CLI_PACKAGES_DIR' );
 
 		$get_composer_json_path = new \ReflectionMethod( 'Package_Command', 'get_composer_json_path' );
 		$get_composer_json_path->setAccessible( true );
 
-		$package = new Package_Command;
+		$package = new Package_Command();
 
 		putenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH=1' );
 		putenv( 'HOME=' . $this->temp_dir );
@@ -91,7 +91,7 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		// Create in HOME.
 		putenv( 'WP_CLI_PACKAGES_DIR' );
 		$expected = $this->temp_dir . '.wp-cli/packages/composer.json';
-		$actual = $get_composer_json_path->invoke( $package );
+		$actual   = $get_composer_json_path->invoke( $package );
 		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );
 		unlink( $actual );
@@ -101,7 +101,7 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		// Create in WP_CLI_PACKAGES_DIR.
 		putenv( 'WP_CLI_PACKAGES_DIR=' . $this->temp_dir . 'packages' );
 		$expected = $this->temp_dir . 'packages/composer.json';
-		$actual = $get_composer_json_path->invoke( $package );
+		$actual   = $get_composer_json_path->invoke( $package );
 		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );
 		unlink( $actual );
@@ -123,8 +123,8 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		putenv( false === $env_wp_cli_packages_dir ? 'WP_CLI_PACKAGES_DIR' : "WP_CLI_PACKAGES_DIR=$env_wp_cli_packages_dir" );
 	}
 
-	function test_get_composer_json_path_backup_decoded() {
-		$env_test = getenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' );
+	public function test_get_composer_json_path_backup_decoded() {
+		$env_test                = getenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' );
 		$env_wp_cli_packages_dir = getenv( 'WP_CLI_PACKAGES_DIR' );
 
 		putenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH=1' );
@@ -133,7 +133,7 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		$get_composer_json_path_backup_decoded = new \ReflectionMethod( 'Package_Command', 'get_composer_json_path_backup_decoded' );
 		$get_composer_json_path_backup_decoded->setAccessible( true );
 
-		$package = new Package_Command;
+		$package = new Package_Command();
 
 		// Fail with bad json.
 		$expected = $this->temp_dir . 'packages/composer.json';
@@ -153,7 +153,7 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 		rmdir( dirname( $expected ) );
 
 		// Succeed with newly created.
-		$expected = $this->temp_dir . 'packages/composer.json';
+		$expected                           = $this->temp_dir . 'packages/composer.json';
 		list( $actual, $content, $decoded ) = $get_composer_json_path_backup_decoded->invoke( $package );
 		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );

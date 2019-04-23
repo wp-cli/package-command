@@ -13,6 +13,11 @@
 	<!-- What to scan. -->
 	<file>.</file>
 
+	<!-- Ignoring select files/folders.
+		 https://github.com/squizlabs/PHP_CodeSniffer/wiki/Advanced-Usage#ignoring-files-and-folders -->
+	<exclude-pattern>*/src/WP_CLI/JsonManipulator\.php$</exclude-pattern>
+	<exclude-pattern>*/tests/test-json-manipulator\.php$</exclude-pattern>
+
 	<!-- Show progress. -->
 	<arg value="p"/>
 
@@ -49,6 +54,11 @@
 				<element value="wpcli_package"/><!-- Global variables and such. -->
 			</property>
 		</properties>
+	</rule>
+
+	<!-- Exclude existing classes from the prefix rule as it would break BC to prefix them now. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound">
+		<exclude-pattern>*/src/Package_Command\.php$</exclude-pattern>
 	</rule>
 
 </ruleset>
