@@ -621,7 +621,7 @@ class Package_Command extends WP_CLI_Command {
 
 			// Prevent DateTime error/warning when no timezone set.
 			// Note: The package is loaded before WordPress load, For environments that don't have set time in php.ini.
-			// phpcs:ignore WordPress.WP.TimezoneChange.timezone_change_date_default_timezone_set,WordPress.PHP.NoSilencedErrors.Discouraged
+			// phpcs:ignore WordPress.DateTime.RestrictedFunctions.timezone_change_date_default_timezone_set,WordPress.PHP.NoSilencedErrors.Discouraged
 			date_default_timezone_set( @date_default_timezone_get() );
 
 			$composer = Factory::create( new NullIO(), $composer_path );
