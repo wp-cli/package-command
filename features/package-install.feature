@@ -49,7 +49,7 @@ Feature: Install WP-CLI packages
   Scenario: Install a package with 'wp-cli/wp-cli' as a dependency
     Given a WP install
 
-    When I run `wp package install sinebridge/wp-cli-about:v1.0.1`
+    When I run `wp package install typisttech/image-optimize-command:v0.3.1`
     Then STDOUT should contain:
       """
       Success: Package installed
@@ -59,10 +59,10 @@ Feature: Install WP-CLI packages
       requires wp-cli/wp-cli
       """
 
-    When I run `wp about`
+    When I run `wp help image-optimize`
     Then STDOUT should contain:
       """
-      Site Information
+      Optimize images.
       """
 
   @require-php-5.6
