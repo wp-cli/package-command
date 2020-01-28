@@ -46,6 +46,7 @@ Feature: Install WP-CLI packages
       "url": "http://wp-cli.org/package-index/"
       """
 
+  @require-php-5.6
   Scenario: Install a package with 'wp-cli/wp-cli' as a dependency
     Given a WP install
 
