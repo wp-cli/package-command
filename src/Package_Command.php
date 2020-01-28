@@ -1223,7 +1223,7 @@ class Package_Command extends WP_CLI_Command {
 		];
 
 		register_shutdown_function(
-			function () use (
+			static function () use (
 				$json_path,
 				$composer_backup,
 				&$revert,
@@ -1234,14 +1234,15 @@ class Package_Command extends WP_CLI_Command {
 				$error_array
 			) {
 				if ( $revert ) {
-					if ( false === file_put_contents( $json_path, $composer_backup ) ) {
-						fwrite( STDERR, $revert_fail_msg );
-					} else {
+					if ( false !== file_put_contents( $json_path, $composer_backup ) ) {
 						fwrite( STDERR, $revert_msg );
+					} else {
+						fwrite( STDERR, $revert_fail_msg );
 					}
 				}
+
 				$error_array = error_get_last();
-				if ( false !== strpos( $error_array['message'], $memory_string ) ) {
+				if ( is_array( $error_array ) && false !== strpos( $error_array['message'], $memory_string ) ) {
 					fwrite( STDERR, $memory_msg );
 				}
 			}
