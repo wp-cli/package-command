@@ -46,10 +46,11 @@ Feature: Install WP-CLI packages
       "url": "http://wp-cli.org/package-index/"
       """
 
+  @require-php-5.6
   Scenario: Install a package with 'wp-cli/wp-cli' as a dependency
     Given a WP install
 
-    When I run `wp package install sinebridge/wp-cli-about:v1.0.1`
+    When I run `wp package install wp-cli-test/test-command:v0.2.0`
     Then STDOUT should contain:
       """
       Success: Package installed
@@ -59,10 +60,10 @@ Feature: Install WP-CLI packages
       requires wp-cli/wp-cli
       """
 
-    When I run `wp about`
+    When I run `wp test-command`
     Then STDOUT should contain:
       """
-      Site Information
+      Version C.
       """
 
   @require-php-5.6
