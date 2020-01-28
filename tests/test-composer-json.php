@@ -180,6 +180,6 @@ class ComposerJsonTest extends PHPUnit_Framework_TestCase {
 	}
 
 	private function mac_safe_path( $path ) {
-		return preg_replace( '|^/private/var/|', '/var/', $path );
+		return preg_replace( '#^/private/(var|tmp)/#i', '/$1/', $path );
 	}
 }
