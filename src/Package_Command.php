@@ -35,7 +35,7 @@ use WP_CLI\PackageManagerEventSubscriber;
  * [Package Index](http://wp-cli.org/package-index/).
  *
  * Learn how to create your own command from the
- * [Commands Cookbook](http://wp-cli.org/docs/commands-cookbook/)
+ * [Commands Cookbook](https://make.wordpress.org/cli/handbook/commands-cookbook/)
  *
  * ## EXAMPLES
  *

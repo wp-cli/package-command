@@ -26,7 +26,7 @@ Installable packages are listed in the
 [Package Index](http://wp-cli.org/package-index/).
 
 Learn how to create your own command from the
-[Commands Cookbook](http://wp-cli.org/docs/commands-cookbook/)
+[Commands Cookbook](https://make.wordpress.org/cli/handbook/commands-cookbook/)
 
 **EXAMPLES**
 
@@ -247,7 +247,7 @@ These fields are optionally available:
 Updates all installed WP-CLI packages to their latest version.
 
 ~~~
-wp package update 
+wp package update
 ~~~
 
 **EXAMPLES**
