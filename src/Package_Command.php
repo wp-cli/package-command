@@ -220,6 +220,9 @@ class Package_Command extends WP_CLI_Command {
 	 *     # Install a package hosted at a git URL.
 	 *     $ wp package install git@github.com:runcommand/hook.git
 	 *
+	 *     # Install a package hosted at a GitLab.com URL.
+	 *     $ wp package install https://gitlab.com/foo/wp-cli-bar-command.git
+	 *
 	 *     # Install a package in a .zip file.
 	 *     $ wp package install google-sitemap-generator-cli.zip
 	 */
@@ -234,7 +237,7 @@ class Package_Command extends WP_CLI_Command {
 			$git_package = $package_name;
 			preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches );
 			if ( ! empty( $matches[1] ) ) {
-				$package_name = $this->check_git_package_name( $matches[1] );
+				$package_name = $this->check_git_package_name( $matches[1], $package_name );
 			} else {
 				WP_CLI::error( "Couldn't parse package name from expected path '<name>/<package>'." );
 			}
@@ -305,7 +308,7 @@ class Package_Command extends WP_CLI_Command {
 						$tag     = $this->get_github_latest_release_tag( $package_name );
 						$version = $this->guess_version_constraint_from_tag( $tag );
 					}
-					$package_name = $this->check_git_package_name( $package_name, $version );
+					$package_name = $this->check_github_package_name( $package_name, $version );
 				}
 			} elseif ( $package_name !== $package->getPrettyName() ) {
 				// BC support for specifying lowercase names for mixed-case package index packages - don't bother warning.
@@ -1034,13 +1037,13 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Checks that `$package_name` matches the name in the repo composer.json, and return corrected value if not.
+	 * Checks that `$package_name` matches the name in composer.json at Github.com, and return corrected value if not.
 	 *
 	 * @string $package_name Package name to check.
 	 * @string $version Optional. Package version. Default 'master'.
 	 * @string Package name, possibly changed to match that in repo.
 	 */
-	private function check_git_package_name( $package_name, $version = '' ) {
+	private function check_github_package_name( $package_name, $version = '' ) {
 		// Generate raw git URL of composer.json file.
 		$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/' . $this->get_raw_git_version( $version ) . '/composer.json';
 		$github_token    = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
@@ -1063,6 +1066,72 @@ class Package_Command extends WP_CLI_Command {
 		}
 
 		// Package name in composer.json that is hosted on GitHub.
+		$package_name_on_repo = $composer_content_as_array['name'];
+
+		// If package name and repository name are not identical, then fix it.
+		if ( $package_name !== $package_name_on_repo ) {
+			WP_CLI::warning( sprintf( "Package name mismatch...Updating from git name '%s' to composer.json name '%s'.", $package_name, $package_name_on_repo ) );
+			$package_name = $package_name_on_repo;
+		}
+		return $package_name;
+	}
+
+	/**
+	 * Checks that `$package_name` matches the name in composer.json at the corresponding upstream repository, and return corrected value if not.
+	 *
+	 * @string $package_name Package name to check.
+	 * @string $version Optional. Package version. Default 'master'.
+	 * @string Package name, possibly changed to match that in repo.
+	 */
+	private function check_git_package_name( $package_name, $url = '', $version = '' ) {
+		if ( $url && ( strpos( $url, '://gitlab.com/' ) !== false ) || ( strpos( $url, 'git@gitlab.com:' ) !== false ) ) {
+			return $this->check_gitlab_package_name( $package_name );
+		}
+
+		return $this->check_github_package_name( $package_name );
+	}
+
+	/**
+	 * Checks that `$package_name` matches the name in composer.json at GitLab.com, and return corrected value if not.
+	 *
+	 * @string $package_name Package name to check.
+	 * @string $version Optional. Package version. Default 'master'.
+	 * @string Package name, possibly changed to match that in repo.
+	 */
+	private function check_gitlab_package_name( $package_name, $version = '' ) {
+		// Generate raw git URL of composer.json file.
+		$raw_content_public_url  = 'https://gitlab.com/' . $package_name . '/-/raw/' . $this->get_raw_git_version( $version ) . '/composer.json';
+		$raw_content_private_url = 'https://gitlab.com/api/v4/projects/' . rawurlencode( $package_name ) . '/repository/files/composer.json/raw?ref=' . $this->get_raw_git_version( $version );
+
+		$response = Utils\http_request( 'GET', $raw_content_public_url, null /*data*/ );
+		if ( $response->status_code < 200 || $response->status_code >= 300 ) {
+			// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
+			WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_public_url, $response->status_code, $package_name ) );
+			return $package_name;
+		}
+
+		if ( strpos( $response->headers['content-type'], 'text/html' ) === 0 ) {
+			$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
+			$headers      = $gitlab_token ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
+			$response     = Utils\http_request( 'GET', $raw_content_private_url, null /*data*/, $headers );
+
+			if ( $response->status_code < 200 || $response->status_code >= 300 ) {
+				// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
+				WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_private_url, $response->status_code, $package_name ) );
+				return $package_name;
+			}
+		}
+
+		// Convert composer.json JSON to Array.
+		$composer_content_as_array = json_decode( $response->body, true );
+		if ( null === $composer_content_as_array ) {
+			WP_CLI::error( sprintf( "Failed to parse '%s' as json.", $response->url ) );
+		}
+		if ( empty( $composer_content_as_array['name'] ) ) {
+			WP_CLI::error( sprintf( "Invalid package: no name in composer.json file '%s'.", $response->url ) );
+		}
+
+		// Package name in composer.json that is hosted on Gitlab.
 		$package_name_on_repo = $composer_content_as_array['name'];
 
 		// If package name and repository name are not identical, then fix it.
