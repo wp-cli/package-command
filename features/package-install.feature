@@ -881,6 +881,17 @@ Feature: Install WP-CLI packages
       wp-cli/google-sitemap-generator-cli
       """
 
+  @gitlab-api
+  Scenario: Install a package from a GitLab URL
+    Given an empty directory
+
+    When I try `wp package install https://gitlab.com/gitlab-examples/php.git`
+    Then the return code should be 1
+    And STDERR should contain:
+      """
+      Error: Invalid package: no name in composer.json file 'https://gitlab.com/gitlab-examples/php/-/raw/master/composer.json'.
+      """
+
   Scenario: Install a package at an existing path
     Given an empty directory
     And a path-command/command.php file:
