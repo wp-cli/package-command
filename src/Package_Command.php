@@ -4,6 +4,7 @@ use Composer\Composer;
 use Composer\Config;
 use Composer\Config\JsonConfigSource;
 use Composer\DependencyResolver\Pool;
+use Composer\DependencyResolver\Request;
 use Composer\EventDispatcher\Event;
 use Composer\Factory;
 use Composer\IO\NullIO;
@@ -19,6 +20,7 @@ use Composer\Repository\CompositeRepository;
 use Composer\Repository\ComposerRepository;
 use Composer\Repository\RepositoryManager;
 use Composer\Util\Filesystem;
+use Composer\Util\HttpDownloader;
 use WP_CLI\ComposerIO;
 use WP_CLI\Extractor;
 use WP_CLI\Utils;
@@ -81,7 +83,7 @@ class Package_Command extends WP_CLI_Command {
 	const PACKAGE_INDEX_URL = 'https://wp-cli.org/package-index/';
 	const SSL_CERTIFICATE   = '/rmccue/requests/library/Requests/Transport/cacert.pem';
 
-	private $pool = false;
+	private $version_selector = false;
 
 	/**
 	 * Default author data used while creating default WP-CLI packages composer.json.
@@ -676,8 +678,14 @@ class Package_Command extends WP_CLI_Command {
 			$config->merge( $config_args );
 			$config->setConfigSource( new JsonConfigSource( $this->get_composer_json() ) );
 
+			$io = new NullIO();
 			try {
-				$package_index = new ComposerRepository( [ 'url' => self::PACKAGE_INDEX_URL ], new NullIO(), $config );
+				if ( $this->is_composer_v2() ) {
+					$http_downloader = new HttpDownloader( $io, $config );
+					$package_index   = new ComposerRepository( [ 'url' => self::PACKAGE_INDEX_URL ], $io, $config, $http_downloader );
+				} else {
+					$package_index = new ComposerRepository( [ 'url' => self::PACKAGE_INDEX_URL ], $io, $config );
+				}
 			} catch ( Exception $e ) {
 				WP_CLI::error( $e->getMessage() );
 			}
@@ -995,9 +1003,9 @@ class Package_Command extends WP_CLI_Command {
 	 * @return PackageInterface|null
 	 */
 	private function find_latest_package( PackageInterface $package, Composer $composer, $php_version, $minor_only = false ) {
-		// find the latest version allowed in this pool
+		// Find the latest version allowed in this pool/repository set.
 		$name             = $package->getPrettyName();
-		$version_selector = new VersionSelector( $this->get_pool( $composer ) );
+		$version_selector = $this->get_version_selector( $composer );
 		$stability        = $composer->getPackage()->getMinimumStability();
 		$flags            = $composer->getPackage()->getStabilityFlags();
 		if ( isset( $flags[ $name ] ) ) {
@@ -1014,15 +1022,31 @@ class Package_Command extends WP_CLI_Command {
 		if ( null === $target_version && $minor_only ) {
 			$target_version = '^' . $package->getVersion();
 		}
+
+		if ( $this->is_composer_v2() ) {
+			return $version_selector->findBestCandidate( $name, $target_version, $best_stability );
+		}
+
 		return $version_selector->findBestCandidate( $name, $target_version, $php_version, $best_stability );
 	}
 
-	private function get_pool( Composer $composer ) {
-		if ( ! $this->pool ) {
-			$this->pool = new Pool( $composer->getPackage()->getMinimumStability(), $composer->getPackage()->getStabilityFlags() );
-			$this->pool->addRepository( new CompositeRepository( $composer->getRepositoryManager()->getRepositories() ) );
+	private function get_version_selector( Composer $composer ) {
+		if ( ! $this->version_selector ) {
+			if ( $this->is_composer_v2() ) {
+				$repository_set = new Repository\RepositorySet(
+					$composer->getPackage()->getMinimumStability(),
+					$composer->getPackage()->getStabilityFlags()
+				);
+				$repository_set->addRepository( new CompositeRepository( $composer->getRepositoryManager()->getRepositories() ) );
+				$this->version_selector = new VersionSelector( $repository_set );
+			} else {
+				$pool = new Pool( $composer->getPackage()->getMinimumStability(), $composer->getPackage()->getStabilityFlags() );
+				$pool->addRepository( new CompositeRepository( $composer->getRepositoryManager()->getRepositories() ) );
+				$this->version_selector = new VersionSelector( $pool );
+			}
 		}
-		return $this->pool;
+
+		return $this->version_selector;
 	}
 
 	/**
@@ -1316,5 +1340,14 @@ class Package_Command extends WP_CLI_Command {
 				}
 			}
 		);
+	}
+
+	/**
+	 * Check whether we are dealing with Composer version 2.0.0+.
+	 *
+	 * @return bool
+	 */
+	private function is_composer_v2() {
+		return version_compare( Composer::getVersion(), '2.0.0', '>=' );
 	}
 }
