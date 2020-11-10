@@ -71,10 +71,6 @@ Feature: Install WP-CLI packages
     Given an empty directory
 
     When I run `wp package install trendwerk/faker`
-    Then STDOUT should contain:
-      """
-      Warning: trendwerk/faker dev-master requires nelmio/alice
-      """
     And STDOUT should contain:
       """
       Success: Package installed
