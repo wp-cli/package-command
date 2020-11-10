@@ -318,6 +318,12 @@ class Package_Command extends WP_CLI_Command {
 			}
 		}
 
+		if ( $this->is_composer_v2() ) {
+			$package_name = function_exists( 'mb_strtolower' )
+				? mb_strtolower( $package_name )
+				: strtolower( $package_name );
+		}
+
 		WP_CLI::log( sprintf( 'Installing package %s (%s)', $package_name, $version ) );
 
 		// Read the WP-CLI packages composer.json and do some initial error checking.
@@ -834,7 +840,9 @@ class Package_Command extends WP_CLI_Command {
 			if ( in_array( $package->getPrettyName(), $installed_package_keys, true ) ) {
 				$installed_packages[] = $package;
 			} elseif ( false !== $idx ) { // Legacy incorrect name check.
-				WP_CLI::warning( sprintf( "Found package '%s' misnamed '%s' in '%s'.", $package->getPrettyName(), $installed_package_keys[ $idx ], $this->get_composer_json_path() ) );
+				if ( ! $this->is_composer_v2() ) {
+					WP_CLI::warning( sprintf( "Found package '%s' misnamed '%s' in '%s'.", $package->getPrettyName(), $installed_package_keys[ $idx ], $this->get_composer_json_path() ) );
+				}
 				$installed_packages[] = $package;
 			}
 		}
