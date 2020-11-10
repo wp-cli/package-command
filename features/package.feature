@@ -57,6 +57,46 @@ Feature: Manage WP-CLI packages
     When I run `wp --require=bad-command.php package list`
     Then STDERR should be empty
 
+  @require-php-7.0
+  Scenario: Revert the WP-CLI packages composer.json when fail to install/uninstall a package due to memory limit
+    Given an empty directory
+    When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=10M -ddisable_functions=ini_set} package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then the return code should not be 0
+    And STDERR should contain:
+      """
+      Reverted composer.json.
+      """
+
+    When I run `wp package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=10M -ddisable_functions=ini_set} package uninstall danielbachhuber/wp-cli-reset-post-date-command`
+    Then the return code should not be 0
+    And STDERR should contain:
+      """
+      Reverted composer.json.
+      """
+
+    # Create a default composer.json first to compare.
+    When I run `WP_CLI_PACKAGES_DIR={RUN_DIR}/mypackages wp package list`
+    Then the {RUN_DIR}/mypackages/composer.json file should exist
+    And save the {RUN_DIR}/mypackages/composer.json file as {MYPACKAGES_COMPOSER_JSON}
+
+    When I try `WP_CLI_PACKAGES_DIR={RUN_DIR}/mypackages {INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=10M -ddisable_functions=ini_set} package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then the return code should not be 0
+    And STDERR should contain:
+      """
+      Reverted composer.json.
+      """
+    And the mypackages/composer.json file should be:
+      """
+      {MYPACKAGES_COMPOSER_JSON}
+      """
+
+  @require-php-7.0
   Scenario: Revert the WP-CLI packages composer.json when fail to install/uninstall a package due to memory limit
     Given an empty directory
     When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=10M -ddisable_functions=ini_set} package install danielbachhuber/wp-cli-reset-post-date-command`
