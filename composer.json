@@ -13,12 +13,12 @@
     ],
     "require": {
         "ext-json": "*",
-        "composer/composer": ">=1.2.0 <1.7.0 || ^1.7.1",
+        "composer/composer": ">=1.2.0 <1.7.0 || ^1.7.1 || ^2.0.0",
         "wp-cli/wp-cli": "dev-master"
     },
     "require-dev": {
         "wp-cli/scaffold-command": "^1 || ^2",
-        "wp-cli/wp-cli-tests": "^2.1"
+        "wp-cli/wp-cli-tests": "^2.1.16"
     },
     "config": {
         "process-timeout": 7200,

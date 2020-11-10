@@ -71,10 +71,6 @@ Feature: Install WP-CLI packages
     Given an empty directory
 
     When I run `wp package install trendwerk/faker`
-    Then STDOUT should contain:
-      """
-      Warning: trendwerk/faker dev-master requires nelmio/alice
-      """
     And STDOUT should contain:
       """
       Success: Package installed
@@ -263,14 +259,7 @@ Feature: Install WP-CLI packages
       """
       Success: Package installed.
       """
-    And the {PACKAGE_PATH}composer.json file should contain:
-      """
-      "gitlost/TestMixedCaseCommand"
-      """
-    And the {PACKAGE_PATH}composer.json file should not contain:
-      """
-      mixed
-      """
+    And the contents of the {PACKAGE_PATH}composer.json file should match /\"gitlost\/(?:TestMixedCaseCommand|testmixedcasecommand)\"/
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
@@ -552,10 +541,7 @@ Feature: Install WP-CLI packages
     # Install and uninstall with case-sensitive name
     When I run `wp package install GeekPress/wp-rocket-cli`
     Then STDERR should be empty
-    And STDOUT should contain:
-      """
-      Installing package GeekPress/wp-rocket-cli (dev-master)
-      """
+    And STDOUT should match /Installing package (?:GeekPress|geekpress)\/wp-rocket-cli \(dev-master\)/
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
       """
@@ -569,14 +555,7 @@ Feature: Install WP-CLI packages
       """
       Success: Package installed.
       """
-    And the {PACKAGE_PATH}composer.json file should contain:
-      """
-      GeekPress/wp-rocket-cli
-      """
-    And the {PACKAGE_PATH}composer.json file should not contain:
-      """
-      geek
-      """
+    And the contents of the {PACKAGE_PATH}composer.json file should match /("?:GeekPress|geekpress)\/wp-rocket-cli"/
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
@@ -606,10 +585,7 @@ Feature: Install WP-CLI packages
     # Install with lowercase name (for BC - no warning) and uninstall with lowercase name (for BC and convenience)
     When I run `wp package install geekpress/wp-rocket-cli`
     Then STDERR should be empty
-    And STDOUT should contain:
-      """
-      Installing package GeekPress/wp-rocket-cli (dev-master)
-      """
+    And STDOUT should match /Installing package (?:GeekPress|geekpress)\/wp-rocket-cli \(dev-master\)/
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
       """
@@ -623,14 +599,7 @@ Feature: Install WP-CLI packages
       """
       Success: Package installed.
       """
-    And the {PACKAGE_PATH}composer.json file should contain:
-      """
-      GeekPress/wp-rocket-cli
-      """
-    And the {PACKAGE_PATH}composer.json file should not contain:
-      """
-      geek
-      """
+    And the contents of the {PACKAGE_PATH}composer.json file should match /("?:GeekPress|geekpress)\/wp-rocket-cli"/
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
