@@ -51,10 +51,7 @@ Feature: Update WP-CLI packages
       """
 
     When I run `wp package update`
-    Then STDOUT should contain:
-      """
-      Nothing to install or update
-      """
+    Then STDOUT should match /Nothing to install(?: or update|, update or remove)/
     And STDOUT should contain:
       """
       Success: Packages updated.
@@ -88,10 +85,7 @@ Feature: Update WP-CLI packages
       """
       Success: Packages updated.
       """
-    And STDOUT should not contain:
-      """
-      Nothing to install or update
-      """
+    And STDOUT should not match /Nothing to install(?: or update|, update or remove)/
 
     When I run `wp package list --fields=name,update`
     Then STDOUT should be a table containing rows:
@@ -99,10 +93,7 @@ Feature: Update WP-CLI packages
       | wp-cli-test/updateable-package | none    |
 
     When I run `wp package update`
-    Then STDOUT should contain:
-      """
-      Nothing to install or update
-      """
+    Then STDOUT should match /Nothing to install(?: or update|, update or remove)/
     And STDOUT should contain:
       """
       Success: Packages updated.
