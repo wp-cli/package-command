@@ -3,12 +3,13 @@
 use WP_CLI\Utils;
 use WP_CLI\ExitException;
 use WP_CLI\Loggers\Execution;
+use WP_CLI\Tests\TestCase;
 
 require_once VENDOR_DIR . '/wp-cli/wp-cli/php/utils.php';
 require_once VENDOR_DIR . '/wp-cli/wp-cli/php/class-wp-cli.php';
 require_once VENDOR_DIR . '/wp-cli/wp-cli/php/class-wp-cli-command.php';
 
-class ComposerJsonTest extends PHPUnit_Framework_TestCase {
+class ComposerJsonTest extends TestCase {
 
 	private $logger            = null;
 	private $prev_logger       = null;

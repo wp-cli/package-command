@@ -11,8 +11,9 @@
  */
 
 use WP_CLI\JsonManipulator; // WP_CLI
+use WP_CLI\Tests\TestCase;
 
-class JsonManipulatorTest extends \PHPUnit_Framework_TestCase
+class JsonManipulatorTest extends TestCase
 {
 
     /**
