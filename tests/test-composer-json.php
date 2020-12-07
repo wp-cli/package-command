@@ -16,8 +16,8 @@ class ComposerJsonTest extends TestCase {
 	private $prev_capture_exit = null;
 	private $temp_dir          = null;
 
-	public function setUp() {
-		parent::setUp();
+	public function set_up() {
+		parent::set_up();
 
 		// Save and set logger.
 		$class_wp_cli_logger = new \ReflectionProperty( 'WP_CLI', 'logger' );
@@ -37,7 +37,7 @@ class ComposerJsonTest extends TestCase {
 		mkdir( $this->temp_dir );
 	}
 
-	public function tearDown() {
+	public function tear_down() {
 		// Restore logger.
 		WP_CLI::set_logger( $this->prev_logger );
 
@@ -48,7 +48,7 @@ class ComposerJsonTest extends TestCase {
 
 		rmdir( $this->temp_dir );
 
-		parent::tearDown();
+		parent::tear_down();
 	}
 
 	public function test_create_default_composer_json() {
