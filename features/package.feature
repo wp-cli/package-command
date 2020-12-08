@@ -57,7 +57,7 @@ Feature: Manage WP-CLI packages
     When I run `wp --require=bad-command.php package list`
     Then STDERR should be empty
 
-  @require-php-7.0
+  @require-php-7.2
   Scenario: Revert the WP-CLI packages composer.json when fail to install/uninstall a package due to memory limit
     Given an empty directory
     When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=10M -ddisable_functions=ini_set} package install danielbachhuber/wp-cli-reset-post-date-command`
@@ -96,7 +96,7 @@ Feature: Manage WP-CLI packages
       {MYPACKAGES_COMPOSER_JSON}
       """
 
-  @require-php-7.0
+  @require-php-7.2
   Scenario: Revert the WP-CLI packages composer.json when fail to install/uninstall a package due to memory limit
     Given an empty directory
     When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=10M -ddisable_functions=ini_set} package install danielbachhuber/wp-cli-reset-post-date-command`
