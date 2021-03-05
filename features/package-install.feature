@@ -70,30 +70,30 @@ Feature: Install WP-CLI packages
   Scenario: Install a package with a dependency
     Given an empty directory
 
-    When I run `wp package install trendwerk/faker`
+    When I run `wp package install yoast/wp-cli-faker`
     And STDOUT should contain:
       """
       Success: Package installed
       """
-    And the {PACKAGE_PATH}/vendor/trendwerk directory should contain:
+    And the {PACKAGE_PATH}/vendor/yoast directory should contain:
+      """
+      wp-cli-faker
+      """
+    And the {PACKAGE_PATH}/vendor/fzaninotto directory should contain:
       """
       faker
-      """
-    And the {PACKAGE_PATH}/vendor/nelmio directory should contain:
-      """
-      alice
       """
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
       | name                |
-      | trendwerk/faker     |
+      | yoast/wp-cli-faker  |
     And STDOUT should not contain:
       """
-      nelmio/alice
+      fzaninotto/faker
       """
 
-    When I run `wp package uninstall trendwerk/faker`
+    When I run `wp package uninstall yoast/wp-cli-faker`
     Then STDOUT should contain:
       """
       Removing require statement
@@ -104,11 +104,11 @@ Feature: Install WP-CLI packages
       """
     And the {PACKAGE_PATH}/vendor directory should not contain:
       """
-      trendwerk
+      yoast
       """
     And the {PACKAGE_PATH}/vendor directory should not contain:
       """
-      alice
+      fzaninotto
       """
 
     When I run `wp package list`
