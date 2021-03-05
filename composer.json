@@ -15,7 +15,7 @@
         "ext-json": "*",
         "composer/composer": ">=1.2.0 <1.7.0 || ^1.7.1 || ^2.0.0",
         "wp-cli/wp-cli": "^2.5",
-        "wp-cli/wp-cli-tests": "^3.0.2"
+        "wp-cli/wp-cli-tests": "^3.0.7"
     },
     "require-dev": {
         "wp-cli/scaffold-command": "^1 || ^2"
