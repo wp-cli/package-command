@@ -382,6 +382,9 @@ class Package_Command extends WP_CLI_Command {
 		} catch ( Exception $e ) {
 			WP_CLI::warning( $e->getMessage() );
 		}
+
+		// TODO: The --insecure flag should cause another Composer run with verify disabled.
+
 		WP_CLI::log( '---' );
 
 		if ( 0 === $res ) {
@@ -515,6 +518,8 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::warning( $e->getMessage() );
 		}
 		WP_CLI::log( '---' );
+
+		// TODO: The --insecure (to be added here) flag should cause another Composer run with verify disabled.
 
 		if ( 0 === $res ) {
 			WP_CLI::success( 'Packages updated.' );
