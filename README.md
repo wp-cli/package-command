@@ -3,7 +3,7 @@ wp-cli/package-command
 
 Lists, installs, and removes WP-CLI packages.
 
-[![Build Status](https://travis-ci.org/wp-cli/package-command.svg?branch=master)](https://travis-ci.org/wp-cli/package-command)
+[![Testing](https://github.com/wp-cli/package-command/actions/workflows/testing.yml/badge.svg)](https://github.com/wp-cli/package-command/actions/workflows/testing.yml)
 
 Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contributing) | [Support](#support)
 
@@ -187,6 +187,9 @@ When installing a .zip file, WP-CLI extracts the package to
     # Install a package hosted at a git URL.
     $ wp package install git@github.com:runcommand/hook.git
 
+    # Install a package hosted at a GitLab.com URL.
+    $ wp package install https://gitlab.com/foo/wp-cli-bar-command.git
+
     # Install a package in a .zip file.
     $ wp package install google-sitemap-generator-cli.zip
 
@@ -247,7 +250,7 @@ These fields are optionally available:
 Updates all installed WP-CLI packages to their latest version.
 
 ~~~
-wp package update
+wp package update 
 ~~~
 
 **EXAMPLES**
@@ -321,7 +324,7 @@ Once you've decided to commit the time to seeing your pull request through, [ple
 
 ## Support
 
-Github issues aren't for general support questions, but there are other venues you can try: https://wp-cli.org/#support
+GitHub issues aren't for general support questions, but there are other venues you can try: https://wp-cli.org/#support
 
 
 *This README.md is generated dynamically from the project's codebase using `wp scaffold package-readme` ([doc](https://github.com/wp-cli/scaffold-package-command#wp-scaffold-package-readme)). To suggest changes, please submit a pull request against the corresponding part of the codebase.*
