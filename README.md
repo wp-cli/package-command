@@ -22,9 +22,6 @@ wp package
 WP-CLI packages are community-maintained projects built on WP-CLI. They can
 contain WP-CLI commands, but they can also just extend WP-CLI in some way.
 
-Installable packages are listed in the
-[Package Index](http://wp-cli.org/package-index/).
-
 Learn how to create your own command from the
 [Commands Cookbook](https://make.wordpress.org/cli/handbook/commands-cookbook/)
 
@@ -163,29 +160,11 @@ When installing a .zip file, WP-CLI extracts the package to
 
 **EXAMPLES**
 
-    # Install the latest development version from the package index.
-    $ wp package install wp-cli/server-command
-    Installing package wp-cli/server-command (dev-master)
-    Updating /home/person/.wp-cli/packages/composer.json to require the package...
-    Using Composer to install the package...
-    ---
-    Loading composer repositories with package information
-    Updating dependencies
-    Resolving dependencies through SAT
-    Dependency resolution completed in 0.005 seconds
-    Analyzed 732 packages to resolve dependencies
-    Analyzed 1034 rules to resolve dependencies
-     - Installing package
-    Writing lock file
-    Generating autoload files
-    ---
-    Success: Package installed.
+    # Install a package hosted at a git URL.
+    $ wp package install runcommand/hook
 
     # Install the latest stable version.
     $ wp package install wp-cli/server-command:@stable
-
-    # Install a package hosted at a git URL.
-    $ wp package install git@github.com:runcommand/hook.git
 
     # Install a package hosted at a GitLab.com URL.
     $ wp package install https://gitlab.com/foo/wp-cli-bar-command.git
