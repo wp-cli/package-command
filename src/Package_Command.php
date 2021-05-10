@@ -193,6 +193,9 @@ class Package_Command extends WP_CLI_Command {
 	 * Names can optionally include a version constraint
 	 * (e.g. wp-cli/server-command:@stable).
 	 *
+	 * [--insecure]
+	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Install a package hosted at a git URL.
@@ -210,6 +213,8 @@ class Package_Command extends WP_CLI_Command {
 	public function install( $args, $assoc_args ) {
 		list( $package_name ) = $args;
 
+		$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+
 		$this->set_composer_auth_env_var();
 		$git_package = false;
 		$dir_package = false;
@@ -218,7 +223,7 @@ class Package_Command extends WP_CLI_Command {
 			$git_package = $package_name;
 			preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches );
 			if ( ! empty( $matches[1] ) ) {
-				$package_name = $this->check_git_package_name( $matches[1], $package_name );
+				$package_name = $this->check_git_package_name( $matches[1], $package_name, '', $insecure );
 			} else {
 				WP_CLI::error( "Couldn't parse package name from expected path '<name>/<package>'." );
 			}
@@ -231,6 +236,7 @@ class Package_Command extends WP_CLI_Command {
 				$options  = [
 					'timeout'  => 600,
 					'filename' => $temp,
+					'insecure' => $insecure,
 				];
 				$response = Utils\http_request( 'GET', $package_name, null, [], $options );
 				if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
@@ -286,10 +292,10 @@ class Package_Command extends WP_CLI_Command {
 				if ( $this->is_git_repository( $package ) ) {
 					$git_package = $package;
 					if ( '@stable' === $version ) {
-						$tag     = $this->get_github_latest_release_tag( $package_name );
+						$tag     = $this->get_github_latest_release_tag( $package_name, $insecure );
 						$version = $this->guess_version_constraint_from_tag( $tag );
 					}
-					$package_name = $this->check_github_package_name( $package_name, $version );
+					$package_name = $this->check_github_package_name( $package_name, $version, $insecure );
 				}
 			} elseif ( $package_name !== $package->getPrettyName() ) {
 				// BC support for specifying lowercase names for mixed-case package index packages - don't bother warning.
@@ -765,8 +771,11 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * This method first checks the deprecated package index, for BC reasons,
 	 * and then falls back to the corresponding GitHub URL.
+	 *
+	 * @param string $package_name Name of the package to get.
+	 * @param bool   $insecure Whether to insecurely retry downloads that failed TLS handshake.
 	 */
-	private function get_package_by_shortened_identifier( $package_name ) {
+	private function get_package_by_shortened_identifier( $package_name, $insecure = false ) {
 		// Check the package index first, so we don't break existing behavior.
 		$lc_package_name = strtolower( $package_name ); // For BC check.
 		foreach ( $this->get_community_packages() as $package ) {
@@ -779,9 +788,11 @@ class Package_Command extends WP_CLI_Command {
 			}
 		}
 
+		$options = [ 'insecure' => $insecure ];
+
 		// Check if the package exists on Packagist.
 		$url      = "https://repo.packagist.org/p/{$package_name}.json";
-		$response = Utils\http_request( 'GET', $url );
+		$response = Utils\http_request( 'GET', $url, null, [], $options );
 		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
 			return $package_name;
 		}
@@ -790,7 +801,7 @@ class Package_Command extends WP_CLI_Command {
 		$url          = "https://github.com/{$package_name}.git";
 		$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
 		$headers      = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
-		$response     = Utils\http_request( 'GET', $url, null /*data*/, $headers );
+		$response     = Utils\http_request( 'GET', $url, null /*data*/, $headers, $options );
 		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
 			return $url;
 		}
@@ -1050,17 +1061,18 @@ class Package_Command extends WP_CLI_Command {
 	/**
 	 * Checks that `$package_name` matches the name in composer.json at Github.com, and return corrected value if not.
 	 *
-	 * @string $package_name Package name to check.
-	 * @string $version Optional. Package version. Default 'master'.
-	 * @string Package name, possibly changed to match that in repo.
+	 * @param string $package_name Package name to check.
+	 * @param string $version      Optional. Package version. Default 'master'.
+	 * @param bool   $insecure     Optional. Whether to insecurely retry downloads that failed TLS handshake.
 	 */
-	private function check_github_package_name( $package_name, $version = '' ) {
+	private function check_github_package_name( $package_name, $version = '', $insecure = false ) {
 		// Generate raw git URL of composer.json file.
 		$raw_content_url = 'https://raw.githubusercontent.com/' . $package_name . '/' . $this->get_raw_git_version( $version ) . '/composer.json';
 		$github_token    = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
 		$headers         = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
+		$options         = [ 'insecure' => $insecure ];
 
-		$response = Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers );
+		$response = Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers, $options );
 		if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
 			// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
 			WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_url, $response->status_code, $package_name ) );
@@ -1090,31 +1102,34 @@ class Package_Command extends WP_CLI_Command {
 	/**
 	 * Checks that `$package_name` matches the name in composer.json at the corresponding upstream repository, and return corrected value if not.
 	 *
-	 * @string $package_name Package name to check.
-	 * @string $version Optional. Package version. Default 'master'.
-	 * @string Package name, possibly changed to match that in repo.
+	 * @param string $package_name Package name to check.
+	 * @param string $urrl         URL to fetch the package from.
+	 * @param string $version      Optional. Package version. Default 'master'.
+	 * @param bool   $insecure     Optional. Whether to insecurely retry downloads that failed TLS handshake.
 	 */
-	private function check_git_package_name( $package_name, $url = '', $version = '' ) {
+	private function check_git_package_name( $package_name, $url = '', $version = '', $insecure = false ) {
 		if ( $url && ( strpos( $url, '://gitlab.com/' ) !== false ) || ( strpos( $url, 'git@gitlab.com:' ) !== false ) ) {
-			return $this->check_gitlab_package_name( $package_name );
+			return $this->check_gitlab_package_name( $package_name, $version, $insecure );
 		}
 
-		return $this->check_github_package_name( $package_name );
+		return $this->check_github_package_name( $package_name, $version, $insecure );
 	}
 
 	/**
 	 * Checks that `$package_name` matches the name in composer.json at GitLab.com, and return corrected value if not.
 	 *
-	 * @string $package_name Package name to check.
-	 * @string $version Optional. Package version. Default 'master'.
-	 * @string Package name, possibly changed to match that in repo.
+	 * @param string $package_name Package name to check.
+	 * @param string $version      Optional. Package version. Default 'master'.
+	 * @param bool   $insecure     Optional. Whether to insecurely retry downloads that failed TLS handshake.
 	 */
-	private function check_gitlab_package_name( $package_name, $version = '' ) {
+	private function check_gitlab_package_name( $package_name, $version = '', $insecure = false ) {
 		// Generate raw git URL of composer.json file.
 		$raw_content_public_url  = 'https://gitlab.com/' . $package_name . '/-/raw/' . $this->get_raw_git_version( $version ) . '/composer.json';
 		$raw_content_private_url = 'https://gitlab.com/api/v4/projects/' . rawurlencode( $package_name ) . '/repository/files/composer.json/raw?ref=' . $this->get_raw_git_version( $version );
 
-		$response = Utils\http_request( 'GET', $raw_content_public_url, null /*data*/ );
+		$options = [ 'insecure' => $insecure ];
+
+		$response = Utils\http_request( 'GET', $raw_content_public_url, null /*data*/, [], $options );
 		if ( $response->status_code < 200 || $response->status_code >= 300 ) {
 			// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
 			WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_public_url, $response->status_code, $package_name ) );
@@ -1124,7 +1139,7 @@ class Package_Command extends WP_CLI_Command {
 		if ( strpos( $response->headers['content-type'], 'text/html' ) === 0 ) {
 			$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
 			$headers      = $gitlab_token ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
-			$response     = Utils\http_request( 'GET', $raw_content_private_url, null /*data*/, $headers );
+			$response     = Utils\http_request( 'GET', $raw_content_private_url, null /*data*/, $headers, $options );
 
 			if ( $response->status_code < 200 || $response->status_code >= 300 ) {
 				// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
@@ -1186,9 +1201,10 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * @return string Release tag.
 	 */
-	private function get_github_latest_release_tag( $package_name ) {
+	private function get_github_latest_release_tag( $package_name, $insecure ) {
 		$url      = "https://api.github.com/repos/{$package_name}/releases/latest";
-		$response = Utils\http_request( 'GET', $url );
+		$options  = [ 'insecure' => $insecure ];
+		$response = Utils\http_request( 'GET', $url, null, [], $options );
 		if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
 			WP_CLI::warning( 'Could not guess stable version from GitHub repository, falling back to master branch' );
 			return 'master';
