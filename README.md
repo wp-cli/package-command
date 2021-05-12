@@ -130,7 +130,7 @@ There are no optionally available fields.
 Installs a WP-CLI package.
 
 ~~~
-wp package install <name|git|path|zip>
+wp package install <name|git|path|zip> [--insecure]
 ~~~
 
 Packages are required to be a valid Composer package, and can be
@@ -157,6 +157,9 @@ When installing a .zip file, WP-CLI extracts the package to
 		Name, git URL, directory path, or .zip file for the package to install.
 		Names can optionally include a version constraint
 		(e.g. wp-cli/server-command:@stable).
+
+	[--insecure]
+		Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 
 **EXAMPLES**
 
