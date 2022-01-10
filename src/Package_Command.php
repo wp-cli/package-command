@@ -564,7 +564,7 @@ class Package_Command extends WP_CLI_Command {
 			if ( false === $package_name ) {
 				WP_CLI::error( 'Package not installed.' );
 			}
-			$matches      = [];
+			$matches = [];
 			if ( preg_match( '#^https://github.com/(?<repo_name>.*?).git$#', $package_name, $matches ) ) {
 				$package_name = $matches['repo_name'];
 			}
@@ -1090,9 +1090,9 @@ class Package_Command extends WP_CLI_Command {
 	 *                             to false.
 	 */
 	private function check_github_package_name( $package_name, $version = '', $insecure = false ) {
-		$github_token    = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
-		$headers         = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
-		$options         = [ 'insecure' => $insecure ];
+		$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
+		$headers      = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
+		$options      = [ 'insecure' => $insecure ];
 
 		// Generate raw git URL of composer.json file.
 		$raw_content_url = "https://raw.githubusercontent.com/{$package_name}/{$this->get_raw_git_version( $version )}/composer.json";
@@ -1397,14 +1397,13 @@ class Package_Command extends WP_CLI_Command {
 	 *                             to false.
 	 * @return string Default branch, or 'master' if it could not be retrieved.
 	 */
-	private function get_github_default_branch( $package_name, $insecure = false )
-	{
-		$github_token    = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
-		$headers         = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
-		$options         = [ 'insecure' => $insecure ];
+	private function get_github_default_branch( $package_name, $insecure = false ) {
+		$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
+		$headers      = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
+		$options      = [ 'insecure' => $insecure ];
 
 		$github_api_repo_url = "https://api.github.com/repos/{$package_name}";
-		$response = Utils\http_request( 'GET', $github_api_repo_url, null /*data*/, $headers, $options );
+		$response            = Utils\http_request( 'GET', $github_api_repo_url, null /*data*/, $headers, $options );
 		if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
 			WP_CLI::warning(
 				sprintf(
