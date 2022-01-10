@@ -220,13 +220,12 @@ class Package_Command extends WP_CLI_Command {
 		$dir_package = false;
 		$version     = '';
 		if ( $this->is_git_repository( $package_name ) ) {
+			if ( '' === $version ) {
+				$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+			}
 			$git_package = $package_name;
-			preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches );
-			if ( ! empty( $matches[1] ) ) {
-				if ( '' === $version ) {
-					$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
-				}
-
+			$matches     = [];
+			if ( preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches ) ) {
 				$package_name = $this->check_git_package_name( $matches[1], $package_name, $version, $insecure );
 			} else {
 				WP_CLI::error( "Couldn't parse package name from expected path '<name>/<package>'." );
@@ -316,6 +315,10 @@ class Package_Command extends WP_CLI_Command {
 			$package_name = function_exists( 'mb_strtolower' )
 				? mb_strtolower( $package_name )
 				: strtolower( $package_name );
+		}
+
+		if ( '' === $version ) {
+			$version = 'dev-master';
 		}
 
 		WP_CLI::log( sprintf( 'Installing package %s (%s)', $package_name, $version ) );
