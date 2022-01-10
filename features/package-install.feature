@@ -694,7 +694,7 @@ Feature: Install WP-CLI packages
     When I run `wp package install google-sitemap-generator-cli.zip`
     Then STDOUT should contain:
       """
-      Installing package wp-cli/google-sitemap-generator-cli (dev-master)
+      Installing package wp-cli/google-sitemap-generator-cli
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
@@ -901,7 +901,7 @@ Feature: Install WP-CLI packages
     When I run `wp package install path-command`
     Then STDOUT should contain:
       """
-      Installing package wp-cli/community-command (dev-master)
+      Installing package wp-cli/community-command
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:

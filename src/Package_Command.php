@@ -40,15 +40,15 @@ use WP_CLI\PackageManagerEventSubscriber;
  *
  *     # List installed packages
  *     $ wp package list
- *     +-----------------------+------------------------------------------+---------+------------+
- *     | name                  | description                              | authors | version    |
- *     +-----------------------+------------------------------------------+---------+------------+
- *     | wp-cli/server-command | Start a development server for WordPress |         | dev-master |
- *     +-----------------------+------------------------------------------+---------+------------+
+ *     +-----------------------+------------------------------------------+---------+----------+
+ *     | name                  | description                              | authors | version  |
+ *     +-----------------------+------------------------------------------+---------+----------+
+ *     | wp-cli/server-command | Start a development server for WordPress |         | dev-main |
+ *     +-----------------------+------------------------------------------+---------+----------+
  *
  *     # Install the latest development version of the package
  *     $ wp package install wp-cli/server-command
- *     Installing package wp-cli/server-command (dev-master)
+ *     Installing package wp-cli/server-command (dev-main)
  *     Updating /home/person/.wp-cli/packages/composer.json to require the package...
  *     Using Composer to install the package...
  *     ---
@@ -79,6 +79,8 @@ class Package_Command extends WP_CLI_Command {
 
 	const PACKAGE_INDEX_URL = 'https://wp-cli.org/package-index/';
 	const SSL_CERTIFICATE   = '/rmccue/requests/library/Requests/Transport/cacert.pem';
+
+	const DEFAULT_DEV_BRANCH_CONSTRAINTS = 'dev-main || dev-master || dev-trunk';
 
 	private $version_selector = false;
 
@@ -145,17 +147,17 @@ class Package_Command extends WP_CLI_Command {
 	 *       name: 10up/mu-migration
 	 *       description: A set of WP-CLI commands to support the migration of single WordPress instances to multisite
 	 *       authors: Nícholas André
-	 *       version: dev-master, dev-develop
+	 *       version: dev-main, dev-develop
 	 *     aaemnnosttv/wp-cli-dotenv-command:
 	 *       name: aaemnnosttv/wp-cli-dotenv-command
 	 *       description: Dotenv commands for WP-CLI
 	 *       authors: Evan Mattson
-	 *       version: v0.1, v0.1-beta.1, v0.2, dev-master, dev-dev, dev-develop, dev-tests/behat
+	 *       version: v0.1, v0.1-beta.1, v0.2, dev-main, dev-dev, dev-develop, dev-tests/behat
 	 *     aaemnnosttv/wp-cli-http-command:
 	 *       name: aaemnnosttv/wp-cli-http-command
 	 *       description: WP-CLI command for using the WordPress HTTP API
 	 *       authors: Evan Mattson
-	 *       version: dev-master
+	 *       version: dev-main
 	 */
 	public function browse( $_, $assoc_args ) {
 		$this->set_composer_auth_env_var();
@@ -318,7 +320,7 @@ class Package_Command extends WP_CLI_Command {
 		}
 
 		if ( '' === $version ) {
-			$version = 'dev-master';
+			$version = self::DEFAULT_DEV_BRANCH_CONSTRAINTS;
 		}
 
 		WP_CLI::log( sprintf( 'Installing package %s (%s)', $package_name, $version ) );
@@ -446,11 +448,11 @@ class Package_Command extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     $ wp package list
-	 *     +-----------------------+------------------------------------------+---------+------------+
-	 *     | name                  | description                              | authors | version    |
-	 *     +-----------------------+------------------------------------------+---------+------------+
-	 *     | wp-cli/server-command | Start a development server for WordPress |         | dev-master |
-	 *     +-----------------------+------------------------------------------+---------+------------+
+	 *     +-----------------------+------------------------------------------+---------+----------+
+	 *     | name                  | description                              | authors | version  |
+	 *     +-----------------------+------------------------------------------+---------+----------+
+	 *     | wp-cli/server-command | Start a development server for WordPress |         | dev-main |
+	 *     +-----------------------+------------------------------------------+---------+----------+
 	 *
 	 * @subcommand list
 	 */
@@ -917,7 +919,7 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::error( sprintf( "Invalid package: no name in composer.json file '%s'.", $composer_file ) );
 		}
 		$package_name = $composer_data['name'];
-		$version      = 'dev-master';
+		$version      = self::DEFAULT_DEV_BRANCH_CONSTRAINTS;
 		if ( ! empty( $composer_data['version'] ) ) {
 			$version = $composer_data['version'];
 		}
@@ -1094,7 +1096,7 @@ class Package_Command extends WP_CLI_Command {
 	 * Checks that `$package_name` matches the name in composer.json at Github.com, and return corrected value if not.
 	 *
 	 * @param string $package_name Package name to check.
-	 * @param string $version      Optional. Package version. Default 'master'.
+	 * @param string $version      Optional. Package version. Defaults to empty string.
 	 * @param bool   $insecure     Optional. Whether to insecurely retry downloads that failed TLS handshake. Defaults
 	 *                             to false.
 	 */
@@ -1146,7 +1148,7 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * @param string $package_name Package name to check.
 	 * @param string $url          URL to fetch the package from.
-	 * @param string $version      Optional. Package version. Default 'master'.
+	 * @param string $version      Optional. Package version. Defaults to empty string.
 	 * @param bool   $insecure     Optional. Whether to insecurely retry downloads that failed TLS handshake. Defaults
 	 *                             to false.
 	 */
@@ -1162,7 +1164,7 @@ class Package_Command extends WP_CLI_Command {
 	 * Checks that `$package_name` matches the name in composer.json at GitLab.com, and return corrected value if not.
 	 *
 	 * @param string $package_name Package name to check.
-	 * @param string $version      Optional. Package version. Default 'master'.
+	 * @param string $version      Optional. Package version. Defaults to empty string.
 	 * @param bool   $insecure     Optional. Whether to insecurely retry downloads that failed TLS handshake. Defaults
 	 *                             to false.
 	 */
@@ -1213,10 +1215,10 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get the version to use for raw github request. Very basic.
+	 * Get the version to use for raw GitHub request. Very basic.
 	 *
 	 * @string $version Package version.
-	 * @string Version to use for github request.
+	 * @string Version to use for GitHub request.
 	 */
 	private function get_raw_git_version( $version ) {
 		if ( '' === $version ) {
