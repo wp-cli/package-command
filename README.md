@@ -258,13 +258,16 @@ wp package update
 Uninstalls a WP-CLI package.
 
 ~~~
-wp package uninstall <name>
+wp package uninstall <name> [--insecure]
 ~~~
 
 **OPTIONS**
 
 	<name>
 		Name of the package to uninstall.
+
+	[--insecure]
+		Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 
 **EXAMPLES**
 
