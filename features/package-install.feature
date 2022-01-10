@@ -96,7 +96,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall yoast/wp-cli-faker`
     Then STDOUT should contain:
       """
-      Removing require statement
+      Removing require statement for package 'yoast/wp-cli-faker' from
       """
     And STDOUT should contain:
       """
@@ -176,7 +176,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli/google-sitemap-generator-cli' from
       """
     Then STDOUT should contain:
       """
@@ -310,7 +310,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli-test/github-test-command' from
       """
     And STDOUT should contain:
       """
@@ -361,7 +361,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli-test/github-test-command' from
       """
     And STDOUT should contain:
       """
@@ -419,7 +419,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli-test/github-test-command' from
       """
     And STDOUT should contain:
       """
@@ -470,7 +470,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli-test/github-test-command' from
       """
     And STDOUT should contain:
       """
@@ -521,7 +521,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli-test/github-test-command`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli-test/github-test-command' from
       """
     And STDOUT should contain:
       """
@@ -725,7 +725,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli/google-sitemap-generator-cli' from
       """
     And STDOUT should contain:
       """
@@ -789,7 +789,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall capitalwpcli/examplecommand`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'capitalwpcli/examplecommand' from
       """
     And STDOUT should contain:
       """
@@ -844,7 +844,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli/google-sitemap-generator-cli' from
       """
     And STDOUT should contain:
       """
@@ -932,7 +932,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/community-command`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli/community-command' from
       """
     And STDOUT should contain:
       """
@@ -1011,7 +1011,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall wp-cli/community-command`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-cli/community-command' from
       """
     And STDOUT should contain:
       """
