@@ -137,7 +137,7 @@ Feature: Install WP-CLI packages
       """
 
     When I try `wp package install git@github.com:wp-cli.git`
-    Then STDERR should be:
+    Then STDERR should contain:
       """
       Error: Couldn't parse package name from expected path '<name>/<package>'.
       """

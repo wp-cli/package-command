@@ -1405,6 +1405,11 @@ class Package_Command extends WP_CLI_Command {
 		$headers      = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
 		$options      = [ 'insecure' => $insecure ];
 
+		$matches = [];
+		if ( preg_match( '#^(?:https?://github.com/|git@github.com:)(?<repo_name>.*?).git$#', $package_name, $matches ) ) {
+			$package_name = $matches['repo_name'];
+		}
+
 		$github_api_repo_url = "https://api.github.com/repos/{$package_name}";
 		$response            = Utils\http_request( 'GET', $github_api_repo_url, null /*data*/, $headers, $options );
 		if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
