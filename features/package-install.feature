@@ -571,14 +571,18 @@ Feature: Install WP-CLI packages
       wp rocket
       """
 
-    When I run `wp package uninstall GeekPress/wp-rocket-cli`
+    When I try `wp package uninstall GeekPress/wp-rocket-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'wp-media/wp-rocket-cli' from
       """
     And STDOUT should contain:
       """
       Success: Uninstalled package.
+      """
+    And STDERR should contain:
+      """
+      Warning: Package name mismatch...Updating from git name 'GeekPress/wp-rocket-cli' to composer.json name 'wp-media/wp-rocket-cli'.
       """
     And the {PACKAGE_PATH}composer.json file should not contain:
       """
@@ -607,7 +611,7 @@ Feature: Install WP-CLI packages
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
       | name                    |
-      | GeekPress/wp-rocket-cli |
+      | geekpress/wp-rocket-cli |
 
     When I run `wp help rocket`
     Then STDOUT should contain:
@@ -618,7 +622,7 @@ Feature: Install WP-CLI packages
     When I run `wp package uninstall geekpress/wp-rocket-cli`
     Then STDOUT should contain:
       """
-      Removing require statement from
+      Removing require statement for package 'geekpress/wp-rocket-cli' from
       """
     And STDOUT should contain:
       """

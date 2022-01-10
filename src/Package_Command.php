@@ -549,6 +549,9 @@ class Package_Command extends WP_CLI_Command {
 	 * <name>
 	 * : Name of the package to uninstall.
 	 *
+	 * [--insecure]
+	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     $ wp package uninstall wp-cli/server-command
@@ -557,8 +560,10 @@ class Package_Command extends WP_CLI_Command {
 	 *     Regenerating Composer autoload.
 	 *     Success: Uninstalled package.
 	 */
-	public function uninstall( $args ) {
+	public function uninstall( $args, $assoc_args ) {
 		list( $package_name ) = $args;
+
+		$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
 
 		$this->set_composer_auth_env_var();
 		$package = $this->get_installed_package_by_name( $package_name );
@@ -567,9 +572,10 @@ class Package_Command extends WP_CLI_Command {
 			if ( false === $package_name ) {
 				WP_CLI::error( 'Package not installed.' );
 			}
+			$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
 			$matches = [];
-			if ( preg_match( '#^https://github.com/(?<repo_name>.*?).git$#', $package_name, $matches ) ) {
-				$package_name = $matches['repo_name'];
+			if ( preg_match( '#^(?:https?://github\.com/|git@github\.com:)(?<repo_name>.*?).git$#', $package_name, $matches ) ) {
+				$package_name = $this->check_git_package_name( $matches['repo_name'], $package_name, $version, $insecure );
 			}
 		} else {
 			$package_name = $package->getPrettyName(); // Make sure package name is what's in composer.json.
@@ -583,7 +589,7 @@ class Package_Command extends WP_CLI_Command {
 		$this->register_revert_shutdown_function( $json_path, $composer_backup, $revert );
 
 		// Remove the 'require' from composer.json.
-		WP_CLI::log( sprintf( 'Removing require statement from %s', $json_path ) );
+		WP_CLI::log( sprintf( 'Removing require statement for package \'%s\' from %s', $package_name, $json_path ) );
 		$manipulator = new JsonManipulator( $composer_backup );
 		$manipulator->removeSubNode( 'require', $package_name, true /*caseInsensitive*/ );
 
@@ -1406,7 +1412,7 @@ class Package_Command extends WP_CLI_Command {
 		$options      = [ 'insecure' => $insecure ];
 
 		$matches = [];
-		if ( preg_match( '#^(?:https?://github.com/|git@github.com:)(?<repo_name>.*?).git$#', $package_name, $matches ) ) {
+		if ( preg_match( '#^(?:https?://github\.com/|git@github\.com:)(?<repo_name>.*?).git$#', $package_name, $matches ) ) {
 			$package_name = $matches['repo_name'];
 		}
 
