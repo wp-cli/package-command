@@ -539,9 +539,12 @@ Feature: Install WP-CLI packages
     Given an empty directory
 
     # Install and uninstall with case-sensitive name
-    When I run `wp package install GeekPress/wp-rocket-cli`
-    Then STDERR should be empty
-    And STDOUT should match /Installing package (?:GeekPress|geekpress)\/wp-rocket-cli \(dev-master\)/
+    When I try `wp package install GeekPress/wp-rocket-cli`
+    Then STDERR should contain:
+      """
+      Warning: Package name mismatch...Updating from git name 'GeekPress/wp-rocket-cli' to composer.json name 'wp-media/wp-rocket-cli'.
+      """
+    And STDOUT should match /Installing package wp-media\/wp-rocket-cli \(dev-trunk\)/
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
       """
@@ -555,12 +558,12 @@ Feature: Install WP-CLI packages
       """
       Success: Package installed.
       """
-    And the contents of the {PACKAGE_PATH}composer.json file should match /("?:GeekPress|geekpress)\/wp-rocket-cli"/
+    And the contents of the {PACKAGE_PATH}composer.json file should match /"wp-media\/wp-rocket-cli"/
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
-      | name                    |
-      | GeekPress/wp-rocket-cli |
+      | name                   |
+      | wp-media/wp-rocket-cli |
 
     When I run `wp help rocket`
     Then STDOUT should contain:
