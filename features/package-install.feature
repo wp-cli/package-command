@@ -544,7 +544,7 @@ Feature: Install WP-CLI packages
       """
       Warning: Package name mismatch...Updating from git name 'GeekPress/wp-rocket-cli' to composer.json name 'wp-media/wp-rocket-cli'.
       """
-    And STDOUT should match /Installing package wp-media\/wp-rocket-cli \(dev-trunk\)/
+    And STDOUT should match /Installing package wp-media\/wp-rocket-cli \(dev-/
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
       """
@@ -592,7 +592,7 @@ Feature: Install WP-CLI packages
     # Install with lowercase name (for BC - no warning) and uninstall with lowercase name (for BC and convenience)
     When I run `wp package install geekpress/wp-rocket-cli`
     Then STDERR should be empty
-    And STDOUT should match /Installing package (?:GeekPress|geekpress)\/wp-rocket-cli \(dev-master\)/
+    And STDOUT should match /Installing package (?:GeekPress|geekpress)\/wp-rocket-cli \(dev-/
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
       """
@@ -813,7 +813,7 @@ Feature: Install WP-CLI packages
     When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
     Then STDOUT should contain:
       """
-      Installing package wp-cli/google-sitemap-generator-cli (dev-master)
+      Installing package wp-cli/google-sitemap-generator-cli (dev-
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
