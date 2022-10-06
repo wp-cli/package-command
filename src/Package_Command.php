@@ -250,7 +250,9 @@ class Package_Command extends WP_CLI_Command {
 					'filename' => $temp,
 					'insecure' => $insecure,
 				];
-				$response = Utils\http_request( 'GET', $package_name, null, [], $options );
+				$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
+				$headers      = $gitlab_token && strpos( $package_name, '://gitlab.com/' ) !== false ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
+				$response     = Utils\http_request( 'GET', $package_name, null, $headers, $options );
 				if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
 					@unlink( $temp ); // @codingStandardsIgnoreLine
 					WP_CLI::error( sprintf( "Couldn't download package from '%s' (HTTP code %d).", $package_name, $response->status_code ) );
@@ -1182,17 +1184,17 @@ class Package_Command extends WP_CLI_Command {
 
 		$options = [ 'insecure' => $insecure ];
 
-		$response = Utils\http_request( 'GET', $raw_content_public_url, null /*data*/, [], $options );
-		if ( $response->status_code < 200 || $response->status_code >= 300 ) {
+		$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
+		$response     = Utils\http_request( 'GET', $raw_content_public_url, null /*data*/, [], $options );
+		if ( ! $gitlab_token && ( $response->status_code < 200 || $response->status_code >= 300 ) ) {
 			// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
 			WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_public_url, $response->status_code, $package_name ) );
 			return $package_name;
 		}
 
 		if ( strpos( $response->headers['content-type'], 'text/html' ) === 0 ) {
-			$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
-			$headers      = $gitlab_token ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
-			$response     = Utils\http_request( 'GET', $raw_content_private_url, null /*data*/, $headers, $options );
+			$headers  = $gitlab_token ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
+			$response = Utils\http_request( 'GET', $raw_content_private_url, null /*data*/, $headers, $options );
 
 			if ( $response->status_code < 200 || $response->status_code >= 300 ) {
 				// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
