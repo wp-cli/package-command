@@ -66,7 +66,7 @@ Feature: Install WP-CLI packages
       Version C.
       """
 
-  @require-php-5.6
+  @require-php-5.6 @test
   Scenario: Install a package with a dependency
     Given an empty directory
 
