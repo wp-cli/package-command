@@ -26,6 +26,7 @@ use WP_CLI\Extractor;
 use WP_CLI\Utils;
 use WP_CLI\JsonManipulator;
 use WP_CLI\PackageManagerEventSubscriber;
+use WP_CLI\RequestsLibrary;
 
 /**
  * Lists, installs, and removes WP-CLI packages.
@@ -78,7 +79,6 @@ use WP_CLI\PackageManagerEventSubscriber;
 class Package_Command extends WP_CLI_Command {
 
 	const PACKAGE_INDEX_URL = 'https://wp-cli.org/package-index/';
-	const SSL_CERTIFICATE   = '/rmccue/requests/library/Requests/Transport/cacert.pem';
 
 	const DEFAULT_DEV_BRANCH_CONSTRAINTS = 'dev-main || dev-master || dev-trunk';
 
@@ -1316,8 +1316,8 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function avoid_composer_ca_bundle() {
 		if ( Utils\inside_phar() && ! getenv( 'SSL_CERT_FILE' ) && ! getenv( 'SSL_CERT_DIR' ) && ! ini_get( 'openssl.cafile' ) && ! ini_get( 'openssl.capath' ) ) {
-			$certificate = Utils\extract_from_phar( WP_CLI_VENDOR_DIR . self::SSL_CERTIFICATE );
-			putenv( "SSL_CERT_FILE={$certificate}" );
+			$certificate_path = Utils\extract_from_phar( RequestsLibrary::get_bundled_certificate_path() );
+			putenv( "SSL_CERT_FILE={$certificate_path}" );
 		}
 	}
 
