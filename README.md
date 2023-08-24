@@ -151,6 +151,13 @@ reference breaks.
 When installing a .zip file, WP-CLI extracts the package to
 `~/.wp-cli/packages/local/<package-name>`.
 
+If Github token authorization is required, a GitHub Personal Access Token
+(https://github.com/settings/tokens) can be used. The following command
+will add a GitHub Personal Access Token to Composer's global configuration:
+composer config -g github-oauth.github.com <GITHUB_TOKEN>
+Once this has been added, the value used for <GITHUB_TOKEN> will be used
+for future authorization requests.
+
 **OPTIONS**
 
 	<name|git|path|zip>
