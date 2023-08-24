@@ -190,7 +190,7 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * If Github token authorization is required, a GitHub Personal Access Token 
 	 * (https://github.com/settings/tokens) can be used. The following command 
-	 * will add a Github Personal Access Token to Composer's global configuration:
+	 * will add a GitHub Personal Access Token to Composer's global configuration:
 	 * composer config -g github-oauth.github.com <GITHUB_TOKEN>
 	 * Once this has been added, the value used for <GITHUB_TOKEN> will be used 
 	 * for future authorization requests.
