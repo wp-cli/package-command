@@ -194,7 +194,7 @@ class Package_Command extends WP_CLI_Command {
 	 * composer config -g github-oauth.github.com <GITHUB_TOKEN>
 	 * Once this has been added, the value used for <GITHUB_TOKEN> will be used
 	 * for future authorization requests.
-	 * 
+	 *
 	 * ## OPTIONS
 	 *
 	 * <name|git|path|zip>
