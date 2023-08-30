@@ -1163,7 +1163,9 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function check_git_package_name( $package_name, $url = '', $version = '', $insecure = false ) {
 		if ( $url && ( strpos( $url, '://gitlab.com/' ) !== false ) || ( strpos( $url, 'git@gitlab.com:' ) !== false ) ) {
-			return $this->check_gitlab_package_name( $package_name, $version, $insecure );
+			$matches = [];
+			preg_match( '#gitlab.com[:/](.*?)\.git#', $url, $matches );
+			return $this->check_gitlab_package_name( $matches[1] , $version, $insecure );
 		}
 
 		return $this->check_github_package_name( $package_name, $version, $insecure );
@@ -1177,19 +1179,22 @@ class Package_Command extends WP_CLI_Command {
 	 * @param bool   $insecure     Optional. Whether to insecurely retry downloads that failed TLS handshake. Defaults
 	 *                             to false.
 	 */
-	private function check_gitlab_package_name( $package_name, $version = '', $insecure = false ) {
+	private function check_gitlab_package_name( $project_name, $version = '', $insecure = false ) {
 		// Generate raw git URL of composer.json file.
-		$raw_content_public_url  = 'https://gitlab.com/' . $package_name . '/-/raw/' . $this->get_raw_git_version( $version ) . '/composer.json';
-		$raw_content_private_url = 'https://gitlab.com/api/v4/projects/' . rawurlencode( $package_name ) . '/repository/files/composer.json/raw?ref=' . $this->get_raw_git_version( $version );
+		$raw_content_public_url  = 'https://gitlab.com/' . $project_name . '/-/raw/' . $this->get_raw_git_version( $version ) . '/composer.json';
+		$raw_content_private_url = 'https://gitlab.com/api/v4/projects/' . rawurlencode( $project_name ) . '/repository/files/composer.json/raw?ref=' . $this->get_raw_git_version( $version );
 
+		$matches = [];
+		preg_match( '#([^:\/]+\/[^\/]+$)#', $project_name, $matches );
+		$default_package_name = $package_name = $matches[1];
 		$options = [ 'insecure' => $insecure ];
 
 		$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
 		$response     = Utils\http_request( 'GET', $raw_content_public_url, null /*data*/, [], $options );
 		if ( ! $gitlab_token && ( $response->status_code < 200 || $response->status_code >= 300 ) ) {
 			// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
-			WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_public_url, $response->status_code, $package_name ) );
-			return $package_name;
+			WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_public_url, $response->status_code, $default_package_name ) );
+			return $default_package_name;
 		}
 
 		if ( strpos( $response->headers['content-type'], 'text/html' ) === 0 ) {
@@ -1198,8 +1203,8 @@ class Package_Command extends WP_CLI_Command {
 
 			if ( $response->status_code < 200 || $response->status_code >= 300 ) {
 				// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
-				WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_private_url, $response->status_code, $package_name ) );
-				return $package_name;
+				WP_CLI::warning( sprintf( "Couldn't download composer.json file from '%s' (HTTP code %d). Presuming package name is '%s'.", $raw_content_private_url, $response->status_code, $default_package_name ) );
+				return $default_package_name;
 			}
 		}
 
@@ -1216,8 +1221,8 @@ class Package_Command extends WP_CLI_Command {
 		$package_name_on_repo = $composer_content_as_array['name'];
 
 		// If package name and repository name are not identical, then fix it.
-		if ( $package_name !== $package_name_on_repo ) {
-			WP_CLI::warning( sprintf( "Package name mismatch...Updating from git name '%s' to composer.json name '%s'.", $package_name, $package_name_on_repo ) );
+		if ( $default_package_name !== $package_name_on_repo ) {
+			WP_CLI::warning( sprintf( "Package name mismatch...Updating from git name '%s' to composer.json name '%s'.", $default_package_name, $package_name_on_repo ) );
 			$package_name = $package_name_on_repo;
 		}
 		return $package_name;
