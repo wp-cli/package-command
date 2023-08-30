@@ -849,6 +849,16 @@ class Package_Command extends WP_CLI_Command {
 			return $url;
 		}
 
+		// Fall back to GitLab URL if we had no match yet.
+		$url          = "https://gitlab.com/{$package_name}.git";
+		$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
+		$headers      = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
+		$headers      = $gitlab_token && strpos( $package_name, '://gitlab.com/' ) !== false ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
+		$response     = Utils\http_request( 'GET', $url, null /*data*/, $headers, $options );
+		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
+			return $url;
+		}
+
 		return false;
 	}
 
