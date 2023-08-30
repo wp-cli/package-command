@@ -790,7 +790,7 @@ class Package_Command extends WP_CLI_Command {
 		}
 
 		$list = array_map(
-			function( $package ) {
+			function ( $package ) {
 				$package['version'] = implode( ', ', $package['version'] );
 				return $package;
 			},
