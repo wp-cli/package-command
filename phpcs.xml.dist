@@ -16,6 +16,8 @@
 	<!-- Ignoring select files/folders.
 		 https://github.com/squizlabs/PHP_CodeSniffer/wiki/Advanced-Usage#ignoring-files-and-folders -->
 	<exclude-pattern>*/src/WP_CLI/JsonManipulator\.php$</exclude-pattern>
+	<exclude-pattern>*/src/WP_CLI/Package/Compat/Min_Composer_1_10/NullIOMethodsTrait\.php$</exclude-pattern>
+	<exclude-pattern>*/src/WP_CLI/Package/Compat/Min_Composer_2_3/NullIOMethodsTrait\.php$</exclude-pattern>
 	<exclude-pattern>*/tests/test-json-manipulator\.php$</exclude-pattern>
 
 	<!-- Show progress. -->
