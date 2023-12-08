@@ -145,7 +145,7 @@ Feature: Install WP-CLI packages
     When I run `wp package install git@github.com:wp-cli/google-sitemap-generator-cli.git`
     Then STDOUT should contain:
       """
-      Installing package wp-cli/google-sitemap-generator-cli (dev-master)
+      Installing package wp-cli/google-sitemap-generator-cli (dev-main)
       """
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
