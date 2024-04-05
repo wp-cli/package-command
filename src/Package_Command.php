@@ -1166,7 +1166,7 @@ class Package_Command extends WP_CLI_Command {
 	 *                             to false.
 	 */
 	private function check_git_package_name( $package_name, $url = '', $version = '', $insecure = false ) {
-		if ( $url && ( strpos( $url, '://gitlab.com/' ) !== false ) || ( strpos( $url, 'git@gitlab.com:' ) !== false ) ) {
+		if ( $url && ( ( strpos( $url, '://gitlab.com/' ) !== false ) || ( strpos( $url, 'git@gitlab.com:' ) !== false ) ) ) {
 			$matches = [];
 			preg_match( '#gitlab.com[:/](.*?)\.git#', $url, $matches );
 			return $this->check_gitlab_package_name( $matches[1], $version, $insecure );
@@ -1178,7 +1178,7 @@ class Package_Command extends WP_CLI_Command {
 	/**
 	 * Checks that `$package_name` matches the name in composer.json at GitLab.com, and return corrected value if not.
 	 *
-	 * @param string $package_name Package name to check.
+	 * @param string $project_name Package name to check.
 	 * @param string $version      Optional. Package version. Defaults to empty string.
 	 * @param bool   $insecure     Optional. Whether to insecurely retry downloads that failed TLS handshake. Defaults
 	 *                             to false.

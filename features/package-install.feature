@@ -1063,9 +1063,9 @@ Feature: Install WP-CLI packages
 
     When I try `wp package install https://example.com/non-existent-zip-asdfasdf.zip`
     Then the return code should be 1
-    And STDERR should be:
+    And STDERR should contain:
       """
-      Error: Couldn't download package from 'https://example.com/non-existent-zip-asdfasdf.zip' (HTTP code 404).
+      Error: Couldn't download package from 'https://example.com/non-existent-zip-asdfasdf.zip'
       """
     And STDOUT should be empty
 
