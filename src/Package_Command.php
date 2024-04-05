@@ -1178,7 +1178,7 @@ class Package_Command extends WP_CLI_Command {
 	/**
 	 * Checks that `$package_name` matches the name in composer.json at GitLab.com, and return corrected value if not.
 	 *
-	 * @param string $package_name Package name to check.
+	 * @param string $project_name Package name to check.
 	 * @param string $version      Optional. Package version. Defaults to empty string.
 	 * @param bool   $insecure     Optional. Whether to insecurely retry downloads that failed TLS handshake. Defaults
 	 *                             to false.
