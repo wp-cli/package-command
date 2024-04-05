@@ -23,19 +23,19 @@ WP-CLI packages are community-maintained projects built on WP-CLI. They can
 contain WP-CLI commands, but they can also just extend WP-CLI in some way.
 
 Learn how to create your own command from the
-[Commands Cookbook](https://make.wordpress.org/cli/handbook/commands-cookbook/)
+[Commands Cookbook](https://make.wordpress.org/cli/handbook/guides/commands-cookbook/)
 
 **EXAMPLES**
 
-    # List installed packages
+    # List installed packages.
     $ wp package list
-    +-----------------------+------------------------------------------+---------+----------+
-    | name                  | description                              | authors | version  |
-    +-----------------------+------------------------------------------+---------+----------+
-    | wp-cli/server-command | Start a development server for WordPress |         | dev-main |
-    +-----------------------+------------------------------------------+---------+----------+
+    +-----------------------+------------------+----------+-----------+----------------+
+    | name                  | authors          | version  | update    | update_version |
+    +-----------------------+------------------+----------+-----------+----------------+
+    | wp-cli/server-command | Daniel Bachhuber | dev-main | available | 2.x-dev        |
+    +-----------------------+------------------+----------+-----------+----------------+
 
-    # Install the latest development version of the package
+    # Install the latest development version of the package.
     $ wp package install wp-cli/server-command
     Installing package wp-cli/server-command (dev-main)
     Updating /home/person/.wp-cli/packages/composer.json to require the package...
@@ -53,11 +53,11 @@ Learn how to create your own command from the
     ---
     Success: Package installed.
 
-    # Uninstall package
+    # Uninstall package.
     $ wp package uninstall wp-cli/server-command
-    Removing require statement from /home/person/.wp-cli/packages/composer.json
-    Deleting package directory /home/person/.wp-cli/packages/vendor/wp-cli/server-command
-    Regenerating Composer autoload.
+    Removing require statement for package 'wp-cli/server-command' from /home/person/.wp-cli/packages/composer.json
+    Removing repository details from /home/person/.wp-cli/packages/composer.json
+    Removing package directories and regenerating autoloader...
     Success: Uninstalled package.
 
 
@@ -225,12 +225,13 @@ These fields are optionally available:
 
 **EXAMPLES**
 
+    # List installed packages.
     $ wp package list
-    +-----------------------+------------------------------------------+---------+----------+
-    | name                  | description                              | authors | version  |
-    +-----------------------+------------------------------------------+---------+----------+
-    | wp-cli/server-command | Start a development server for WordPress |         | dev-main |
-    +-----------------------+------------------------------------------+---------+----------+
+    +-----------------------+------------------+----------+-----------+----------------+
+    | name                  | authors          | version  | update    | update_version |
+    +-----------------------+------------------+----------+-----------+----------------+
+    | wp-cli/server-command | Daniel Bachhuber | dev-main | available | 2.x-dev        |
+    +-----------------------+------------------+----------+-----------+----------------+
 
 
 
@@ -278,10 +279,11 @@ wp package uninstall <name> [--insecure]
 
 **EXAMPLES**
 
+    # Uninstall package.
     $ wp package uninstall wp-cli/server-command
-    Removing require statement from /home/person/.wp-cli/packages/composer.json
-    Deleting package directory /home/person/.wp-cli/packages/vendor/wp-cli/server-command
-    Regenerating Composer autoload.
+    Removing require statement for package 'wp-cli/server-command' from /home/person/.wp-cli/packages/composer.json
+    Removing repository details from /home/person/.wp-cli/packages/composer.json
+    Removing package directories and regenerating autoloader...
     Success: Uninstalled package.
 
 ## Installing
