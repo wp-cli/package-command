@@ -1063,7 +1063,7 @@ Feature: Install WP-CLI packages
 
     When I try `wp package install https://example.com/non-existent-zip-asdfasdf.zip`
     Then the return code should be 1
-    And STDERR should cintain:
+    And STDERR should contain:
       """
       Error: Couldn't download package from 'https://example.com/non-existent-zip-asdfasdf.zip'
       """
