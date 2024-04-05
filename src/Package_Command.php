@@ -1166,7 +1166,7 @@ class Package_Command extends WP_CLI_Command {
 	 *                             to false.
 	 */
 	private function check_git_package_name( $package_name, $url = '', $version = '', $insecure = false ) {
-		if ( $url && ( strpos( $url, '://gitlab.com/' ) !== false ) || ( strpos( $url, 'git@gitlab.com:' ) !== false ) ) {
+		if ( $url && ( ( strpos( $url, '://gitlab.com/' ) !== false ) || ( strpos( $url, 'git@gitlab.com:' ) !== false ) ) ) {
 			$matches = [];
 			preg_match( '#gitlab.com[:/](.*?)\.git#', $url, $matches );
 			return $this->check_gitlab_package_name( $matches[1], $version, $insecure );
