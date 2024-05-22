@@ -18,7 +18,7 @@
 	<exclude-pattern>*/src/WP_CLI/JsonManipulator\.php$</exclude-pattern>
 	<exclude-pattern>*/src/WP_CLI/Package/Compat/Min_Composer_1_10/NullIOMethodsTrait\.php$</exclude-pattern>
 	<exclude-pattern>*/src/WP_CLI/Package/Compat/Min_Composer_2_3/NullIOMethodsTrait\.php$</exclude-pattern>
-	<exclude-pattern>*/tests/test-json-manipulator\.php$</exclude-pattern>
+	<exclude-pattern>*/tests/JsonManipulatorTest\.php$</exclude-pattern>
 
 	<!-- Show progress. -->
 	<arg value="p"/>
