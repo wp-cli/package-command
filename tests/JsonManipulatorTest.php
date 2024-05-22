@@ -26,7 +26,7 @@ class JsonManipulatorTest extends TestCase
         $this->assertEquals($expected, $manipulator->getContents());
     }
 
-    public function linkProvider()
+    public static function linkProvider()
     {
         return array(
             array(
@@ -1297,7 +1297,7 @@ class JsonManipulatorTest extends TestCase
         $this->assertEquals($expected, $manipulator->getContents());
     }
 
-    public function providerAddLinkAndSortPackages()
+    public static function providerAddLinkAndSortPackages()
     {
         return array(
             array(
@@ -1380,7 +1380,7 @@ class JsonManipulatorTest extends TestCase
         }
     }
 
-    public function removeSubNodeProvider()
+    public static function removeSubNodeProvider()
     {
         return array(
             'works on simple ones first' => array(
@@ -2374,7 +2374,7 @@ class JsonManipulatorTest extends TestCase
         $this->assertEquals($expected, $manipulator->getContents());
     }
 
-    public function providerAddLinkCaseInsensitive()
+    public static function providerAddLinkCaseInsensitive()
     {
         return array(
             array(
@@ -2441,7 +2441,7 @@ class JsonManipulatorTest extends TestCase
 		$this->assertSame($expected, $manipulator->getContents());
     }
 
-    public function providerAddSubNodeCase()
+    public static function providerAddSubNodeCase()
     {
         return array(
             array(
@@ -2504,7 +2504,7 @@ class JsonManipulatorTest extends TestCase
         }
     }
 
-    public function providerRemoveSubNodeCaseInsensitive()
+    public static function providerRemoveSubNodeCaseInsensitive()
     {
         return array(
             array(
