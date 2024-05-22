@@ -31,8 +31,7 @@ class ComposerJsonTest extends TestCase {
 
 		$class_wp_cli_capture_exit = new \ReflectionProperty( 'WP_CLI', 'capture_exit' );
 		$class_wp_cli_capture_exit->setAccessible( true );
-		$class_wp_cli = new \ReflectionClass( 'WP_CLI' );
-		$class_wp_cli->setStaticPropertyValue( 'capture_exit', true );
+		$class_wp_cli_capture_exit->setValue( null, true );
 
 		$this->temp_dir = Utils\get_temp_dir() . uniqid( 'wp-cli-test-package-composer-json-', true ) . '/';
 		mkdir( $this->temp_dir );
@@ -45,8 +44,7 @@ class ComposerJsonTest extends TestCase {
 		// Restore exit exception.
 		$class_wp_cli_capture_exit = new \ReflectionProperty( 'WP_CLI', 'capture_exit' );
 		$class_wp_cli_capture_exit->setAccessible( true );
-		$class_wp_cli = new \ReflectionClass( 'WP_CLI' );
-		$class_wp_cli->setStaticPropertyValue( 'capture_exit', $this->prev_capture_exit );
+		$class_wp_cli_capture_exit->setValue( null, $this->prev_capture_exit );
 
 		rmdir( $this->temp_dir );
 
