@@ -1047,10 +1047,10 @@ Feature: Install WP-CLI packages
       Warning: Couldn't download composer.json file from 'https://raw.githubusercontent.com/non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf/master/composer.json' (HTTP code 404). Presuming package name is 'non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf'.
       """
 
-    When I try `wp package install https://github.com/wp-cli-tests/private-repository.git`
+    When I try `wp package install https://github.com/wp-cli-test/private-repository.git`
     Then STDERR should contain:
       """
-      Warning: Couldn't download composer.json file from 'https://raw.githubusercontent.com/wp-cli-tests/private-repository/master/composer.json' (HTTP code 404). Presuming package name is 'wp-cli-tests/private-repository'.
+      Warning: Couldn't download composer.json file from 'https://raw.githubusercontent.com/wp-cli-test/private-repository/master/composer.json' (HTTP code 404). Presuming package name is 'wp-cli-tests/private-repository'.
       """
 
     When I try `wp package install non-existent-git-user-asdfasdf/non-existent-git-repo-asdfasdf`
