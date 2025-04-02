@@ -71,7 +71,7 @@ Feature: Install WP-CLI packages
     Given an empty directory
 
     When I run `wp package install yoast/wp-cli-faker`
-    And STDOUT should contain:
+    Then STDOUT should contain:
       """
       Success: Package installed
       """
@@ -178,7 +178,7 @@ Feature: Install WP-CLI packages
       """
       Removing require statement for package 'wp-cli/google-sitemap-generator-cli' from
       """
-    Then STDOUT should contain:
+    And STDOUT should contain:
       """
       Removing repository details from
       """
