@@ -836,7 +836,7 @@ class Package_Command extends WP_CLI_Command {
 		$options = [ 'insecure' => $insecure ];
 
 		// Check if the package exists on Packagist.
-		$url = $this->get_packagist_url( $package_name, $options );
+		$url      = $this->get_packagist_url( $package_name, $options );
 		$response = Utils\http_request( 'GET', $url, null, [], $options );
 		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
 			return $package_name;
