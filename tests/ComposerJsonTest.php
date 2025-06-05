@@ -180,6 +180,25 @@ class ComposerJsonTest extends TestCase {
 		putenv( false === $env_wp_cli_packages_dir ? 'WP_CLI_PACKAGES_DIR' : "WP_CLI_PACKAGES_DIR=$env_wp_cli_packages_dir" );
 	}
 
+	public function test_get_packagist_url() {
+		$get_packagist_url = new \ReflectionMethod( 'Package_Command', 'get_packagist_url' );
+		$get_packagist_url->setAccessible( true );
+
+		$package = new Package_Command();
+		$options = [ 'insecure' => false ];
+
+		// Test with a valid package that should exist on packagist v1
+		$result = $get_packagist_url->invoke( $package, 'wp-cli/wp-cli', $options );
+		$this->assertStringContainsString( 'repo.packagist.org/p/', $result );
+		$this->assertStringContainsString( 'wp-cli/wp-cli.json', $result );
+
+		// The method should return either v1 or v2 URL based on availability
+		$this->assertTrue(
+			strpos( $result, 'https://repo.packagist.org/p/wp-cli/wp-cli.json' ) === 0 ||
+			strpos( $result, 'https://repo.packagist.org/p2/wp-cli/wp-cli.json' ) === 0
+		);
+	}
+
 	private function mac_safe_path( $path ) {
 		return preg_replace( '#^/private/(var|tmp)/#i', '/$1/', $path );
 	}
