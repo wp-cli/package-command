@@ -74,8 +74,6 @@ class Package_Command extends WP_CLI_Command {
 
 	const PACKAGE_INDEX_URL = 'https://wp-cli.org/package-index/';
 
-	private $packagist_version = 'p';
-
 	const DEFAULT_DEV_BRANCH_CONSTRAINTS = 'dev-main || dev-master || dev-trunk';
 
 	private $version_selector = false;
