@@ -834,7 +834,7 @@ class Package_Command extends WP_CLI_Command {
 		$options = [ 'insecure' => $insecure ];
 
 		// Check if the package exists on Packagist.
-		$url      = "https://repo.packagist.org/p/{$package_name}.json";
+		$url      = $this->get_packagist_url( $package_name, $options );
 		$response = Utils\http_request( 'GET', $url, null, [], $options );
 		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
 			return $package_name;
@@ -860,6 +860,20 @@ class Package_Command extends WP_CLI_Command {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Gets the correct packagist URL.
+	 */
+	private function get_packagist_url( $package_name, $options ) {
+		$url      = "https://repo.packagist.org/p2/{$package_name}.json";
+		$response = Utils\http_request( 'GET', $url, null, [], $options );
+
+		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
+			return $url;
+		}
+
+		return "https://repo.packagist.org/p/{$package_name}.json";
 	}
 
 	/**
