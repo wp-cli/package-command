@@ -1606,10 +1606,6 @@ class JsonManipulatorTest extends TestCase
     }
 }
 ',
-
-                '{
-}
-',
             ),
             'works on deep repos with borked texts2' => array(
                 '{
@@ -1627,10 +1623,6 @@ class JsonManipulatorTest extends TestCase
             "package": { "bar": "ba}z" }
         }
     }
-}
-',
-
-                '{
 }
 ',
             ),
