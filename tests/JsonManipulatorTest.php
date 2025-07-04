@@ -12,6 +12,7 @@
 
 use WP_CLI\JsonManipulator; // WP_CLI
 use WP_CLI\Tests\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class JsonManipulatorTest extends TestCase
 {
@@ -19,6 +20,7 @@ class JsonManipulatorTest extends TestCase
     /**
      * @dataProvider linkProvider
      */
+	#[DataProvider( 'linkProvider' )] // phpcs:ignore PHPCompatibility.Attributes.NewAttributes.PHPUnitAttributeFound
     public function testAddLink($json, $type, $package, $constraint, $expected)
     {
         $manipulator = new JsonManipulator($json);
@@ -1290,6 +1292,7 @@ class JsonManipulatorTest extends TestCase
     /**
      * @dataProvider providerAddLinkAndSortPackages
      */
+	#[DataProvider( 'providerAddLinkAndSortPackages' )] // phpcs:ignore PHPCompatibility.Attributes.NewAttributes.PHPUnitAttributeFound
     public function testAddLinkAndSortPackages($json, $type, $package, $constraint, $sortPackages, $expected)
     {
         $manipulator = new JsonManipulator($json);
@@ -1370,6 +1373,7 @@ class JsonManipulatorTest extends TestCase
     /**
      * @dataProvider removeSubNodeProvider
      */
+	#[DataProvider( 'removeSubNodeProvider' )] // phpcs:ignore PHPCompatibility.Attributes.NewAttributes.PHPUnitAttributeFound
     public function testRemoveSubNode($json, $name, $expected, $expectedContent = null)
     {
         $manipulator = new JsonManipulator($json);
@@ -1602,10 +1606,6 @@ class JsonManipulatorTest extends TestCase
     }
 }
 ',
-
-                '{
-}
-',
             ),
             'works on deep repos with borked texts2' => array(
                 '{
@@ -1623,10 +1623,6 @@ class JsonManipulatorTest extends TestCase
             "package": { "bar": "ba}z" }
         }
     }
-}
-',
-
-                '{
 }
 ',
             ),
@@ -2367,6 +2363,7 @@ class JsonManipulatorTest extends TestCase
     /**
      * @dataProvider providerAddLinkCaseInsensitive
      */
+	#[DataProvider( 'providerAddLinkCaseInsensitive' )] // phpcs:ignore PHPCompatibility.Attributes.NewAttributes.PHPUnitAttributeFound
     public function testAddLinkCaseInsensitive($json, $type, $package, $constraint, $sortPackages, $expected)
     {
         $manipulator = new JsonManipulator($json);
@@ -2433,6 +2430,7 @@ class JsonManipulatorTest extends TestCase
     /**
      * @dataProvider providerAddSubNodeCase
      */
+	#[DataProvider( 'providerAddSubNodeCase' )] // phpcs:ignore PHPCompatibility.Attributes.NewAttributes.PHPUnitAttributeFound
     public function testAddSubNodeCase($json, $mainNode, $name, $caseInsensitive, $expected)
     {
         $manipulator = new JsonManipulator($json);
@@ -2494,6 +2492,7 @@ class JsonManipulatorTest extends TestCase
     /**
      * @dataProvider providerRemoveSubNodeCaseInsensitive
      */
+	#[DataProvider( 'providerRemoveSubNodeCaseInsensitive' )] // phpcs:ignore PHPCompatibility.Attributes.NewAttributes.PHPUnitAttributeFound
     public function testRemoveSubNodeCaseInsensitive($json, $mainNode, $name, $expected, $expectedContent = null)
     {
         $manipulator = new JsonManipulator($json);
