@@ -21,7 +21,9 @@ class ComposerJsonTest extends TestCase {
 
 		// Save and set logger.
 		$class_wp_cli_logger = new \ReflectionProperty( 'WP_CLI', 'logger' );
-		$class_wp_cli_logger->setAccessible( true );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$class_wp_cli_logger->setAccessible( true );
+		}
 		$this->prev_logger = $class_wp_cli_logger->getValue();
 
 		$this->logger = new Execution();
@@ -30,7 +32,9 @@ class ComposerJsonTest extends TestCase {
 		// Enable exit exception.
 
 		$class_wp_cli_capture_exit = new \ReflectionProperty( 'WP_CLI', 'capture_exit' );
-		$class_wp_cli_capture_exit->setAccessible( true );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$class_wp_cli_capture_exit->setAccessible( true );
+		}
 		$class_wp_cli_capture_exit->setValue( null, true );
 
 		$this->temp_dir = Utils\get_temp_dir() . uniqid( 'wp-cli-test-package-composer-json-', true ) . '/';
@@ -43,7 +47,9 @@ class ComposerJsonTest extends TestCase {
 
 		// Restore exit exception.
 		$class_wp_cli_capture_exit = new \ReflectionProperty( 'WP_CLI', 'capture_exit' );
-		$class_wp_cli_capture_exit->setAccessible( true );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$class_wp_cli_capture_exit->setAccessible( true );
+		}
 		$class_wp_cli_capture_exit->setValue( null, $this->prev_capture_exit );
 
 		rmdir( $this->temp_dir );
@@ -53,7 +59,9 @@ class ComposerJsonTest extends TestCase {
 
 	public function test_create_default_composer_json() {
 		$create_default_composer_json = new \ReflectionMethod( 'Package_Command', 'create_default_composer_json' );
-		$create_default_composer_json->setAccessible( true );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$create_default_composer_json->setAccessible( true );
+		}
 
 		$package = new Package_Command();
 
@@ -84,7 +92,9 @@ class ComposerJsonTest extends TestCase {
 		$env_wp_cli_packages_dir = getenv( 'WP_CLI_PACKAGES_DIR' );
 
 		$get_composer_json_path = new \ReflectionMethod( 'Package_Command', 'get_composer_json_path' );
-		$get_composer_json_path->setAccessible( true );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$get_composer_json_path->setAccessible( true );
+		}
 
 		$package = new Package_Command();
 
@@ -134,7 +144,9 @@ class ComposerJsonTest extends TestCase {
 		putenv( 'WP_CLI_PACKAGES_DIR=' . $this->temp_dir . 'packages' );
 
 		$get_composer_json_path_backup_decoded = new \ReflectionMethod( 'Package_Command', 'get_composer_json_path_backup_decoded' );
-		$get_composer_json_path_backup_decoded->setAccessible( true );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$get_composer_json_path_backup_decoded->setAccessible( true );
+		}
 
 		$package = new Package_Command();
 
