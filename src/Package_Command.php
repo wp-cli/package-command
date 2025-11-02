@@ -199,6 +199,9 @@ class Package_Command extends WP_CLI_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
+	 * [--no-interaction]
+	 * : Do not ask any interactive questions. Useful for scripting.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Install a package hosted at a git URL.
@@ -216,7 +219,12 @@ class Package_Command extends WP_CLI_Command {
 	public function install( $args, $assoc_args ) {
 		list( $package_name ) = $args;
 
-		$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$insecure       = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$no_interaction = (bool) Utils\get_flag_value( $assoc_args, 'no-interaction', false );
+
+		if ( $no_interaction ) {
+			$this->set_non_interactive_mode();
+		}
 
 		$this->set_composer_auth_env_var();
 		$git_package = false;
@@ -503,6 +511,11 @@ class Package_Command extends WP_CLI_Command {
 	/**
 	 * Updates all installed WP-CLI packages to their latest version.
 	 *
+	 * ## OPTIONS
+	 *
+	 * [--no-interaction]
+	 * : Do not ask any interactive questions. Useful for scripting.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     $ wp package update
@@ -519,7 +532,13 @@ class Package_Command extends WP_CLI_Command {
 	 *     ---
 	 *     Success: Packages updated.
 	 */
-	public function update() {
+	public function update( $_, $assoc_args = [] ) {
+		$no_interaction = (bool) Utils\get_flag_value( $assoc_args, 'no-interaction', false );
+
+		if ( $no_interaction ) {
+			$this->set_non_interactive_mode();
+		}
+
 		$this->set_composer_auth_env_var();
 		$composer = $this->get_composer();
 
@@ -562,6 +581,9 @@ class Package_Command extends WP_CLI_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
+	 * [--no-interaction]
+	 * : Do not ask any interactive questions. Useful for scripting.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Uninstall package.
@@ -574,7 +596,12 @@ class Package_Command extends WP_CLI_Command {
 	public function uninstall( $args, $assoc_args ) {
 		list( $package_name ) = $args;
 
-		$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$insecure       = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$no_interaction = (bool) Utils\get_flag_value( $assoc_args, 'no-interaction', false );
+
+		if ( $no_interaction ) {
+			$this->set_non_interactive_mode();
+		}
 
 		$this->set_composer_auth_env_var();
 		$package = $this->get_installed_package_by_name( $package_name );
@@ -1477,5 +1504,18 @@ class Package_Command extends WP_CLI_Command {
 		WP_CLI::debug( "Detected package default branch: {$default_branch}", 'packages' );
 
 		return $default_branch;
+	}
+
+	/**
+	 * Sets environment variables to enable non-interactive mode.
+	 *
+	 * This prevents Git from prompting for credentials (e.g., SSH passwords),
+	 * which is useful for scripting and automation.
+	 */
+	private function set_non_interactive_mode() {
+		// Prevent Git from prompting for credentials
+		putenv( 'GIT_TERMINAL_PROMPT=0' );
+		// Prevent SSH from prompting for passwords
+		putenv( 'GIT_SSH_COMMAND=ssh -o BatchMode=yes' );
 	}
 }

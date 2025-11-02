@@ -1102,3 +1102,33 @@ Feature: Install WP-CLI packages
       Error: ZipArchive failed to unzip 'package-dir/zero.zip': Not a zip archive (19).
       """
     And STDOUT should be empty
+
+  Scenario: Install a package with --no-interaction flag
+    Given an empty directory
+    And a composer.json file:
+      """
+      {
+        "repositories": {
+          "test" : {
+            "type": "path",
+            "url": "./dummy-package/"
+          },
+          "wp-cli": {
+            "type": "composer",
+            "url": "https://wp-cli.org/package-index/"
+          }
+        }
+      }
+      """
+    And a dummy-package/composer.json file:
+      """
+      {
+        "name": "wp-cli/test-package",
+        "description": "Test package for no-interaction flag"
+      }
+      """
+    When I run `WP_CLI_PACKAGES_DIR=. wp package install wp-cli/test-package --no-interaction`
+    Then STDOUT should contain:
+      """
+      Success: Package installed
+      """
