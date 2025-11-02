@@ -1123,11 +1123,11 @@ Feature: Install WP-CLI packages
     And a dummy-package/composer.json file:
       """
       {
-        "name": "wp-cli/test-package",
+        "name": "wp-cli/restful",
         "description": "Test package for no-interaction flag"
       }
       """
-    When I run `WP_CLI_PACKAGES_DIR=. wp package install wp-cli/test-package --no-interaction`
+    When I run `WP_CLI_PACKAGES_DIR=. wp package install wp-cli/restful --no-interaction`
     Then STDOUT should contain:
       """
       Success: Package installed
