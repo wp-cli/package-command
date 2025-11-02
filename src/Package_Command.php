@@ -199,7 +199,7 @@ class Package_Command extends WP_CLI_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
-	 * [--no-interaction]
+	 * [--<interaction>]
 	 * : Do not ask any interactive questions. Useful for scripting.
 	 *
 	 * ## EXAMPLES
@@ -219,10 +219,10 @@ class Package_Command extends WP_CLI_Command {
 	public function install( $args, $assoc_args ) {
 		list( $package_name ) = $args;
 
-		$insecure       = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
-		$no_interaction = (bool) Utils\get_flag_value( $assoc_args, 'no-interaction', false );
+		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$interaction = Utils\get_flag_value( $assoc_args, 'interaction', true );
 
-		if ( $no_interaction ) {
+		if ( ! $interaction ) {
 			$this->set_non_interactive_mode();
 		}
 
@@ -513,7 +513,7 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * ## OPTIONS
 	 *
-	 * [--no-interaction]
+	 * [--<interaction>]
 	 * : Do not ask any interactive questions. Useful for scripting.
 	 *
 	 * ## EXAMPLES
@@ -536,9 +536,9 @@ class Package_Command extends WP_CLI_Command {
 	 * @param array $assoc_args Associative array of options.
 	 */
 	public function update( $_, $assoc_args = [] ) {
-		$no_interaction = (bool) Utils\get_flag_value( $assoc_args, 'no-interaction', false );
+		$interaction = Utils\get_flag_value( $assoc_args, 'interaction', true );
 
-		if ( $no_interaction ) {
+		if ( ! $interaction ) {
 			$this->set_non_interactive_mode();
 		}
 
@@ -584,7 +584,7 @@ class Package_Command extends WP_CLI_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
-	 * [--no-interaction]
+	 * [--<interaction>]
 	 * : Do not ask any interactive questions. Useful for scripting.
 	 *
 	 * ## EXAMPLES
@@ -599,10 +599,10 @@ class Package_Command extends WP_CLI_Command {
 	public function uninstall( $args, $assoc_args ) {
 		list( $package_name ) = $args;
 
-		$insecure       = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
-		$no_interaction = (bool) Utils\get_flag_value( $assoc_args, 'no-interaction', false );
+		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$interaction = Utils\get_flag_value( $assoc_args, 'interaction', true );
 
-		if ( $no_interaction ) {
+		if ( ! $interaction ) {
 			$this->set_non_interactive_mode();
 		}
 
