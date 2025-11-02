@@ -531,6 +531,9 @@ class Package_Command extends WP_CLI_Command {
 	 *     Generating autoload files
 	 *     ---
 	 *     Success: Packages updated.
+	 *
+	 * @param array $_ Unused positional arguments (none expected).
+	 * @param array $assoc_args Associative array of options.
 	 */
 	public function update( $_, $assoc_args = [] ) {
 		$no_interaction = (bool) Utils\get_flag_value( $assoc_args, 'no-interaction', false );
@@ -1511,6 +1514,10 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * This prevents Git from prompting for credentials (e.g., SSH passwords),
 	 * which is useful for scripting and automation.
+	 *
+	 * Note: This uses putenv() which affects the entire PHP process, including
+	 * any Git operations spawned by Composer. This is intentional to ensure
+	 * non-interactive behavior propagates to all child processes.
 	 */
 	private function set_non_interactive_mode() {
 		// Prevent Git from prompting for credentials
