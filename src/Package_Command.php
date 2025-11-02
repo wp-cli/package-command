@@ -199,7 +199,7 @@ class Package_Command extends WP_CLI_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
-	 * [--<interaction>]
+	 * [--interaction]
 	 * : Do not ask any interactive questions. Useful for scripting.
 	 *
 	 * ## EXAMPLES
@@ -513,7 +513,7 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * ## OPTIONS
 	 *
-	 * [--<interaction>]
+	 * [--interaction]
 	 * : Do not ask any interactive questions. Useful for scripting.
 	 *
 	 * ## EXAMPLES
@@ -584,7 +584,7 @@ class Package_Command extends WP_CLI_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
-	 * [--<interaction>]
+	 * [--interaction]
 	 * : Do not ask any interactive questions. Useful for scripting.
 	 *
 	 * ## EXAMPLES
