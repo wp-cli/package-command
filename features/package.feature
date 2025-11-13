@@ -208,3 +208,22 @@ Feature: Manage WP-CLI packages
       """
       {NO_SUCH_PACKAGE_COMPOSER_JSON}
       """
+
+  Scenario: Uninstall a package with --no-interaction flag
+    Given an empty directory
+
+    When I run `wp package install runcommand/hook`
+    Then STDERR should be empty
+
+    When I run `wp package uninstall runcommand/hook --no-interaction`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+
+    When I run `wp package list`
+    Then STDOUT should not contain:
+      """
+      runcommand/hook
+      """
