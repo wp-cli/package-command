@@ -200,7 +200,7 @@ class Package_Command extends WP_CLI_Command {
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
 	 * [--interaction]
-	 * : Do not ask any interactive questions. Useful for scripting.
+	 * : Control interactive mode. Use `--no-interaction` to disable prompts (interactive by default). Useful for scripting.
 	 *
 	 * ## EXAMPLES
 	 *
