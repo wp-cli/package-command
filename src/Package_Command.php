@@ -514,7 +514,7 @@ class Package_Command extends WP_CLI_Command {
 	 * ## OPTIONS
 	 *
 	 * [--interaction]
-	 * : Do not ask any interactive questions. Useful for scripting.
+	 * : Boolean flag that controls interactive mode (enabled by default). Use `--no-interaction` to disable prompts, which is useful for scripting.
 	 *
 	 * ## EXAMPLES
 	 *
