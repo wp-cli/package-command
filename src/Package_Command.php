@@ -501,7 +501,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Updates all installed WP-CLI packages to their latest version.
+	 * Updates installed WP-CLI packages to their latest version.
 	 *
 	 * ## OPTIONS
 	 *
@@ -581,11 +581,12 @@ class Package_Command extends WP_CLI_Command {
 		// TODO: The --insecure (to be added here) flag should cause another Composer run with verify disabled.
 
 		if ( 0 === $res ) {
-			if ( ! empty( $packages_to_update ) ) {
-				if ( 1 === count( $packages_to_update ) ) {
+			$num_packages = count( $packages_to_update );
+			if ( $num_packages > 0 ) {
+				if ( 1 === $num_packages ) {
 					WP_CLI::success( 'Package updated successfully.' );
 				} else {
-					WP_CLI::success( sprintf( '%d packages updated successfully.', count( $packages_to_update ) ) );
+					WP_CLI::success( sprintf( '%d packages updated successfully.', $num_packages ) );
 				}
 			} else {
 				WP_CLI::success( 'Packages updated.' );
