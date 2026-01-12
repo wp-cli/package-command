@@ -554,9 +554,22 @@ class Package_Command extends WP_CLI_Command {
 
 		$composer = $this->get_composer();
 
-		// Set up the EventSubscriber
+		// Set up the EventSubscriber with tracking for updates
+		$updated_packages = [];
 		$event_subscriber = new PackageManagerEventSubscriber();
 		$composer->getEventDispatcher()->addSubscriber( $event_subscriber );
+
+		// Add a listener to track actual package updates
+		$composer->getEventDispatcher()->addListener(
+			'post-package-update',
+			function ( $event ) use ( &$updated_packages ) {
+				$operation = $event->getOperation();
+				if ( method_exists( $operation, 'getTargetPackage' ) ) {
+					$package            = $operation->getTargetPackage();
+					$updated_packages[] = $package->getPrettyName();
+				}
+			}
+		);
 
 		// Set up the installer
 		$install = Installer::create( new ComposerIO(), $composer );
@@ -583,10 +596,22 @@ class Package_Command extends WP_CLI_Command {
 		if ( 0 === $res ) {
 			$num_packages = count( $packages_to_update );
 			if ( $num_packages > 0 ) {
-				if ( 1 === $num_packages ) {
-					WP_CLI::success( 'Package updated successfully.' );
+				// When specific packages were requested, report on actual updates
+				$num_updated = count( $updated_packages );
+				if ( 0 === $num_updated ) {
+					if ( 1 === $num_packages ) {
+						WP_CLI::success( 'Package already at latest version.' );
+					} else {
+						WP_CLI::success( 'Packages already at latest versions.' );
+					}
+				} elseif ( $num_updated === $num_packages ) {
+					if ( 1 === $num_packages ) {
+						WP_CLI::success( 'Package updated successfully.' );
+					} else {
+						WP_CLI::success( sprintf( 'All %d packages updated successfully.', $num_packages ) );
+					}
 				} else {
-					WP_CLI::success( sprintf( '%d packages updated successfully.', $num_packages ) );
+					WP_CLI::success( sprintf( 'Updated %d of %d packages.', $num_updated, $num_packages ) );
 				}
 			} else {
 				WP_CLI::success( 'Packages updated.' );

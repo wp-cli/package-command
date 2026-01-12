@@ -157,7 +157,26 @@ Feature: Update WP-CLI packages
       """
     And STDOUT should contain:
       """
-      Success: 2 packages updated successfully.
+      Success: Updated 1 of 2 packages.
+      """
+
+  Scenario: Update package that is already up to date
+    Given an empty directory
+
+    When I run `wp package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package update danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Using Composer to update packages...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package already at latest version.
       """
 
   Scenario: Error when trying to update a non-existent package
