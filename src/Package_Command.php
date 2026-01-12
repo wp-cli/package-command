@@ -503,8 +503,14 @@ class Package_Command extends WP_CLI_Command {
 	/**
 	 * Updates all installed WP-CLI packages to their latest version.
 	 *
+	 * ## OPTIONS
+	 *
+	 * [<package-name>...]
+	 * : One or more package names to update. If not specified, all packages will be updated.
+	 *
 	 * ## EXAMPLES
 	 *
+	 *     # Update all packages.
 	 *     $ wp package update
 	 *     Using Composer to update packages...
 	 *     ---
@@ -518,9 +524,34 @@ class Package_Command extends WP_CLI_Command {
 	 *     Generating autoload files
 	 *     ---
 	 *     Success: Packages updated.
+	 *
+	 *     # Update a specific package.
+	 *     $ wp package update wp-cli/server-command
+	 *     Using Composer to update packages...
+	 *     ---
+	 *     Loading composer repositories with package information
+	 *     Updating dependencies
+	 *     Writing lock file
+	 *     Generating autoload files
+	 *     ---
+	 *     Success: Package updated successfully.
 	 */
-	public function update() {
+	public function update( $args = [] ) {
 		$this->set_composer_auth_env_var();
+
+		// Validate package names if provided
+		$packages_to_update = [];
+		if ( ! empty( $args ) ) {
+			foreach ( $args as $package_name ) {
+				$package = $this->get_installed_package_by_name( $package_name );
+				if ( false === $package ) {
+					WP_CLI::error( sprintf( "Package '%s' is not installed.", $package_name ) );
+				}
+				// Use the package's pretty name (case-sensitive) from composer
+				$packages_to_update[] = $package->getPrettyName();
+			}
+		}
+
 		$composer = $this->get_composer();
 
 		// Set up the EventSubscriber
@@ -531,6 +562,12 @@ class Package_Command extends WP_CLI_Command {
 		$install = Installer::create( new ComposerIO(), $composer );
 		$install->setUpdate( true ); // Installer class will only override composer.lock with this flag
 		$install->setPreferSource( true ); // Use VCS when VCS for easier contributions.
+
+		// If specific packages are provided, use the allow list
+		if ( ! empty( $packages_to_update ) ) {
+			$install->setUpdateAllowList( $packages_to_update );
+		}
+
 		WP_CLI::log( 'Using Composer to update packages...' );
 		WP_CLI::log( '---' );
 		$res = false;
@@ -544,7 +581,15 @@ class Package_Command extends WP_CLI_Command {
 		// TODO: The --insecure (to be added here) flag should cause another Composer run with verify disabled.
 
 		if ( 0 === $res ) {
-			WP_CLI::success( 'Packages updated.' );
+			if ( ! empty( $packages_to_update ) ) {
+				if ( 1 === count( $packages_to_update ) ) {
+					WP_CLI::success( 'Package updated successfully.' );
+				} else {
+					WP_CLI::success( sprintf( '%d packages updated successfully.', count( $packages_to_update ) ) );
+				}
+			} else {
+				WP_CLI::success( 'Packages updated.' );
+			}
 		} else {
 			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
 			WP_CLI::error( "Failed to update packages{$res_msg}." );
