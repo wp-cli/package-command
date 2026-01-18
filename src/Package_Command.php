@@ -645,6 +645,34 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
+	 * Checks if a given package is installed.
+	 *
+	 * Returns exit code 0 when installed, 1 when uninstalled.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <name>
+	 * : The package to check.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Check whether "foo/bar" is installed; exit status 0 if installed, otherwise 1
+	 *     $ wp package is-installed foo/bar
+	 *     $ echo $?
+	 *     1
+	 *
+	 * @subcommand is-installed
+	 */
+	public function is_installed( $args, $assoc_args ) {
+		list( $package_name ) = $args;
+		if ( $this->get_installed_package_by_name( $package_name ) ) {
+			WP_CLI::halt( 0 );
+		} else {
+			WP_CLI::halt( 1 );
+		}
+	}
+
+	/**
 	 * Checks whether a package is a WP-CLI community package based
 	 * on membership in our package index.
 	 *
@@ -918,17 +946,6 @@ class Package_Command extends WP_CLI_Command {
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Checks if the package name provided is already installed.
-	 */
-	private function is_package_installed( $package_name ) {
-		if ( $this->get_installed_package_by_name( $package_name ) ) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	/**
