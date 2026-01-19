@@ -189,7 +189,7 @@ for future authorization requests.
 Lists installed WP-CLI packages.
 
 ~~~
-wp package list [--fields=<fields>] [--format=<format>]
+wp package list [--fields=<fields>] [--format=<format>] [--skip-update-check]
 ~~~
 
 **OPTIONS**
@@ -208,6 +208,9 @@ wp package list [--fields=<fields>] [--format=<format>]
 		  - json
 		  - yaml
 		---
+
+	[--skip-update-check]
+		Skip checking for updates. This is faster and avoids authentication issues with GitHub or Composer repositories.
 
 **AVAILABLE FIELDS**
 
@@ -232,6 +235,14 @@ These fields are optionally available:
     +-----------------------+------------------+----------+-----------+----------------+
     | wp-cli/server-command | Daniel Bachhuber | dev-main | available | 2.x-dev        |
     +-----------------------+------------------+----------+-----------+----------------+
+
+    # List installed packages without checking for updates.
+    $ wp package list --skip-update-check
+    +-----------------------+------------------+----------+--------+----------------+
+    | name                  | authors          | version  | update | update_version |
+    +-----------------------+------------------+----------+--------+----------------+
+    | wp-cli/server-command | Daniel Bachhuber | dev-main | none   |                |
+    +-----------------------+------------------+----------+--------+----------------+
 
 
 
