@@ -580,7 +580,7 @@ class Package_Command extends WP_CLI_Command {
 		} catch ( Exception $e ) {
 			WP_CLI::warning( $e->getMessage() );
 			$update         = 'error';
-			$update_version = $update;
+			$update_version = 'N/A';
 		}
 
 		$package_output['update']         = $update;
