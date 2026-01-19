@@ -501,6 +501,109 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
+	 * Gets information about an installed WP-CLI package.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <name>
+	 * : Name of the package to get information for.
+	 *
+	 * [--fields=<fields>]
+	 * : Limit the output to specific fields. Defaults to all fields.
+	 *
+	 * [--format=<format>]
+	 * : Render output in a particular format.
+	 * ---
+	 * default: table
+	 * options:
+	 *   - table
+	 *   - csv
+	 *   - json
+	 *   - yaml
+	 * ---
+	 *
+	 * ## AVAILABLE FIELDS
+	 *
+	 * These fields will be displayed by default for each package:
+	 *
+	 * * name
+	 * * authors
+	 * * version
+	 * * update
+	 * * update_version
+	 *
+	 * These fields are optionally available:
+	 *
+	 * * description
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Get information about an installed package.
+	 *     $ wp package get wp-cli/server-command
+	 *     +---------+------------------+
+	 *     | Field   | Value            |
+	 *     +---------+------------------+
+	 *     | name    | wp-cli/server-command |
+	 *     | authors | Daniel Bachhuber |
+	 *     | version | dev-main         |
+	 *     +---------+------------------+
+	 *
+	 *     # Get the version of a package.
+	 *     $ wp package get wp-cli/server-command --fields=version --format=json
+	 *     {"version":"dev-main"}
+	 */
+	public function get( $args, $assoc_args ) {
+		list( $package_name ) = $args;
+		$this->set_composer_auth_env_var();
+
+		$package = $this->get_installed_package_by_name( $package_name );
+		if ( false === $package ) {
+			WP_CLI::error( sprintf( "Package '%s' is not installed.", $package_name ) );
+		}
+
+		$composer = $this->get_composer();
+
+		$package_output                = [];
+		$package_output['name']        = $package->getPrettyName();
+		$package_output['description'] = $package->getDescription();
+		$package_output['authors']     = implode( ', ', array_column( (array) $package->getAuthors(), 'name' ) );
+		$package_output['version']     = $package->getPrettyVersion();
+		$update                        = 'none';
+		$update_version                = '';
+
+		try {
+			$latest = $this->find_latest_package( $package, $composer, null );
+			if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
+				$update         = 'available';
+				$update_version = $latest->getPrettyVersion();
+			}
+		} catch ( Exception $e ) {
+			WP_CLI::warning( $e->getMessage() );
+			$update         = 'error';
+			$update_version = $update;
+		}
+
+		$package_output['update']         = $update;
+		$package_output['update_version'] = $update_version;
+
+		$default_fields = [
+			'name',
+			'authors',
+			'version',
+			'update',
+			'update_version',
+		];
+
+		$defaults   = [
+			'fields' => implode( ',', $default_fields ),
+			'format' => 'table',
+		];
+		$assoc_args = array_merge( $defaults, $assoc_args );
+
+		Utils\format_items( $assoc_args['format'], [ $package_output ], $assoc_args['fields'] );
+	}
+
+	/**
 	 * Updates all installed WP-CLI packages to their latest version.
 	 *
 	 * ## EXAMPLES
