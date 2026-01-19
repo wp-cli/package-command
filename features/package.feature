@@ -274,7 +274,7 @@ Feature: Manage WP-CLI packages
     When I run `wp package get runcommand/hook --format=json`
     Then STDOUT should contain:
       """
-      "name":"runcommand/hook"
+      "name":"runcommand\/hook"
       """
     And STDOUT should contain:
       """
