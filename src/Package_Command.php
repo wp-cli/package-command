@@ -553,7 +553,7 @@ class Package_Command extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Get information about an installed package.
-	 *     $ wp package get wp-cli/scaffold-package-command	 *
+	 *     $ wp package get wp-cli/scaffold-package-command
 	 *     +----------------+---------------------------------+
 	 *     | Field          | Value                           |
 	 *     +----------------+---------------------------------+
@@ -619,7 +619,7 @@ class Package_Command extends WP_CLI_Command {
 		];
 		$assoc_args = array_merge( $defaults, $assoc_args );
 
-		$formatter  = new \WP_CLI\Formatter( $assoc_args );
+		$formatter = new \WP_CLI\Formatter( $assoc_args );
 		$formatter->display_item( $package_output );
 	}
 
