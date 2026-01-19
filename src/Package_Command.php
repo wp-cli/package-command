@@ -533,6 +533,9 @@ class Package_Command extends WP_CLI_Command {
 	 *   - yaml
 	 * ---
 	 *
+	 * [--skip-update-check]
+	 * : Skip checking for updates. This is faster and avoids authentication issues with GitHub or Composer repositories.
+	 *
 	 * ## AVAILABLE FIELDS
 	 *
 	 * These fields will be displayed by default for each package:
@@ -572,7 +575,8 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::error( sprintf( "Package '%s' is not installed.", $package_name ) );
 		}
 
-		$composer = $this->get_composer();
+		$skip_update_check = Utils\get_flag_value( $assoc_args, 'skip-update-check', false );
+		$composer          = $this->get_composer();
 
 		$package_output                = [];
 		$package_output['name']        = $package->getPrettyName();
@@ -582,16 +586,18 @@ class Package_Command extends WP_CLI_Command {
 		$update                        = 'none';
 		$update_version                = '';
 
-		try {
-			$latest = $this->find_latest_package( $package, $composer, null );
-			if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
-				$update         = 'available';
-				$update_version = $latest->getPrettyVersion();
+		if ( ! $skip_update_check ) {
+			try {
+				$latest = $this->find_latest_package( $package, $composer, null );
+				if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
+					$update         = 'available';
+					$update_version = $latest->getPrettyVersion();
+				}
+			} catch ( Exception $e ) {
+				WP_CLI::warning( $e->getMessage() );
+				$update         = 'error';
+				$update_version = $update;
 			}
-		} catch ( Exception $e ) {
-			WP_CLI::warning( $e->getMessage() );
-			$update         = 'error';
-			$update_version = $update;
 		}
 
 		$package_output['update']         = $update;
