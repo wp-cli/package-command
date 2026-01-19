@@ -553,14 +553,16 @@ class Package_Command extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Get information about an installed package.
-	 *     $ wp package get wp-cli/server-command
-	 *     +---------+------------------+
-	 *     | Field   | Value            |
-	 *     +---------+------------------+
-	 *     | name    | wp-cli/server-command |
-	 *     | authors | Daniel Bachhuber |
-	 *     | version | dev-main         |
-	 *     +---------+------------------+
+	 *     $ wp package get wp-cli/scaffold-package-command	 *
+	 *     +----------------+---------------------------------+
+	 *     | Field          | Value                           |
+	 *     +----------------+---------------------------------+
+	 *     | name           | wp-cli/scaffold-package-command |
+	 *     | authors        | Daniel Bachhuber                |
+	 *     | version        | dev-main                        |
+	 *     | update         | available                       |
+	 *     | update_version | 2.x-dev                         |
+	 *     +----------------+---------------------------------+
 	 *
 	 *     # Get the version of a package.
 	 *     $ wp package get wp-cli/server-command --fields=version --format=json
@@ -617,7 +619,8 @@ class Package_Command extends WP_CLI_Command {
 		];
 		$assoc_args = array_merge( $defaults, $assoc_args );
 
-		Utils\format_items( $assoc_args['format'], [ $package_output ], $assoc_args['fields'] );
+		$formatter  = new \WP_CLI\Formatter( $assoc_args );
+		$formatter->display_item( $package_output );
 	}
 
 	/**
