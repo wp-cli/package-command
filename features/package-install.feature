@@ -46,7 +46,7 @@ Feature: Install WP-CLI packages
       "url": "http://wp-cli.org/package-index/"
       """
 
-    When I run `wp package is-installed wp-cli/restful`
+    When I run `WP_CLI_PACKAGES_DIR=. wp package is-installed wp-cli/restful`
     Then the return code should be 0
     And STDERR should be empty
     And STDOUT should be empty
