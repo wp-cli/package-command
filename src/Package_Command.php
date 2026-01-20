@@ -669,17 +669,6 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Checks whether a package is a WP-CLI community package based
-	 * on membership in our package index.
-	 *
-	 * @param object      $package     A package object
-	 * @return bool
-	 */
-	private function is_community_package( $package ) {
-		return $this->package_index()->hasPackage( $package );
-	}
-
-	/**
 	 * Gets a Composer instance.
 	 */
 	private function get_composer() {
