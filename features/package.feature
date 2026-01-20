@@ -227,3 +227,26 @@ Feature: Manage WP-CLI packages
       """
       runcommand/hook
       """
+
+  Scenario: List packages with --skip-update-check flag
+    Given an empty directory
+
+    When I run `wp package install runcommand/hook`
+    Then STDERR should be empty
+
+    When I run `wp package list --skip-update-check --fields=name,update,update_version`
+    Then STDOUT should contain:
+      """
+      runcommand/hook
+      """
+    And STDOUT should contain:
+      """
+      none
+      """
+    And STDOUT should not contain:
+      """
+      available
+      """
+
+    When I run `wp package uninstall runcommand/hook`
+    Then STDERR should be empty

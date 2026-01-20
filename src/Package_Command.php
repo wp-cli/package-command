@@ -442,6 +442,9 @@ class Package_Command extends WP_CLI_Command {
 	 *   - yaml
 	 * ---
 	 *
+	 * [--skip-update-check]
+	 * : Skip checking for updates. This is faster and avoids authentication issues with GitHub or Composer repositories.
+	 *
 	 * ## AVAILABLE FIELDS
 	 *
 	 * These fields will be displayed by default for each package:
@@ -465,6 +468,14 @@ class Package_Command extends WP_CLI_Command {
 	 *     +-----------------------+------------------+----------+-----------+----------------+
 	 *     | wp-cli/server-command | Daniel Bachhuber | dev-main | available | 2.x-dev        |
 	 *     +-----------------------+------------------+----------+-----------+----------------+
+	 *
+	 *     # List installed packages without checking for updates.
+	 *     $ wp package list --skip-update-check
+	 *     +-----------------------+------------------+----------+--------+----------------+
+	 *     | name                  | authors          | version  | update | update_version |
+	 *     +-----------------------+------------------+----------+--------+----------------+
+	 *     | wp-cli/server-command | Daniel Bachhuber | dev-main | none   |                |
+	 *     +-----------------------+------------------+----------+--------+----------------+
 	 *
 	 * @subcommand list
 	 */
@@ -664,14 +675,27 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Checks whether a package is a WP-CLI community package based
-	 * on membership in our package index.
+	 * Checks if a given package is installed.
 	 *
-	 * @param object      $package     A package object
-	 * @return bool
+	 * Returns exit code 0 when installed, 1 when uninstalled.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <name>
+	 * : The package to check.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Check whether "foo/bar" is installed; exit status 0 if installed, otherwise 1
+	 *     $ wp package is-installed foo/bar
+	 *     $ echo $?
+	 *     1
+	 *
+	 * @subcommand is-installed
 	 */
-	private function is_community_package( $package ) {
-		return $this->package_index()->hasPackage( $package );
+	public function is_installed( $args, $assoc_args ) {
+		list( $package_name ) = $args;
+		WP_CLI::halt( $this->get_installed_package_by_name( $package_name ) ? 0 : 1 );
 	}
 
 	/**
@@ -787,8 +811,9 @@ class Package_Command extends WP_CLI_Command {
 		];
 		$assoc_args = array_merge( $defaults, $assoc_args );
 
-		$composer = $this->get_composer();
-		$list     = [];
+		$skip_update_check = Utils\get_flag_value( $assoc_args, 'skip-update-check', false );
+		$composer          = $this->get_composer();
+		$list              = [];
 		foreach ( $packages as $package ) {
 			$name = $package->getPrettyName();
 			if ( isset( $list[ $name ] ) ) {
@@ -801,7 +826,7 @@ class Package_Command extends WP_CLI_Command {
 				$package_output['version']     = [ $package->getPrettyVersion() ];
 				$update                        = 'none';
 				$update_version                = '';
-				if ( 'list' === $context ) {
+				if ( 'list' === $context && ! $skip_update_check ) {
 					try {
 						$latest = $this->find_latest_package( $package, $composer, null );
 						if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
@@ -936,17 +961,6 @@ class Package_Command extends WP_CLI_Command {
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Checks if the package name provided is already installed.
-	 */
-	private function is_package_installed( $package_name ) {
-		if ( $this->get_installed_package_by_name( $package_name ) ) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	/**
@@ -1111,6 +1125,9 @@ class Package_Command extends WP_CLI_Command {
 		return $version_selector->findBestCandidate( $name, $target_version, $php_version, $best_stability );
 	}
 
+	/**
+	 * @return VersionSelector
+	 */
 	private function get_version_selector( Composer $composer ) {
 		if ( ! $this->version_selector ) {
 			if ( $this->is_composer_v2() ) {
