@@ -547,7 +547,7 @@ class Package_Command extends WP_CLI_Command {
 	 * @param array $assoc_args Associative array of options.
 	 */
 	public function update( $_, $assoc_args = [] ) {
-		$interaction = Utils\get_flag_value( $assoc_args, 'interaction', true );
+		$interaction = (bool) Utils\get_flag_value( $assoc_args, 'interaction', true );
 
 		if ( ! $interaction ) {
 			$this->set_non_interactive_mode();
