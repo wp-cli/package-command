@@ -46,6 +46,11 @@ Feature: Install WP-CLI packages
       "url": "http://wp-cli.org/package-index/"
       """
 
+    When I run `WP_CLI_PACKAGES_DIR=. wp package is-installed wp-cli/restful`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
   @require-php-5.6
   Scenario: Install a package with 'wp-cli/wp-cli' as a dependency
     Given a WP install
@@ -59,6 +64,11 @@ Feature: Install WP-CLI packages
       """
       requires wp-cli/wp-cli
       """
+
+    When I run `wp package is-installed wp-cli-test/test-command`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp test-command`
     Then STDOUT should contain:
@@ -83,6 +93,11 @@ Feature: Install WP-CLI packages
       """
       faker
       """
+
+    When I run `wp package is-installed yoast/wp-cli-faker`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
@@ -111,6 +126,11 @@ Feature: Install WP-CLI packages
       fzaninotto
       """
 
+    When I try `wp package is-installed yoast/wp-cli-faker`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list`
     Then STDOUT should not contain:
       """
@@ -135,6 +155,11 @@ Feature: Install WP-CLI packages
       """
       "wp-cli-test/package-name": "dev-master"
       """
+
+    When I run `wp package is-installed wp-cli-test/package-name`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I try `wp package install git@github.com:wp-cli.git`
     Then STDERR should contain:
@@ -161,6 +186,11 @@ Feature: Install WP-CLI packages
       """
       Success: Package installed.
       """
+
+    When I run `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
@@ -194,6 +224,11 @@ Feature: Install WP-CLI packages
       """
       Success: Uninstalled package.
       """
+
+    When I try `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
@@ -238,6 +273,11 @@ Feature: Install WP-CLI packages
       "CapitalWPCLI/examplecommand"
       """
 
+    When I run `wp package is-installed capitalwpcli/examplecommand`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
       | name                        |
@@ -260,6 +300,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
     And the contents of the {PACKAGE_PATH}composer.json file should match /\"gitlost\/(?:TestMixedCaseCommand|testmixedcasecommand)\"/
+
+    When I run `wp package is-installed gitlost/TestMixedCaseCommand`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
@@ -296,6 +341,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
+    When I run `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
       | name                            | version    |
@@ -316,6 +366,11 @@ Feature: Install WP-CLI packages
       """
       Success: Uninstalled package.
       """
+
+    When I try `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
@@ -347,6 +402,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
+    When I run `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
       | name                            | version |
@@ -367,6 +427,11 @@ Feature: Install WP-CLI packages
       """
       Success: Uninstalled package.
       """
+
+    When I try `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
@@ -405,6 +470,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
+    When I run `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
       | name                            | version |
@@ -425,6 +495,11 @@ Feature: Install WP-CLI packages
       """
       Success: Uninstalled package.
       """
+
+    When I try `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
@@ -456,6 +531,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
+    When I run `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
       | name                            | version    |
@@ -476,6 +556,11 @@ Feature: Install WP-CLI packages
       """
       Success: Uninstalled package.
       """
+
+    When I try `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
@@ -507,6 +592,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
+    When I run `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name,version`
     Then STDOUT should be a table containing rows:
       | name                            | version           |
@@ -527,6 +617,11 @@ Feature: Install WP-CLI packages
       """
       Success: Uninstalled package.
       """
+
+    When I try `wp package is-installed wp-cli-test/github-test-command`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
@@ -560,6 +655,11 @@ Feature: Install WP-CLI packages
       """
     And the contents of the {PACKAGE_PATH}composer.json file should match /"wp-media\/wp-rocket-cli"/
 
+    When I run `wp package is-installed wp-media/wp-rocket-cli`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
       | name                   |
@@ -589,6 +689,11 @@ Feature: Install WP-CLI packages
       rocket
       """
 
+    When I try `wp package is-installed wp-media/wp-rocket-cli`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
+
     # Install with lowercase name (for BC - no warning) and uninstall with lowercase name (for BC and convenience)
     When I run `wp package install geekpress/wp-rocket-cli`
     Then STDERR should be empty
@@ -607,6 +712,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
     And the contents of the {PACKAGE_PATH}composer.json file should match /("?:GeekPress|geekpress)\/wp-rocket-cli"/
+
+    When I run `wp package is-installed geekpress/wp-rocket-cli`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
@@ -632,6 +742,11 @@ Feature: Install WP-CLI packages
       """
       rocket
       """
+
+    When I try `wp package is-installed geekpress/wp-rocket-cli`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
   @github-api
   Scenario: Install a package with a composer.json that differs between versions
@@ -711,6 +826,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
+    When I run `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
       | name                                |
@@ -731,6 +851,11 @@ Feature: Install WP-CLI packages
       """
       Success: Uninstalled package.
       """
+
+    When I try `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
@@ -774,6 +899,11 @@ Feature: Install WP-CLI packages
       """
       "CapitalWPCLI/examplecommand"
       """
+
+    When I run `wp package is-installed capitalwpcli/examplecommand`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
@@ -830,6 +960,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
+    When I run `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
       | name                                |
@@ -850,6 +985,11 @@ Feature: Install WP-CLI packages
       """
       Success: Uninstalled package.
       """
+
+    When I try `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
@@ -918,6 +1058,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
+    When I run `wp package is-installed wp-cli/community-command`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
       | name                            |
@@ -939,6 +1084,11 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
     And the path-command directory should exist
+
+    When I try `wp package is-installed wp-cli/community-command`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
@@ -997,6 +1147,11 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
+    When I run `wp package is-installed wp-cli/community-command`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
       | name                            |
@@ -1018,6 +1173,11 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
     And the path-command directory should exist
+
+    When I try `wp package is-installed wp-cli/community-command`
+    Then the return code should be 1
+    And STDERR should be empty
+    And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should not contain:
