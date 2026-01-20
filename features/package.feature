@@ -280,3 +280,17 @@ Feature: Manage WP-CLI packages
       """
       "version"
       """
+
+    When I run `wp package get runcommand/hook --skip-update-check --fields=name,update,update_version`
+    Then STDOUT should contain:
+      """
+      runcommand/hook
+      """
+    And STDOUT should contain:
+      """
+      none
+      """
+    And STDOUT should not contain:
+      """
+      available
+      """
