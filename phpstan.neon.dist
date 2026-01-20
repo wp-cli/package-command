@@ -1,0 +1,13 @@
+parameters:
+  level: 1
+  paths:
+    - src
+    - package-command.php
+  scanDirectories:
+    - vendor/wp-cli/wp-cli/php
+  scanFiles:
+    - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+  treatPhpDocTypesAsCertain: false
+  ignoreErrors:
+    # WP_CLI_VERSION is defined in wp-cli core at runtime
+    - '#Constant WP_CLI_VERSION not found#'
