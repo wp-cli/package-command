@@ -294,3 +294,6 @@ Feature: Manage WP-CLI packages
       """
       available
       """
+
+    When I run `wp package uninstall runcommand/hook`
+    Then STDERR should be empty
