@@ -126,7 +126,7 @@ Feature: Install WP-CLI packages
       fzaninotto
       """
 
-    When I run `wp package is-installed yoast/wp-cli-faker`
+    When I try `wp package is-installed yoast/wp-cli-faker`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -225,7 +225,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
-    When I run `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    When I try `wp package is-installed wp-cli/google-sitemap-generator-cli`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -367,7 +367,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
-    When I run `wp package is-installed wp-cli-test/github-test-command`
+    When I try `wp package is-installed wp-cli-test/github-test-command`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -428,7 +428,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
-    When I run `wp package is-installed wp-cli-test/github-test-command`
+    When I try `wp package is-installed wp-cli-test/github-test-command`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -496,7 +496,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
-    When I run `wp package is-installed wp-cli-test/github-test-command`
+    When I try `wp package is-installed wp-cli-test/github-test-command`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -557,7 +557,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
-    When I run `wp package is-installed wp-cli-test/github-test-command`
+    When I try `wp package is-installed wp-cli-test/github-test-command`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -618,7 +618,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
-    When I run `wp package is-installed wp-cli-test/github-test-command`
+    When I try `wp package is-installed wp-cli-test/github-test-command`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -689,7 +689,7 @@ Feature: Install WP-CLI packages
       rocket
       """
 
-    When I run `wp package is-installed wp-media/wp-rocket-cli`
+    When I try `wp package is-installed wp-media/wp-rocket-cli`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -743,7 +743,7 @@ Feature: Install WP-CLI packages
       rocket
       """
 
-    When I run `wp package is-installed geekpress/wp-rocket-cli`
+    When I try `wp package is-installed geekpress/wp-rocket-cli`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -852,7 +852,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
-    When I run `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    When I try `wp package is-installed wp-cli/google-sitemap-generator-cli`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -986,7 +986,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
-    When I run `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    When I try `wp package is-installed wp-cli/google-sitemap-generator-cli`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -1085,7 +1085,7 @@ Feature: Install WP-CLI packages
       """
     And the path-command directory should exist
 
-    When I run `wp package is-installed wp-cli/community-command`
+    When I try `wp package is-installed wp-cli/community-command`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
@@ -1174,7 +1174,7 @@ Feature: Install WP-CLI packages
       """
     And the path-command directory should exist
 
-    When I run `wp package is-installed wp-cli/community-command`
+    When I try `wp package is-installed wp-cli/community-command`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
