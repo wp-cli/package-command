@@ -172,7 +172,7 @@ These fields are optionally available:
 **EXAMPLES**
 
     # Get information about an installed package.
-    $ wp package get wp-cli/scaffold-package-command	 *
+    $ wp package get wp-cli/scaffold-package-command
     +----------------+---------------------------------+
     | Field          | Value                           |
     +----------------+---------------------------------+
