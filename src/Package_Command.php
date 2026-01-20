@@ -1095,6 +1095,9 @@ class Package_Command extends WP_CLI_Command {
 		return $version_selector->findBestCandidate( $name, $target_version, $php_version, $best_stability );
 	}
 
+	/**
+	 * @return VersionSelector
+	 */
 	private function get_version_selector( Composer $composer ) {
 		if ( ! $this->version_selector ) {
 			if ( $this->is_composer_v2() ) {
