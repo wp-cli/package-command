@@ -737,12 +737,8 @@ class Package_Command extends WP_CLI_Command {
 
 			$io = new NullIO();
 			try {
-				if ( $this->is_composer_v2() ) {
-					$http_downloader = new HttpDownloader( $io, $config );
-					$package_index   = new ComposerRepository( [ 'url' => self::PACKAGE_INDEX_URL ], $io, $config, $http_downloader );
-				} else {
-					$package_index = new ComposerRepository( [ 'url' => self::PACKAGE_INDEX_URL ], $io, $config );
-				}
+				$http_downloader = new HttpDownloader( $io, $config );
+				$package_index   = new ComposerRepository( [ 'url' => self::PACKAGE_INDEX_URL ], $io, $config, $http_downloader );
 			} catch ( Exception $e ) {
 				WP_CLI::error( $e->getMessage() );
 			}
@@ -759,6 +755,7 @@ class Package_Command extends WP_CLI_Command {
 	 * @param array
 	 */
 	private function show_packages( $context, $packages, $assoc_args ) {
+		$default_fields = [];
 		if ( 'list' === $context ) {
 			$default_fields = [
 				'name',
@@ -1074,7 +1071,7 @@ class Package_Command extends WP_CLI_Command {
 		$stability        = $composer->getPackage()->getMinimumStability();
 		$flags            = $composer->getPackage()->getStabilityFlags();
 		if ( isset( $flags[ $name ] ) ) {
-			$stability = array_search( $flags[ $name ], BasePackage::$stabilities, true );
+			$stability = array_search( $flags[ $name ], BasePackage::STABILITIES, true );
 		}
 		$best_stability = $stability;
 		if ( $composer->getPackage()->getPreferStable() ) {
