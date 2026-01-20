@@ -665,11 +665,7 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	public function is_installed( $args, $assoc_args ) {
 		list( $package_name ) = $args;
-		if ( $this->get_installed_package_by_name( $package_name ) ) {
-			WP_CLI::halt( 0 );
-		} else {
-			WP_CLI::halt( 1 );
-		}
+		WP_CLI::halt( $this->get_installed_package_by_name( $package_name ) ? 0 : 1 );
 	}
 
 	/**
