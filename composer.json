@@ -42,7 +42,8 @@
       "package install",
       "package list",
       "package update",
-      "package uninstall"
+      "package uninstall",
+      "package is-installed"
     ]
   },
   "autoload": {

@@ -757,14 +757,27 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Checks whether a package is a WP-CLI community package based
-	 * on membership in our package index.
+	 * Checks if a given package is installed.
 	 *
-	 * @param object      $package     A package object
-	 * @return bool
+	 * Returns exit code 0 when installed, 1 when uninstalled.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <name>
+	 * : The package to check.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Check whether "foo/bar" is installed; exit status 0 if installed, otherwise 1
+	 *     $ wp package is-installed foo/bar
+	 *     $ echo $?
+	 *     1
+	 *
+	 * @subcommand is-installed
 	 */
-	private function is_community_package( $package ) {
-		return $this->package_index()->hasPackage( $package );
+	public function is_installed( $args, $assoc_args ) {
+		list( $package_name ) = $args;
+		WP_CLI::halt( $this->get_installed_package_by_name( $package_name ) ? 0 : 1 );
 	}
 
 	/**
@@ -1033,17 +1046,6 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Checks if the package name provided is already installed.
-	 */
-	private function is_package_installed( $package_name ) {
-		if ( $this->get_installed_package_by_name( $package_name ) ) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	/**
 	 * Gets the name of the package from the composer.json in a directory path
 	 *
 	 * @param string $dir_package
@@ -1205,6 +1207,9 @@ class Package_Command extends WP_CLI_Command {
 		return $version_selector->findBestCandidate( $name, $target_version, $php_version, $best_stability );
 	}
 
+	/**
+	 * @return VersionSelector
+	 */
 	private function get_version_selector( Composer $composer ) {
 		if ( ! $this->version_selector ) {
 			if ( $this->is_composer_v2() ) {
