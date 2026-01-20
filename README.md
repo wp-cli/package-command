@@ -297,6 +297,30 @@ wp package uninstall <name> [--insecure]
     Removing package directories and regenerating autoloader...
     Success: Uninstalled package.
 
+
+
+### wp package is-installed
+
+Checks if a given package is installed.
+
+~~~
+wp package is-installed <name>
+~~~
+
+Returns exit code 0 when installed, 1 when uninstalled.
+
+**OPTIONS**
+
+	<name>
+		The package to check.
+
+**EXAMPLES**
+
+    # Check whether "foo/bar" is installed; exit status 0 if installed, otherwise 1
+    $ wp package is-installed foo/bar
+    $ echo $?
+    1
+
 ## Installing
 
 This package is included with WP-CLI itself, no additional installation necessary.
