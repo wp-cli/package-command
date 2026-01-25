@@ -1419,7 +1419,7 @@ class Package_Command extends WP_CLI_Command {
 
 		// GitLab OAuth token.
 		$gitlab_oauth_token = getenv( 'GITLAB_OAUTH_TOKEN' );
-		if ( ! isset( $composer_auth['gitlab-oauth'] ) && is_string( $gitlab_oauth_token ) ) {
+		if ( ! isset( $composer_auth['gitlab-oauth'] ) && is_string( $gitlab_oauth_token ) && '' !== $gitlab_oauth_token ) {
 			$composer_auth['gitlab-oauth'] = [ 'gitlab.com' => $gitlab_oauth_token ];
 			$changed                       = true;
 		}
