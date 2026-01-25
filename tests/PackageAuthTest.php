@@ -40,17 +40,24 @@ class PackageAuthTest extends TestCase {
 	}
 
 	/**
-	 * Test that GITHUB_TOKEN is added to COMPOSER_AUTH.
+	 * Helper method to invoke the set_composer_auth_env_var method.
 	 */
-	public function test_github_token_added_to_composer_auth() {
-		putenv( 'GITHUB_TOKEN=ghp_test123456789' );
-
+	private function invoke_set_composer_auth() {
 		$package = new Package_Command();
 		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
 		if ( PHP_VERSION_ID < 80100 ) {
 			$method->setAccessible( true );
 		}
 		$method->invoke( $package );
+	}
+
+	/**
+	 * Test that GITHUB_TOKEN is added to COMPOSER_AUTH.
+	 */
+	public function test_github_token_added_to_composer_auth() {
+		putenv( 'GITHUB_TOKEN=ghp_test123456789' );
+
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		$this->assertNotFalse( $composer_auth );
@@ -68,12 +75,7 @@ class PackageAuthTest extends TestCase {
 	public function test_gitlab_oauth_token_added_to_composer_auth() {
 		putenv( 'GITLAB_OAUTH_TOKEN=glpat_test123456789' );
 
-		$package = new Package_Command();
-		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
-		if ( PHP_VERSION_ID < 80100 ) {
-			$method->setAccessible( true );
-		}
-		$method->invoke( $package );
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		$this->assertNotFalse( $composer_auth );
@@ -91,12 +93,7 @@ class PackageAuthTest extends TestCase {
 	public function test_gitlab_token_added_to_composer_auth() {
 		putenv( 'GITLAB_TOKEN=glpat_test123456789' );
 
-		$package = new Package_Command();
-		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
-		if ( PHP_VERSION_ID < 80100 ) {
-			$method->setAccessible( true );
-		}
-		$method->invoke( $package );
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		$this->assertNotFalse( $composer_auth );
@@ -115,12 +112,7 @@ class PackageAuthTest extends TestCase {
 		putenv( 'BITBUCKET_CONSUMER_KEY=test_key' );
 		putenv( 'BITBUCKET_CONSUMER_SECRET=test_secret' );
 
-		$package = new Package_Command();
-		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
-		if ( PHP_VERSION_ID < 80100 ) {
-			$method->setAccessible( true );
-		}
-		$method->invoke( $package );
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		$this->assertNotFalse( $composer_auth );
@@ -142,12 +134,7 @@ class PackageAuthTest extends TestCase {
 		putenv( 'BITBUCKET_CONSUMER_KEY=test_key' );
 		// BITBUCKET_CONSUMER_SECRET is not set
 
-		$package = new Package_Command();
-		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
-		if ( PHP_VERSION_ID < 80100 ) {
-			$method->setAccessible( true );
-		}
-		$method->invoke( $package );
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		// No auth should be set because only one credential was provided
@@ -168,12 +155,7 @@ class PackageAuthTest extends TestCase {
 		);
 		putenv( "HTTP_BASIC_AUTH=$http_basic" );
 
-		$package = new Package_Command();
-		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
-		if ( PHP_VERSION_ID < 80100 ) {
-			$method->setAccessible( true );
-		}
-		$method->invoke( $package );
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		$this->assertNotFalse( $composer_auth );
@@ -194,12 +176,7 @@ class PackageAuthTest extends TestCase {
 	public function test_invalid_http_basic_auth_json_ignored() {
 		putenv( 'HTTP_BASIC_AUTH=not-valid-json' );
 
-		$package = new Package_Command();
-		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
-		if ( PHP_VERSION_ID < 80100 ) {
-			$method->setAccessible( true );
-		}
-		$method->invoke( $package );
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		// No auth should be set because the JSON was invalid
@@ -213,12 +190,7 @@ class PackageAuthTest extends TestCase {
 		putenv( 'GITHUB_TOKEN=ghp_test123' );
 		putenv( 'GITLAB_TOKEN=glpat_test456' );
 
-		$package = new Package_Command();
-		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
-		if ( PHP_VERSION_ID < 80100 ) {
-			$method->setAccessible( true );
-		}
-		$method->invoke( $package );
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		$this->assertNotFalse( $composer_auth );
@@ -245,12 +217,7 @@ class PackageAuthTest extends TestCase {
 		putenv( "COMPOSER_AUTH=$existing_auth" );
 		putenv( 'GITLAB_TOKEN=glpat_new_token' );
 
-		$package = new Package_Command();
-		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
-		if ( PHP_VERSION_ID < 80100 ) {
-			$method->setAccessible( true );
-		}
-		$method->invoke( $package );
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		$this->assertNotFalse( $composer_auth );
@@ -279,12 +246,7 @@ class PackageAuthTest extends TestCase {
 		putenv( "COMPOSER_AUTH=$existing_auth" );
 		putenv( 'GITHUB_TOKEN=new_token' );
 
-		$package = new Package_Command();
-		$method  = new \ReflectionMethod( 'Package_Command', 'set_composer_auth_env_var' );
-		if ( PHP_VERSION_ID < 80100 ) {
-			$method->setAccessible( true );
-		}
-		$method->invoke( $package );
+		$this->invoke_set_composer_auth();
 
 		$composer_auth = getenv( 'COMPOSER_AUTH' );
 		$this->assertNotFalse( $composer_auth );
