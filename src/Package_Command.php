@@ -1409,11 +1409,51 @@ class Package_Command extends WP_CLI_Command {
 		if ( empty( $composer_auth ) || ! is_array( $composer_auth ) ) {
 			$composer_auth = [];
 		}
+
+		// GitHub OAuth token.
 		$github_token = getenv( 'GITHUB_TOKEN' );
 		if ( ! isset( $composer_auth['github-oauth'] ) && is_string( $github_token ) ) {
 			$composer_auth['github-oauth'] = [ 'github.com' => $github_token ];
 			$changed                       = true;
 		}
+
+		// GitLab OAuth token.
+		$gitlab_oauth_token = getenv( 'GITLAB_OAUTH_TOKEN' );
+		if ( ! isset( $composer_auth['gitlab-oauth'] ) && is_string( $gitlab_oauth_token ) ) {
+			$composer_auth['gitlab-oauth'] = [ 'gitlab.com' => $gitlab_oauth_token ];
+			$changed                       = true;
+		}
+
+		// GitLab personal access token.
+		$gitlab_token = getenv( 'GITLAB_TOKEN' );
+		if ( ! isset( $composer_auth['gitlab-token'] ) && is_string( $gitlab_token ) ) {
+			$composer_auth['gitlab-token'] = [ 'gitlab.com' => $gitlab_token ];
+			$changed                       = true;
+		}
+
+		// Bitbucket OAuth consumer.
+		$bitbucket_key    = getenv( 'BITBUCKET_CONSUMER_KEY' );
+		$bitbucket_secret = getenv( 'BITBUCKET_CONSUMER_SECRET' );
+		if ( ! isset( $composer_auth['bitbucket-oauth'] ) && is_string( $bitbucket_key ) && is_string( $bitbucket_secret ) ) {
+			$composer_auth['bitbucket-oauth'] = [
+				'bitbucket.org' => [
+					'consumer-key'    => $bitbucket_key,
+					'consumer-secret' => $bitbucket_secret,
+				],
+			];
+			$changed                          = true;
+		}
+
+		// HTTP Basic Authentication.
+		$http_basic_auth = getenv( 'HTTP_BASIC_AUTH' );
+		if ( ! isset( $composer_auth['http-basic'] ) && is_string( $http_basic_auth ) ) {
+			$http_basic_auth_decoded = json_decode( $http_basic_auth, true /*assoc*/ );
+			if ( is_array( $http_basic_auth_decoded ) ) {
+				$composer_auth['http-basic'] = $http_basic_auth_decoded;
+				$changed                     = true;
+			}
+		}
+
 		if ( $changed ) {
 			putenv( 'COMPOSER_AUTH=' . json_encode( $composer_auth ) );
 		}
