@@ -1449,7 +1449,7 @@ class Package_Command extends WP_CLI_Command {
 
 		// HTTP Basic Authentication.
 		$http_basic_auth = getenv( 'HTTP_BASIC_AUTH' );
-		if ( ! isset( $composer_auth['http-basic'] ) && is_string( $http_basic_auth ) ) {
+		if ( ! isset( $composer_auth['http-basic'] ) && is_string( $http_basic_auth ) && '' !== $http_basic_auth ) {
 			$http_basic_auth_decoded = json_decode( $http_basic_auth, true /*assoc*/ );
 			if ( is_array( $http_basic_auth_decoded ) ) {
 				$composer_auth['http-basic'] = $http_basic_auth_decoded;
