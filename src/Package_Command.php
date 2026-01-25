@@ -1434,7 +1434,10 @@ class Package_Command extends WP_CLI_Command {
 		// Bitbucket OAuth consumer.
 		$bitbucket_key    = getenv( 'BITBUCKET_CONSUMER_KEY' );
 		$bitbucket_secret = getenv( 'BITBUCKET_CONSUMER_SECRET' );
-		if ( ! isset( $composer_auth['bitbucket-oauth'] ) && is_string( $bitbucket_key ) && is_string( $bitbucket_secret ) ) {
+		if ( ! isset( $composer_auth['bitbucket-oauth'] )
+			&& is_string( $bitbucket_key ) && '' !== $bitbucket_key
+			&& is_string( $bitbucket_secret ) && '' !== $bitbucket_secret
+		) {
 			$composer_auth['bitbucket-oauth'] = [
 				'bitbucket.org' => [
 					'consumer-key'    => $bitbucket_key,
