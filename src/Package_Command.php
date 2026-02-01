@@ -1357,23 +1357,28 @@ class Package_Command extends WP_CLI_Command {
 	/**
 	 * Gets the release tag for the latest stable release of a GitHub repository.
 	 *
-	 * @param string $package_name Name of the repository.
+	 * If there is no release, falls back to the default branch prefixed with 'dev-'.
 	 *
-	 * @return string Release tag.
+	 * @param string $package_name Name of the repository.
+	 * @param bool   $insecure     Whether to retry downloads without certificate validation if TLS handshake fails.
+	 *
+	 * @return string Release tag or 'dev-{default_branch}' if no release exists.
 	 */
 	private function get_github_latest_release_tag( $package_name, $insecure ) {
 		$url      = "https://api.github.com/repos/{$package_name}/releases/latest";
 		$options  = [ 'insecure' => $insecure ];
 		$response = Utils\http_request( 'GET', $url, null, [], $options );
 		if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
-			WP_CLI::warning( 'Could not guess stable version from GitHub repository, falling back to master branch' );
-			return 'master';
+			$default_branch = $this->get_github_default_branch( $package_name, $insecure );
+			WP_CLI::warning( "Could not guess stable version from GitHub repository, falling back to {$default_branch} branch" );
+			return "dev-{$default_branch}";
 		}
 
 		$package_data = json_decode( $response->body );
 		if ( JSON_ERROR_NONE !== json_last_error() ) {
-			WP_CLI::warning( 'Could not guess stable version from GitHub repository, falling back to master branch' );
-			return 'master';
+			$default_branch = $this->get_github_default_branch( $package_name, $insecure );
+			WP_CLI::warning( "Could not guess stable version from GitHub repository, falling back to {$default_branch} branch" );
+			return "dev-{$default_branch}";
 		}
 
 		$tag = $package_data->tag_name;
