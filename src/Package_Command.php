@@ -41,9 +41,9 @@ use WP_CLI\RequestsLibrary;
  *     | wp-cli/server-command | Daniel Bachhuber | dev-main | available | 2.x-dev        |
  *     +-----------------------+------------------+----------+-----------+----------------+
  *
- *     # Install the latest development version of the package.
+ *     # Install the latest stable version of the package.
  *     $ wp package install wp-cli/server-command
- *     Installing package wp-cli/server-command (dev-main)
+ *     Installing package wp-cli/server-command (^2.0)
  *     Updating /home/person/.wp-cli/packages/composer.json to require the package...
  *     Using Composer to install the package...
  *     ---
@@ -201,10 +201,10 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     # Install a package hosted at a git URL.
+	 *     # Install the latest stable version of a package.
 	 *     $ wp package install runcommand/hook
 	 *
-	 *     # Install the latest stable version.
+	 *     # Install the latest stable version (explicitly specified).
 	 *     $ wp package install wp-cli/server-command:@stable
 	 *
 	 *     # Install a package hosted at a GitLab.com URL.
@@ -224,12 +224,17 @@ class Package_Command extends WP_CLI_Command {
 		$version     = '';
 		if ( $this->is_git_repository( $package_name ) ) {
 			if ( '' === $version ) {
-				$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+				$version = '@stable';
 			}
 			$git_package = $package_name;
 			$matches     = [];
 			if ( preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches ) ) {
-				$package_name = $this->check_git_package_name( $matches[1], $package_name, $version, $insecure );
+				$extracted_package_name = $matches[1];
+				if ( '@stable' === $version ) {
+					$tag     = $this->get_github_latest_release_tag( $extracted_package_name, $insecure );
+					$version = $this->guess_version_constraint_from_tag( $tag );
+				}
+				$package_name = $this->check_git_package_name( $extracted_package_name, $package_name, $version, $insecure );
 			} else {
 				WP_CLI::error( "Couldn't parse package name from expected path '<name>/<package>'." );
 			}
@@ -301,7 +306,7 @@ class Package_Command extends WP_CLI_Command {
 					$git_package = $package;
 
 					if ( '' === $version ) {
-						$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+						$version = '@stable';
 					}
 
 					if ( '@stable' === $version ) {
