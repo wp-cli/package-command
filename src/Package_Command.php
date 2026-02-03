@@ -1381,9 +1381,10 @@ class Package_Command extends WP_CLI_Command {
 		$response = Utils\http_request( 'GET', $url, null, [], $options );
 
 		// Check for successful response and valid JSON
-		$package_data = isset( $response->body ) ? json_decode( $response->body ) : null;
+		$package_data = json_decode( $response->body ?? '' );
 
 		if ( 20 !== (int) substr( $response->status_code, 0, 2 )
+			|| JSON_ERROR_NONE !== json_last_error()
 			|| null === $package_data
 			|| ! isset( $package_data->tag_name ) ) {
 
