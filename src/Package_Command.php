@@ -1412,7 +1412,7 @@ class Package_Command extends WP_CLI_Command {
 
 		// GitHub OAuth token.
 		$github_token = getenv( 'GITHUB_TOKEN' );
-		if ( ! isset( $composer_auth['github-oauth'] ) && is_string( $github_token ) ) {
+		if ( ! isset( $composer_auth['github-oauth'] ) && is_string( $github_token ) && '' !== $github_token ) {
 			$composer_auth['github-oauth'] = [ 'github.com' => $github_token ];
 			$changed                       = true;
 		}
@@ -1426,7 +1426,7 @@ class Package_Command extends WP_CLI_Command {
 
 		// GitLab personal access token.
 		$gitlab_token = getenv( 'GITLAB_TOKEN' );
-		if ( ! isset( $composer_auth['gitlab-token'] ) && is_string( $gitlab_token ) ) {
+		if ( ! isset( $composer_auth['gitlab-token'] ) && is_string( $gitlab_token ) && '' !== $gitlab_token ) {
 			$composer_auth['gitlab-token'] = [ 'gitlab.com' => $gitlab_token ];
 			$changed                       = true;
 		}

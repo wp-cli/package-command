@@ -257,4 +257,70 @@ class PackageAuthTest extends TestCase {
 		$this->assertArrayHasKey( 'github-oauth', $auth_array );
 		$this->assertSame( 'existing_token', $auth_array['github-oauth']['github.com'] );
 	}
+
+	/**
+	 * Test that empty GITHUB_TOKEN is ignored.
+	 */
+	public function test_empty_github_token_ignored() {
+		putenv( 'GITHUB_TOKEN=' );
+
+		$this->invoke_set_composer_auth();
+
+		$composer_auth = getenv( 'COMPOSER_AUTH' );
+		// No auth should be set because the token was empty
+		$this->assertFalse( $composer_auth );
+	}
+
+	/**
+	 * Test that empty GITLAB_TOKEN is ignored.
+	 */
+	public function test_empty_gitlab_token_ignored() {
+		putenv( 'GITLAB_TOKEN=' );
+
+		$this->invoke_set_composer_auth();
+
+		$composer_auth = getenv( 'COMPOSER_AUTH' );
+		// No auth should be set because the token was empty
+		$this->assertFalse( $composer_auth );
+	}
+
+	/**
+	 * Test that empty GITLAB_OAUTH_TOKEN is ignored.
+	 */
+	public function test_empty_gitlab_oauth_token_ignored() {
+		putenv( 'GITLAB_OAUTH_TOKEN=' );
+
+		$this->invoke_set_composer_auth();
+
+		$composer_auth = getenv( 'COMPOSER_AUTH' );
+		// No auth should be set because the token was empty
+		$this->assertFalse( $composer_auth );
+	}
+
+	/**
+	 * Test that empty BITBUCKET credentials are ignored.
+	 */
+	public function test_empty_bitbucket_credentials_ignored() {
+		putenv( 'BITBUCKET_CONSUMER_KEY=' );
+		putenv( 'BITBUCKET_CONSUMER_SECRET=' );
+
+		$this->invoke_set_composer_auth();
+
+		$composer_auth = getenv( 'COMPOSER_AUTH' );
+		// No auth should be set because the credentials were empty
+		$this->assertFalse( $composer_auth );
+	}
+
+	/**
+	 * Test that empty HTTP_BASIC_AUTH is ignored.
+	 */
+	public function test_empty_http_basic_auth_ignored() {
+		putenv( 'HTTP_BASIC_AUTH=' );
+
+		$this->invoke_set_composer_auth();
+
+		$composer_auth = getenv( 'COMPOSER_AUTH' );
+		// No auth should be set because the value was empty
+		$this->assertFalse( $composer_auth );
+	}
 }
