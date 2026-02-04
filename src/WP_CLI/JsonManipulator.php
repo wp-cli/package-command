@@ -128,7 +128,7 @@ class JsonManipulator
     private function sortPackages(array &$packages = array())
     {
         $prefix = function ($requirement) {
-            if (preg_match(PlatformRepository::PLATFORM_PACKAGE_REGEX, $requirement)) {
+            if (PlatformRepository::isPlatformPackage($requirement)) {
                 return preg_replace(
                     array(
                         '/^php/',
@@ -248,7 +248,7 @@ class JsonManipulator
         // child exists
         $childRegex = '{'.self::$DEFINES.'(?P<start>"'.preg_quote($name).'"\s*:\s*)(?P<content>(?&json))(?P<end>,?)}x';
         if ($this->pregMatch($childRegex, $children, $matches)) {
-            $children = preg_replace_callback($childRegex, function ($matches) use ($name, $subName, $value, $that) {
+            $children = preg_replace_callback($childRegex, function ($matches) use ($subName, $value, $that) {
                 if ($subName !== null) {
                     $curVal = json_decode($matches['content'], true);
                     if (!is_array($curVal)) {
@@ -362,6 +362,7 @@ class JsonManipulator
         }
 
         // try and find a match for the subkey
+        $childrenClean = $children;
         if ($this->pregMatch('{"'.preg_quote($name).'"\s*:}i', $children)) {
             // find best match for the value of "name"
             if (preg_match_all('{'.self::$DEFINES.'"'.preg_quote($name).'"\s*:\s*(?:(?&json))}x', $children, $matches)) {
@@ -379,8 +380,6 @@ class JsonManipulator
                     }
                 }
             }
-        } else {
-            $childrenClean = $children;
         }
 
         // no child data left, $name was the only key in

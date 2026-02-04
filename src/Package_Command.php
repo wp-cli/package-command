@@ -520,15 +520,19 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Updates all installed WP-CLI packages to their latest version.
+	 * Updates installed WP-CLI packages to their latest version.
 	 *
 	 * ## OPTIONS
+	 *
+	 * [<package-name>...]
+	 * : One or more package names to update. If not specified, all packages will be updated.
 	 *
 	 * [--interaction]
 	 * : Boolean flag that controls interactive mode (enabled by default). Use `--no-interaction` to disable prompts, which is useful for scripting.
 	 *
 	 * ## EXAMPLES
 	 *
+	 *     # Update all packages.
 	 *     $ wp package update
 	 *     Using Composer to update packages...
 	 *     ---
@@ -543,10 +547,21 @@ class Package_Command extends WP_CLI_Command {
 	 *     ---
 	 *     Success: Packages updated.
 	 *
+	 *     # Update a specific package.
+	 *     $ wp package update wp-cli/server-command
+	 *     Using Composer to update packages...
+	 *     ---
+	 *     Loading composer repositories with package information
+	 *     Updating dependencies
+	 *     Writing lock file
+	 *     Generating autoload files
+	 *     ---
+	 *     Success: Package updated successfully.
+	 *
 	 * @param array $_ Unused positional arguments (none expected).
 	 * @param array $assoc_args Associative array of options.
 	 */
-	public function update( $_, $assoc_args = [] ) {
+	public function update( $args, $assoc_args = [] ) {
 		$interaction = (bool) Utils\get_flag_value( $assoc_args, 'interaction', true );
 
 		if ( ! $interaction ) {
@@ -554,16 +569,49 @@ class Package_Command extends WP_CLI_Command {
 		}
 
 		$this->set_composer_auth_env_var();
+
+		// Validate package names if provided
+		$packages_to_update = [];
+		if ( ! empty( $args ) ) {
+			foreach ( $args as $package_name ) {
+				$package = $this->get_installed_package_by_name( $package_name );
+				if ( false === $package ) {
+					WP_CLI::error( sprintf( "Package '%s' is not installed.", $package_name ) );
+				}
+				// Use the package's pretty name (case-sensitive) from composer
+				$packages_to_update[] = $package->getPrettyName();
+			}
+		}
+
 		$composer = $this->get_composer();
 
-		// Set up the EventSubscriber
+		// Set up the EventSubscriber with tracking for updates
+		$updated_packages = [];
 		$event_subscriber = new PackageManagerEventSubscriber();
 		$composer->getEventDispatcher()->addSubscriber( $event_subscriber );
+
+		// Add a listener to track actual package updates
+		$composer->getEventDispatcher()->addListener(
+			'post-package-update',
+			function ( $event ) use ( &$updated_packages ) {
+				$operation = $event->getOperation();
+				if ( method_exists( $operation, 'getTargetPackage' ) ) {
+					$package            = $operation->getTargetPackage();
+					$updated_packages[] = $package->getPrettyName();
+				}
+			}
+		);
 
 		// Set up the installer
 		$install = Installer::create( new ComposerIO(), $composer );
 		$install->setUpdate( true ); // Installer class will only override composer.lock with this flag
 		$install->setPreferSource( true ); // Use VCS when VCS for easier contributions.
+
+		// If specific packages are provided, use the allow list
+		if ( ! empty( $packages_to_update ) ) {
+			$install->setUpdateAllowList( $packages_to_update );
+		}
+
 		WP_CLI::log( 'Using Composer to update packages...' );
 		WP_CLI::log( '---' );
 		$res = false;
@@ -577,7 +625,28 @@ class Package_Command extends WP_CLI_Command {
 		// TODO: The --insecure (to be added here) flag should cause another Composer run with verify disabled.
 
 		if ( 0 === $res ) {
-			WP_CLI::success( 'Packages updated.' );
+			$num_packages = count( $packages_to_update );
+			if ( $num_packages > 0 ) {
+				// When specific packages were requested, report on actual updates
+				$num_updated = count( $updated_packages );
+				if ( 0 === $num_updated ) {
+					if ( 1 === $num_packages ) {
+						WP_CLI::success( 'Package already at latest version.' );
+					} else {
+						WP_CLI::success( 'Packages already at latest versions.' );
+					}
+				} elseif ( $num_updated === $num_packages ) {
+					if ( 1 === $num_packages ) {
+						WP_CLI::success( 'Package updated successfully.' );
+					} else {
+						WP_CLI::success( sprintf( 'All %d packages updated successfully.', $num_packages ) );
+					}
+				} else {
+					WP_CLI::success( sprintf( 'Updated %d of %d packages.', $num_updated, $num_packages ) );
+				}
+			} else {
+				WP_CLI::success( 'Packages updated.' );
+			}
 		} else {
 			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
 			WP_CLI::error( "Failed to update packages{$res_msg}." );
@@ -767,12 +836,8 @@ class Package_Command extends WP_CLI_Command {
 
 			$io = new NullIO();
 			try {
-				if ( $this->is_composer_v2() ) {
-					$http_downloader = new HttpDownloader( $io, $config );
-					$package_index   = new ComposerRepository( [ 'url' => self::PACKAGE_INDEX_URL ], $io, $config, $http_downloader );
-				} else {
-					$package_index = new ComposerRepository( [ 'url' => self::PACKAGE_INDEX_URL ], $io, $config );
-				}
+				$http_downloader = new HttpDownloader( $io, $config );
+				$package_index   = new ComposerRepository( [ 'url' => self::PACKAGE_INDEX_URL ], $io, $config, $http_downloader );
 			} catch ( Exception $e ) {
 				WP_CLI::error( $e->getMessage() );
 			}
@@ -789,6 +854,7 @@ class Package_Command extends WP_CLI_Command {
 	 * @param array
 	 */
 	private function show_packages( $context, $packages, $assoc_args ) {
+		$default_fields = [];
 		if ( 'list' === $context ) {
 			$default_fields = [
 				'name',
@@ -1104,7 +1170,7 @@ class Package_Command extends WP_CLI_Command {
 		$stability        = $composer->getPackage()->getMinimumStability();
 		$flags            = $composer->getPackage()->getStabilityFlags();
 		if ( isset( $flags[ $name ] ) ) {
-			$stability = array_search( $flags[ $name ], BasePackage::$stabilities, true );
+			$stability = array_search( $flags[ $name ], BasePackage::STABILITIES, true );
 		}
 		$best_stability = $stability;
 		if ( $composer->getPackage()->getPreferStable() ) {

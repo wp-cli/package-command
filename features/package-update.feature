@@ -99,6 +99,102 @@ Feature: Update WP-CLI packages
       Success: Packages updated.
       """
 
+  Scenario: Update a specific package by name
+    Given an empty directory
+
+    When I run `wp package install wp-cli-test/updateable-package:v1.0.0`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `sed -i.bak s/v1.0.0/\>=1.0.0/g {PACKAGE_PATH}/composer.json`
+    Then the return code should be 0
+
+    When I run `wp package update wp-cli-test/updateable-package`
+    Then STDOUT should contain:
+      """
+      Using Composer to update packages...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package updated successfully.
+      """
+
+    When I run `wp package list --fields=name,update`
+    Then STDOUT should be a table containing rows:
+      | name                           | update  |
+      | wp-cli-test/updateable-package | none    |
+
+  Scenario: Update multiple specific packages by name
+    Given an empty directory
+
+    When I run `wp package install wp-cli-test/updateable-package:v1.0.0`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `sed -i.bak s/v1.0.0/\>=1.0.0/g {PACKAGE_PATH}/composer.json`
+    Then the return code should be 0
+
+    When I run `wp package update wp-cli-test/updateable-package danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Using Composer to update packages...
+      """
+    And STDOUT should contain:
+      """
+      Success: Updated 1 of 2 packages.
+      """
+
+  Scenario: Update package that is already up to date
+    Given an empty directory
+
+    When I run `wp package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package update danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Using Composer to update packages...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package already at latest version.
+      """
+
+  Scenario: Error when trying to update a non-existent package
+    Given an empty directory
+
+    When I run `wp package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I try `wp package update non-existent/package`
+    Then STDERR should contain:
+      """
+      Error: Package 'non-existent/package' is not installed.
+      """
+    And the return code should be 1
+
   Scenario: Update packages with --no-interaction flag
     Given an empty directory
 
