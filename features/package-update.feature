@@ -194,3 +194,23 @@ Feature: Update WP-CLI packages
       Error: Package 'non-existent/package' is not installed.
       """
     And the return code should be 1
+
+  Scenario: Update packages with --no-interaction flag
+    Given an empty directory
+
+    When I run `wp package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package update --no-interaction`
+    Then STDOUT should contain:
+      """
+      Using Composer to update packages...
+      """
+    And STDOUT should contain:
+      """
+      Packages updated.
+      """
+    And STDERR should be empty
