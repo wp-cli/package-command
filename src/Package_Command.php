@@ -822,8 +822,8 @@ class Package_Command extends WP_CLI_Command {
 	 * Displays a set of packages
 	 *
 	 * @param string $context
-	 * @param array
-	 * @param array
+	 * @param array $packages
+	 * @param array $assoc_args
 	 */
 	private function show_packages( $context, $packages, $assoc_args ) {
 		$default_fields = [];
@@ -1130,8 +1130,8 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * @param  PackageInterface $package
 	 * @param  Composer         $composer
-	 * @param  string           $phpVersion
-	 * @param  bool             $minorOnly
+	 * @param  string           $php_version
+	 * @param  bool             $minor_only
 	 *
 	 * @return PackageInterface|null
 	 */

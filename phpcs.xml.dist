@@ -18,7 +18,7 @@
 	<exclude-pattern>*/src/WP_CLI/JsonManipulator\.php$</exclude-pattern>
 	<exclude-pattern>*/src/WP_CLI/Package/Compat/Min_Composer_1_10/NullIOMethodsTrait\.php$</exclude-pattern>
 	<exclude-pattern>*/src/WP_CLI/Package/Compat/Min_Composer_2_3/NullIOMethodsTrait\.php$</exclude-pattern>
-	<exclude-pattern>*/tests/JsonManipulatorTest\.php$</exclude-pattern>
+	<exclude-pattern>*/tests/phpunit/JsonManipulatorTest\.php$</exclude-pattern>
 
 	<!-- Show progress. -->
 	<arg value="p"/>
@@ -63,4 +63,5 @@
 		<exclude-pattern>*/src/Package_Command\.php$</exclude-pattern>
 	</rule>
 
+	<exclude-pattern>/tests/phpstan/scan-files</exclude-pattern>
 </ruleset>
