@@ -41,9 +41,9 @@ use WP_CLI\RequestsLibrary;
  *     | wp-cli/server-command | Daniel Bachhuber | dev-main | available | 2.x-dev        |
  *     +-----------------------+------------------+----------+-----------+----------------+
  *
- *     # Install the latest development version of the package.
+ *     # Install the latest stable version of the package.
  *     $ wp package install wp-cli/server-command
- *     Installing package wp-cli/server-command (dev-main)
+ *     Installing package wp-cli/server-command (^2.0)
  *     Updating /home/person/.wp-cli/packages/composer.json to require the package...
  *     Using Composer to install the package...
  *     ---
@@ -201,10 +201,10 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     # Install a package hosted at a git URL.
+	 *     # Install the latest stable version of a package.
 	 *     $ wp package install runcommand/hook
 	 *
-	 *     # Install the latest stable version.
+	 *     # Install the latest stable version (explicitly specified).
 	 *     $ wp package install wp-cli/server-command:@stable
 	 *
 	 *     # Install a package hosted at a GitLab.com URL.
@@ -224,12 +224,16 @@ class Package_Command extends WP_CLI_Command {
 		$version     = '';
 		if ( $this->is_git_repository( $package_name ) ) {
 			if ( '' === $version ) {
-				$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+				$version = '@stable';
 			}
 			$git_package = $package_name;
 			$matches     = [];
 			if ( preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches ) ) {
-				$package_name = $this->check_git_package_name( $matches[1], $package_name, $version, $insecure );
+				$extracted_package_name = $matches[1];
+				if ( '@stable' === $version ) {
+					$version = $this->resolve_stable_version( $extracted_package_name, $insecure );
+				}
+				$package_name = $this->check_git_package_name( $extracted_package_name, $package_name, $version, $insecure );
 			} else {
 				WP_CLI::error( "Couldn't parse package name from expected path '<name>/<package>'." );
 			}
@@ -301,12 +305,11 @@ class Package_Command extends WP_CLI_Command {
 					$git_package = $package;
 
 					if ( '' === $version ) {
-						$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+						$version = '@stable';
 					}
 
 					if ( '@stable' === $version ) {
-						$tag     = $this->get_github_latest_release_tag( $package_name, $insecure );
-						$version = $this->guess_version_constraint_from_tag( $tag );
+						$version = $this->resolve_stable_version( $package_name, $insecure );
 					}
 					$package_name = $this->check_github_package_name( $package_name, $version, $insecure );
 				}
@@ -1350,25 +1353,44 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Gets the release tag for the latest stable release of a GitHub repository.
+	 * Resolves '@stable' version to an actual version constraint.
 	 *
 	 * @param string $package_name Name of the repository.
+	 * @param bool   $insecure     Whether to retry downloads without certificate validation if TLS handshake fails.
 	 *
-	 * @return string Release tag.
+	 * @return string Version constraint.
+	 */
+	private function resolve_stable_version( $package_name, $insecure ) {
+		$tag = $this->get_github_latest_release_tag( $package_name, $insecure );
+		return $this->guess_version_constraint_from_tag( $tag );
+	}
+
+	/**
+	 * Gets the release tag for the latest stable release of a GitHub repository.
+	 *
+	 * If there is no release, falls back to the default branch prefixed with 'dev-'.
+	 *
+	 * @param string $package_name Name of the repository.
+	 * @param bool   $insecure     Whether to retry downloads without certificate validation if TLS handshake fails.
+	 *
+	 * @return string Release tag or 'dev-{default_branch}' if no release exists.
 	 */
 	private function get_github_latest_release_tag( $package_name, $insecure ) {
 		$url      = "https://api.github.com/repos/{$package_name}/releases/latest";
 		$options  = [ 'insecure' => $insecure ];
 		$response = Utils\http_request( 'GET', $url, null, [], $options );
-		if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
-			WP_CLI::warning( 'Could not guess stable version from GitHub repository, falling back to master branch' );
-			return 'master';
-		}
 
-		$package_data = json_decode( $response->body );
-		if ( JSON_ERROR_NONE !== json_last_error() ) {
-			WP_CLI::warning( 'Could not guess stable version from GitHub repository, falling back to master branch' );
-			return 'master';
+		// Check for successful response and valid JSON
+		$package_data = json_decode( $response->body ?? '' );
+
+		if ( 20 !== (int) substr( $response->status_code, 0, 2 )
+			|| JSON_ERROR_NONE !== json_last_error()
+			|| null === $package_data
+			|| ! isset( $package_data->tag_name ) ) {
+
+			$default_branch = $this->get_github_default_branch( $package_name, $insecure );
+			WP_CLI::warning( "Could not guess stable version from GitHub repository, falling back to {$default_branch} branch" );
+			return "dev-{$default_branch}";
 		}
 
 		$tag = $package_data->tag_name;
