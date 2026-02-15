@@ -312,14 +312,20 @@ These fields are optionally available:
 
 ### wp package update
 
-Updates all installed WP-CLI packages to their latest version.
+Updates installed WP-CLI packages to their latest version.
 
 ~~~
-wp package update 
+wp package update [<package-name>...]
 ~~~
+
+**OPTIONS**
+
+	[<package-name>...]
+		One or more package names to update. If not specified, all packages will be updated.
 
 **EXAMPLES**
 
+    # Update all packages.
     $ wp package update
     Using Composer to update packages...
     ---
@@ -333,6 +339,17 @@ wp package update
     Generating autoload files
     ---
     Success: Packages updated.
+
+    # Update a specific package.
+    $ wp package update wp-cli/server-command
+    Using Composer to update packages...
+    ---
+    Loading composer repositories with package information
+    Updating dependencies
+    Writing lock file
+    Generating autoload files
+    ---
+    Success: Package updated successfully.
 
 
 
