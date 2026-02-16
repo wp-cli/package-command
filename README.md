@@ -318,8 +318,6 @@ Updates installed WP-CLI packages to their latest version.
 wp package update [<package-name>...]
 ~~~
 
-**OPTIONS**
-
 	[<package-name>...]
 		One or more package names to update. If not specified, all packages will be updated.
 
