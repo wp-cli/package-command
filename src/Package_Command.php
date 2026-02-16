@@ -585,7 +585,7 @@ class Package_Command extends WP_CLI_Command {
 
 		if ( ! $skip_update_check ) {
 			try {
-				$latest = $this->find_latest_package( $package, $composer, null );
+				$latest = $this->find_latest_package( $package, $composer );
 				if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
 					$update         = 'available';
 					$update_version = $latest->getPrettyVersion();
