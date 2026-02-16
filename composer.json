@@ -38,6 +38,7 @@
     "commands": [
       "package",
       "package browse",
+      "package get",
       "package install",
       "package list",
       "package update",
