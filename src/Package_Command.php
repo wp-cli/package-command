@@ -663,8 +663,8 @@ class Package_Command extends WP_CLI_Command {
 	 *     ---
 	 *     Success: Package updated successfully.
 	 *
-	 * @param array $_ Unused positional arguments (none expected).
-	 * @param array $assoc_args Associative array of options.
+	 * @param array<string>             $args       Positional arguments. One or more package names to update.
+	 * @param array{interaction?: bool} $assoc_args Associative arguments.
 	 */
 	public function update( $args, $assoc_args = [] ) {
 		$interaction = (bool) Utils\get_flag_value( $assoc_args, 'interaction', true );
