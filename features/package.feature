@@ -250,3 +250,69 @@ Feature: Manage WP-CLI packages
 
     When I run `wp package uninstall runcommand/hook`
     Then STDERR should be empty
+
+  Scenario: Get information about a single package
+    Given an empty directory
+
+    When I try `wp package get runcommand/hook`
+    Then STDERR should contain:
+      """
+      Error: Package 'runcommand/hook' is not installed.
+      """
+    And the return code should be 1
+
+    When I run `wp package install runcommand/hook`
+    Then STDERR should be empty
+
+    When I run `wp package get runcommand/hook`
+    Then STDOUT should contain:
+      """
+      runcommand/hook
+      """
+    And STDOUT should contain:
+      """
+      version
+      """
+
+    When I run `wp package get runcommand/hook --fields=name,version`
+    Then STDOUT should contain:
+      """
+      runcommand/hook
+      """
+    And STDOUT should contain:
+      """
+      version
+      """
+
+    When I run `wp package get runcommand/hook --fields=version --format=json`
+    Then STDOUT should contain:
+      """
+      "version"
+      """
+
+    When I run `wp package get runcommand/hook --format=json`
+    Then STDOUT should contain:
+      """
+      "name":"runcommand\/hook"
+      """
+    And STDOUT should contain:
+      """
+      "version"
+      """
+
+    When I run `wp package get runcommand/hook --skip-update-check --fields=name,update,update_version`
+    Then STDOUT should contain:
+      """
+      runcommand/hook
+      """
+    And STDOUT should contain:
+      """
+      none
+      """
+    And STDOUT should not contain:
+      """
+      available
+      """
+
+    When I run `wp package uninstall runcommand/hook`
+    Then STDERR should be empty

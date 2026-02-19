@@ -125,6 +125,70 @@ There are no optionally available fields.
 
 
 
+### wp package get
+
+Gets information about an installed WP-CLI package.
+
+~~~
+wp package get <name> [--fields=<fields>] [--format=<format>] [--skip-update-check]
+~~~
+
+**OPTIONS**
+
+	<name>
+		Name of the package to get information for.
+
+	[--fields=<fields>]
+		Limit the output to specific fields. Defaults to all fields.
+
+	[--format=<format>]
+		Render output in a particular format.
+		---
+		default: table
+		options:
+		  - table
+		  - csv
+		  - json
+		  - yaml
+		---
+
+	[--skip-update-check]
+		Skip checking for updates. This is faster and avoids authentication issues with GitHub or Composer repositories.
+
+**AVAILABLE FIELDS**
+
+These fields will be displayed by default for each package:
+
+* name
+* authors
+* version
+* update
+* update_version
+
+These fields are optionally available:
+
+* description
+
+**EXAMPLES**
+
+    # Get information about an installed package.
+    $ wp package get wp-cli/scaffold-package-command
+    +----------------+---------------------------------+
+    | Field          | Value                           |
+    +----------------+---------------------------------+
+    | name           | wp-cli/scaffold-package-command |
+    | authors        | Daniel Bachhuber                |
+    | version        | dev-main                        |
+    | update         | available                       |
+    | update_version | 2.x-dev                         |
+    +----------------+---------------------------------+
+
+    # Get the version of a package.
+    $ wp package get wp-cli/server-command --fields=version --format=json
+    {"version":"dev-main"}
+
+
+
 ### wp package install
 
 Installs a WP-CLI package.
@@ -253,8 +317,6 @@ Updates installed WP-CLI packages to their latest version.
 ~~~
 wp package update [<package-name>...]
 ~~~
-
-**OPTIONS**
 
 	[<package-name>...]
 		One or more package names to update. If not specified, all packages will be updated.
