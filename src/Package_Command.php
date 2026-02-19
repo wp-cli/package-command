@@ -680,7 +680,7 @@ class Package_Command extends WP_CLI_Command {
 		list( $package_name ) = $args;
 
 		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
-		$interaction = Utils\get_flag_value( $assoc_args, 'interaction', true );
+		$interaction = (bool) Utils\get_flag_value( $assoc_args, 'interaction', true );
 
 		if ( ! $interaction ) {
 			$this->set_non_interactive_mode();
