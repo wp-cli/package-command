@@ -1262,3 +1262,20 @@ Feature: Install WP-CLI packages
       Error: ZipArchive failed to unzip 'package-dir/zero.zip': Not a zip archive (19).
       """
     And STDOUT should be empty
+
+  @github-api
+  Scenario: Install package with --no-interaction fails fast on Git authentication errors
+    Given an empty directory
+
+    # Try to install from a repository that requires authentication
+    # With --no-interaction and GIT_TERMINAL_PROMPT=0, Git will fail immediately
+    # instead of prompting for credentials
+    When I try `wp package install git@github.com:wp-cli-private-test/authentication-required.git --no-interaction`
+    Then the return code should be 1
+    # The command should fail fast without hanging
+    And STDERR should contain:
+      """
+      Package installation failed
+      """
+    # Git should report it couldn't authenticate, not prompt
+    And STDERR should match /fatal:|Could not read from remote repository|Repository not found/
