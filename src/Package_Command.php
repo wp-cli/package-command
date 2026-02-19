@@ -528,7 +528,7 @@ class Package_Command extends WP_CLI_Command {
 	 * : One or more package names to update. If not specified, all packages will be updated.
 	 *
 	 * [--interaction]
-	 * : Boolean flag that controls interactive mode (enabled by default). Use `--no-interaction` to disable prompts, which is useful for scripting.
+	 * : Control interactive mode. Use `--no-interaction` to disable prompts (interactive by default). Useful for scripting.
 	 *
 	 * ## EXAMPLES
 	 *
