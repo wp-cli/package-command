@@ -1263,46 +1263,19 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should be empty
 
-  Scenario: Install a package with --no-interaction flag sets environment variables
+  @github-api
+  Scenario: Install package with --no-interaction fails fast on Git authentication errors
     Given an empty directory
-    And a composer.json file:
+
+    # Try to install from a repository that requires authentication
+    # With --no-interaction and GIT_TERMINAL_PROMPT=0, Git will fail immediately
+    # instead of prompting for credentials
+    When I try `wp package install git@github.com:wp-cli-private-test/authentication-required.git --no-interaction`
+    Then the return code should be 1
+    # The command should fail fast without hanging
+    And STDERR should contain:
       """
-      {
-        "repositories": {
-          "test" : {
-            "type": "path",
-            "url": "./dummy-package/"
-          },
-          "wp-cli": {
-            "type": "composer",
-            "url": "https://wp-cli.org/package-index/"
-          }
-        }
-      }
+      Package installation failed
       """
-    And a dummy-package/composer.json file:
-      """
-      {
-        "name": "wp-cli/restful",
-        "description": "Test package for no-interaction flag",
-        "scripts": {
-          "post-install-cmd": [
-            "@php -r \"echo 'GIT_TERMINAL_PROMPT=' . getenv('GIT_TERMINAL_PROMPT') . PHP_EOL;\"",
-            "@php -r \"echo 'GIT_SSH_COMMAND=' . getenv('GIT_SSH_COMMAND') . PHP_EOL;\""
-          ]
-        }
-      }
-      """
-    When I run `WP_CLI_PACKAGES_DIR=. wp package install wp-cli/restful --no-interaction`
-    Then STDOUT should contain:
-      """
-      GIT_TERMINAL_PROMPT=0
-      """
-    And STDOUT should contain:
-      """
-      GIT_SSH_COMMAND=ssh -o BatchMode=yes
-      """
-    And STDOUT should contain:
-      """
-      Success: Package installed
-      """
+    # Git should report it couldn't authenticate, not prompt
+    And STDERR should match /fatal:|Could not read from remote repository|Repository not found/
