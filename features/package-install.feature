@@ -1263,7 +1263,7 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should be empty
 
-  Scenario: Install a package with --no-interaction flag
+  Scenario: Install a package with --no-interaction flag sets environment variables
     Given an empty directory
     And a composer.json file:
       """
@@ -1284,11 +1284,25 @@ Feature: Install WP-CLI packages
       """
       {
         "name": "wp-cli/restful",
-        "description": "Test package for no-interaction flag"
+        "description": "Test package for no-interaction flag",
+        "scripts": {
+          "post-install-cmd": [
+            "@php -r \"echo 'GIT_TERMINAL_PROMPT=' . getenv('GIT_TERMINAL_PROMPT') . PHP_EOL;\"",
+            "@php -r \"echo 'GIT_SSH_COMMAND=' . getenv('GIT_SSH_COMMAND') . PHP_EOL;\""
+          ]
+        }
       }
       """
     When I run `WP_CLI_PACKAGES_DIR=. wp package install wp-cli/restful --no-interaction`
     Then STDOUT should contain:
+      """
+      GIT_TERMINAL_PROMPT=0
+      """
+    And STDOUT should contain:
+      """
+      GIT_SSH_COMMAND=ssh -o BatchMode=yes
+      """
+    And STDOUT should contain:
       """
       Success: Package installed
       """

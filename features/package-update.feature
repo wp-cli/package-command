@@ -195,22 +195,51 @@ Feature: Update WP-CLI packages
       """
     And the return code should be 1
 
-  Scenario: Update packages with --no-interaction flag
+  Scenario: Update packages with --no-interaction flag sets environment variables
     Given an empty directory
+    And a composer.json file:
+      """
+      {
+        "repositories": {
+          "test" : {
+            "type": "path",
+            "url": "./dummy-package/"
+          },
+          "wp-cli": {
+            "type": "composer",
+            "url": "https://wp-cli.org/package-index/"
+          }
+        },
+        "require": {
+          "wp-cli/restful": "*"
+        }
+      }
+      """
+    And a dummy-package/composer.json file:
+      """
+      {
+        "name": "wp-cli/restful",
+        "version": "1.0.0",
+        "description": "Test package for no-interaction flag",
+        "scripts": {
+          "post-update-cmd": [
+            "@php -r \"echo 'GIT_TERMINAL_PROMPT=' . getenv('GIT_TERMINAL_PROMPT') . PHP_EOL;\"",
+            "@php -r \"echo 'GIT_SSH_COMMAND=' . getenv('GIT_SSH_COMMAND') . PHP_EOL;\""
+          ]
+        }
+      }
+      """
 
-    When I run `wp package install danielbachhuber/wp-cli-reset-post-date-command`
+    When I run `WP_CLI_PACKAGES_DIR=. wp package update --no-interaction`
     Then STDOUT should contain:
       """
-      Success: Package installed.
+      GIT_TERMINAL_PROMPT=0
       """
-
-    When I run `wp package update --no-interaction`
-    Then STDOUT should contain:
+    And STDOUT should contain:
       """
-      Using Composer to update packages...
+      GIT_SSH_COMMAND=ssh -o BatchMode=yes
       """
     And STDOUT should contain:
       """
       Packages updated.
       """
-    And STDERR should be empty

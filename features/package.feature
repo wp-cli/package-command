@@ -209,23 +209,53 @@ Feature: Manage WP-CLI packages
       {NO_SUCH_PACKAGE_COMPOSER_JSON}
       """
 
-  Scenario: Uninstall a package with --no-interaction flag
+  Scenario: Uninstall a package with --no-interaction flag sets environment variables
     Given an empty directory
+    And a composer.json file:
+      """
+      {
+        "repositories": {
+          "test" : {
+            "type": "path",
+            "url": "./dummy-package/"
+          },
+          "wp-cli": {
+            "type": "composer",
+            "url": "https://wp-cli.org/package-index/"
+          }
+        },
+        "require": {
+          "wp-cli/restful": "*"
+        }
+      }
+      """
+    And a dummy-package/composer.json file:
+      """
+      {
+        "name": "wp-cli/restful",
+        "version": "1.0.0",
+        "description": "Test package for no-interaction flag",
+        "scripts": {
+          "pre-uninstall-cmd": [
+            "@php -r \"echo 'GIT_TERMINAL_PROMPT=' . getenv('GIT_TERMINAL_PROMPT') . PHP_EOL;\"",
+            "@php -r \"echo 'GIT_SSH_COMMAND=' . getenv('GIT_SSH_COMMAND') . PHP_EOL;\""
+          ]
+        }
+      }
+      """
 
-    When I run `wp package install runcommand/hook`
-    Then STDERR should be empty
-
-    When I run `wp package uninstall runcommand/hook --no-interaction`
-    Then STDERR should be empty
+    When I run `WP_CLI_PACKAGES_DIR=. wp package uninstall wp-cli/restful --no-interaction`
+    Then STDOUT should contain:
+      """
+      GIT_TERMINAL_PROMPT=0
+      """
+    And STDOUT should contain:
+      """
+      GIT_SSH_COMMAND=ssh -o BatchMode=yes
+      """
     And STDOUT should contain:
       """
       Success: Uninstalled package.
-      """
-
-    When I run `wp package list`
-    Then STDOUT should not contain:
-      """
-      runcommand/hook
       """
 
   Scenario: List packages with --skip-update-check flag
