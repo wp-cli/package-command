@@ -1270,7 +1270,7 @@ Feature: Install WP-CLI packages
     # Try to install from a repository that requires authentication
     # With --no-interaction and GIT_TERMINAL_PROMPT=0, Git will fail immediately
     # instead of prompting for credentials
-    When I try `wp package install git@github.com:wp-cli-private-test/authentication-required.git --no-interaction`
+    When I try `wp package install git@github.com:wp-cli/wp-cli-private-test.git --no-interaction`
     Then the return code should be 1
     # The command should fail fast without hanging
     And STDERR should contain:
