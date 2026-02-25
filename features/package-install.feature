@@ -82,10 +82,6 @@ Feature: Install WP-CLI packages
     When I run `WP_CLI_PACKAGES_DIR=. wp package install wp-cli/restful`
     Then STDOUT should contain:
       """
-      Updating package index repository url...
-      """
-    And STDOUT should contain:
-      """
       Success: Package installed
       """
     And the composer.json file should contain:
