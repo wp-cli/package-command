@@ -45,11 +45,53 @@ Feature: Install WP-CLI packages
       """
       "url": "http://wp-cli.org/package-index/"
       """
+    And the composer.json file should contain:
+      """
+      "canonical": false
+      """
 
     When I run `WP_CLI_PACKAGES_DIR=. wp package is-installed wp-cli/restful`
     Then the return code should be 0
     And STDERR should be empty
     And STDOUT should be empty
+
+  Scenario: Install a package updates the package index repository to be non-canonical
+    Given an empty directory
+    And a composer.json file:
+      """
+      {
+        "repositories": {
+          "test" : {
+            "type": "path",
+            "url": "./dummy-package/"
+          },
+          "wp-cli": {
+            "type": "composer",
+            "url": "https://wp-cli.org/package-index/"
+          }
+        }
+      }
+      """
+    And a dummy-package/composer.json file:
+      """
+      {
+        "name": "wp-cli/restful",
+        "description": "This is a dummy package we will install instead of actually installing the real package. This prevents the test from hanging indefinitely for some reason, even though it passes. The 'name' must match a real package as it is checked against the package index."
+      }
+      """
+    When I run `WP_CLI_PACKAGES_DIR=. wp package install wp-cli/restful`
+    Then STDOUT should contain:
+      """
+      Updating package index repository url...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed
+      """
+    And the composer.json file should contain:
+      """
+      "canonical": false
+      """
 
   @require-php-5.6
   Scenario: Install a package with 'wp-cli/wp-cli' as a dependency
