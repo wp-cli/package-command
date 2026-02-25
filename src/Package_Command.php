@@ -368,8 +368,7 @@ class Package_Command extends WP_CLI_Command {
 		// If the composer file does not contain the current package index repository, refresh the repository definition.
 		if ( empty( $composer_backup_decoded['repositories']['wp-cli']['url'] )
 			|| self::PACKAGE_INDEX_URL !== $composer_backup_decoded['repositories']['wp-cli']['url']
-			|| ! isset( $composer_backup_decoded['repositories']['wp-cli']['canonical'] )
-			|| false !== $composer_backup_decoded['repositories']['wp-cli']['canonical'] ) {
+			|| ( $composer_backup_decoded['repositories']['wp-cli']['canonical'] ?? true ) !== false ) {
 			WP_CLI::log( 'Updating package index repository url...' );
 			$package_args = $this->composer_type_package;
 			$json_manipulator->addRepository(
