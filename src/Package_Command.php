@@ -370,10 +370,9 @@ class Package_Command extends WP_CLI_Command {
 			|| self::PACKAGE_INDEX_URL !== $composer_backup_decoded['repositories']['wp-cli']['url']
 			|| ( $composer_backup_decoded['repositories']['wp-cli']['canonical'] ?? true ) !== false ) {
 			WP_CLI::log( 'Updating package index repository url...' );
-			WP_CLI::log( 'Refreshing package index repository definition...' );
 			$json_manipulator->addRepository(
 				'wp-cli',
-				$package_args
+				$this->composer_type_package
 			);
 		}
 
