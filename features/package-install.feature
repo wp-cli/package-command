@@ -114,42 +114,42 @@ Feature: Install WP-CLI packages
       Version C.
       """
 
-  @require-php-5.6 @broken
+  @require-php-7.2
   Scenario: Install a package with a dependency
     Given an empty directory
 
-    When I run `wp package install yoast/wp-cli-faker`
+    When I run `wp package install 10up/wpcli-vulnerability-scanner`
     Then STDOUT should contain:
       """
       Success: Package installed
       """
-    And the {PACKAGE_PATH}/vendor/yoast directory should contain:
+    And the {PACKAGE_PATH}/vendor/10up directory should contain:
       """
-      wp-cli-faker
+      wpcli-vulnerability-scanner
       """
-    And the {PACKAGE_PATH}/vendor/fzaninotto directory should contain:
+    And the {PACKAGE_PATH}/vendor/halaxa directory should contain:
       """
-      faker
+      json-machine
       """
 
-    When I run `wp package is-installed yoast/wp-cli-faker`
+    When I run `wp package is-installed 10up/wpcli-vulnerability-scanner`
     Then the return code should be 0
     And STDERR should be empty
     And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
-      | name                |
-      | yoast/wp-cli-faker  |
+      | name                             |
+      | 10up/wpcli-vulnerability-scanner |
     And STDOUT should not contain:
       """
-      fzaninotto/faker
+      halaxa/json-machine
       """
 
-    When I run `wp package uninstall yoast/wp-cli-faker`
+    When I run `wp package uninstall 10up/wpcli-vulnerability-scanner`
     Then STDOUT should contain:
       """
-      Removing require statement for package 'yoast/wp-cli-faker' from
+      Removing require statement for package '10up/wpcli-vulnerability-scanner' from
       """
     And STDOUT should contain:
       """
@@ -157,23 +157,17 @@ Feature: Install WP-CLI packages
       """
     And the {PACKAGE_PATH}/vendor directory should not contain:
       """
-      yoast
+      10up
       """
     And the {PACKAGE_PATH}/vendor directory should not contain:
       """
-      fzaninotto
+      halaxa
       """
 
-    When I try `wp package is-installed yoast/wp-cli-faker`
+    When I try `wp package is-installed 10up/wpcli-vulnerability-scanner`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
-
-    When I run `wp package list`
-    Then STDOUT should not contain:
-      """
-      trendwerk/faker
-      """
 
   @github-api
   Scenario: Install a package from a Git URL
