@@ -275,6 +275,30 @@ Feature: Install WP-CLI packages
       """
 
   @github-api
+  Scenario: Install a package from a Git URL with a version suffix
+    Given an empty directory
+
+    When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli.git:dev-main`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli/google-sitemap-generator-cli (dev-main)
+      """
+    And STDOUT should contain:
+      """
+      Registering https://github.com/wp-cli/google-sitemap-generator-cli.git as a VCS repository...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+
+  @github-api
   Scenario: Install a package from a Git URL with mixed-case git name but lowercase composer.json name
     Given an empty directory
 
