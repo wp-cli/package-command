@@ -114,42 +114,41 @@ Feature: Install WP-CLI packages
       Version C.
       """
 
-  @require-php-7.2
   Scenario: Install a package with a dependency
     Given an empty directory
 
-    When I run `wp package install 10up/wpcli-vulnerability-scanner`
+    When I run `wp package install wp-cli-test/updateable-package`
     Then STDOUT should contain:
       """
-      Success: Package installed
+      Success: Package installed.
       """
-    And the {PACKAGE_PATH}/vendor/10up directory should contain:
+    And the {PACKAGE_PATH}/vendor/wp-cli-test directory should contain:
       """
-      wpcli-vulnerability-scanner
+      updateable-package
       """
-    And the {PACKAGE_PATH}/vendor/halaxa directory should contain:
+    And the {PACKAGE_PATH}/vendor/wp-cli directory should contain:
       """
-      json-machine
+      wp-cli
       """
 
-    When I run `wp package is-installed 10up/wpcli-vulnerability-scanner`
+    When I run `wp package is-installed wp-cli-test/updateable-package`
     Then the return code should be 0
     And STDERR should be empty
     And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
-      | name                             |
-      | 10up/wpcli-vulnerability-scanner |
+      | name                           |
+      | wp-cli-test/updateable-package |
     And STDOUT should not contain:
       """
-      halaxa/json-machine
+      wp-cli/wp-cli
       """
 
-    When I run `wp package uninstall 10up/wpcli-vulnerability-scanner`
+    When I run `wp package uninstall wp-cli-test/updateable-package`
     Then STDOUT should contain:
       """
-      Removing require statement for package '10up/wpcli-vulnerability-scanner' from
+      Removing require statement for package 'wp-cli-test/updateable-package' from
       """
     And STDOUT should contain:
       """
@@ -157,14 +156,10 @@ Feature: Install WP-CLI packages
       """
     And the {PACKAGE_PATH}/vendor directory should not contain:
       """
-      10up
-      """
-    And the {PACKAGE_PATH}/vendor directory should not contain:
-      """
-      halaxa
+      wp-cli-test
       """
 
-    When I try `wp package is-installed 10up/wpcli-vulnerability-scanner`
+    When I try `wp package is-installed wp-cli-test/updateable-package`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
