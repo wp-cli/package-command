@@ -222,8 +222,15 @@ class Package_Command extends WP_CLI_Command {
 		$git_package = false;
 		$dir_package = false;
 		$version     = '';
+		// Parse version suffix from a git URL (e.g. https://github.com/vendor/package.git:dev-main).
+		if ( preg_match( '#^(.+\.git):([^:]+)$#', $package_name, $url_version_matches ) ) {
+			$package_name = $url_version_matches[1];
+			$version      = $url_version_matches[2];
+		}
 		if ( $this->is_git_repository( $package_name ) ) {
-			$version     = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+			if ( '' === $version ) {
+				$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+			}
 			$git_package = $package_name;
 			$matches     = [];
 			if ( preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches ) ) {
