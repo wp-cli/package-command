@@ -388,7 +388,7 @@ Feature: Install WP-CLI packages
       Success: Package installed.
       """
 
-    When I run `wp package uninstall test-command`
+    When I run `wp package uninstall wp-cli-test/test-command`
     Then STDOUT should contain:
       """
       Success: Uninstalled package.
