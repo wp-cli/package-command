@@ -231,7 +231,11 @@ class Package_Command extends WP_CLI_Command {
 		}
 		if ( $this->is_git_repository( $package_name ) ) {
 			if ( '' === $version ) {
-				$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+				if ( preg_match( '#^(?:https?://github\.com/|git@github\.com:)#i', $package_name ) ) {
+					$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+				} else {
+					$version = 'dev-master';
+				}
 			}
 			$git_package = $package_name;
 			$matches     = [];

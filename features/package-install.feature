@@ -346,6 +346,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
+  @github-api
   Scenario: Install a package from a GitHub SSH URL without .git suffix
     Given an empty directory
 
@@ -369,6 +370,7 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
+  @gitlab-api
   Scenario: Install a package from a GitLab URL without .git suffix and nested groups
     Given an empty directory
 
@@ -391,6 +393,7 @@ Feature: Install WP-CLI packages
       """
       Success: Uninstalled package.
       """
+
   @github-api
   Scenario: Install a package from a Git URL with mixed-case git name but lowercase composer.json name
     Given an empty directory
