@@ -346,6 +346,51 @@ Feature: Install WP-CLI packages
       Success: Uninstalled package.
       """
 
+  Scenario: Install a package from a GitHub SSH URL without .git suffix
+    Given an empty directory
+
+    When I run `wp package install git@github.com:wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli/google-sitemap-generator-cli
+      """
+    And STDOUT should contain:
+      """
+      Registering https://github.com/wp-cli/google-sitemap-generator-cli.git as a VCS repository...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+
+  Scenario: Install a package from a GitLab URL without .git suffix and nested groups
+    Given an empty directory
+
+    When I run `wp package install https://gitlab.com/example-group/sub-group/example-wp-cli-package`
+    Then STDOUT should contain:
+      """
+      Installing package example-wp-cli-package
+      """
+    And STDOUT should contain:
+      """
+      Registering https://gitlab.com/example-group/sub-group/example-wp-cli-package.git as a VCS repository...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package uninstall example-wp-cli-package`
+    Then STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
   @github-api
   Scenario: Install a package from a Git URL with mixed-case git name but lowercase composer.json name
     Given an empty directory
