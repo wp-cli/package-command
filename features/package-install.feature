@@ -372,21 +372,21 @@ Feature: Install WP-CLI packages
   Scenario: Install a package from a GitLab URL without .git suffix and nested groups
     Given an empty directory
 
-    When I run `wp package install https://gitlab.com/example-group/sub-group/example-wp-cli-package`
+    When I run `wp package install https://gitlab.com/wp-cli/wp-cli-test/test-command`
     Then STDOUT should contain:
       """
-      Installing package example-wp-cli-package
+      Installing package test-command
       """
     And STDOUT should contain:
       """
-      Registering https://gitlab.com/example-group/sub-group/example-wp-cli-package.git as a VCS repository...
+      Registering https://gitlab.com/wp-cli/wp-cli-test/test-command.git as a VCS repository...
       """
     And STDOUT should contain:
       """
       Success: Package installed.
       """
 
-    When I run `wp package uninstall example-wp-cli-package`
+    When I run `wp package uninstall test-command`
     Then STDOUT should contain:
       """
       Success: Uninstalled package.
