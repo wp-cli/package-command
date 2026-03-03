@@ -114,35 +114,37 @@ Feature: Install WP-CLI packages
       Version C.
       """
 
+  # The package requires PHP 7.4
+  @require-php-7.4
   Scenario: Install a package with a dependency
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/updateable-package`
+    When I run `wp package install https://github.com/swissspidy/validate-readme-command.git`
     Then STDOUT should contain:
       """
       Success: Package installed.
       """
-    And the {PACKAGE_PATH}/vendor/wp-cli-test directory should contain:
+    And the {PACKAGE_PATH}/vendor/swissspidy directory should contain:
       """
-      updateable-package
+      validate-readme-command
       """
-    And the {PACKAGE_PATH}/vendor/wp-cli directory should contain:
+    And the {PACKAGE_PATH}/vendor/michelf directory should contain:
       """
-      wp-cli
+      php-markdown
       """
 
-    When I run `wp package is-installed wp-cli-test/updateable-package`
+    When I run `wp package is-installed swissspidy/validate-readme-command`
     Then the return code should be 0
     And STDERR should be empty
     And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
-      | name                           |
-      | wp-cli-test/updateable-package |
+      | name                               |
+      | swissspidy/validate-readme-command |
     And STDOUT should not contain:
       """
-      wp-cli/wp-cli
+      michelf
       """
 
     When I run `wp package uninstall wp-cli-test/updateable-package`
