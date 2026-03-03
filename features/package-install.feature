@@ -290,6 +290,106 @@ Feature: Install WP-CLI packages
       """
 
   @github-api
+  Scenario: Install a package from a Git URL without .git suffix
+    Given an empty directory
+
+    When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli/google-sitemap-generator-cli
+      """
+    And STDOUT should contain:
+      """
+      Registering https://github.com/wp-cli/google-sitemap-generator-cli.git as a VCS repository...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+
+  @github-api
+  Scenario: Install a package from a Git URL without .git suffix but with a version suffix
+    Given an empty directory
+
+    When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli:dev-main`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli/google-sitemap-generator-cli (dev-main)
+      """
+    And STDOUT should contain:
+      """
+      Registering https://github.com/wp-cli/google-sitemap-generator-cli.git as a VCS repository...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+
+  @github-api
+  Scenario: Install a package from a GitHub SSH URL without .git suffix
+    Given an empty directory
+
+    When I run `wp package install git@github.com:wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli/google-sitemap-generator-cli
+      """
+    And STDOUT should contain:
+      """
+      Registering git@github.com:wp-cli/google-sitemap-generator-cli.git as a VCS repository...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package uninstall wp-cli/google-sitemap-generator-cli`
+    Then STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+
+  @gitlab-api
+  Scenario: Install a package from a GitLab URL without .git suffix and nested groups
+    Given an empty directory
+
+    When I try `wp package install https://gitlab.com/wp-cli/wp-cli-test/test-command`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli-test/test-command
+      """
+    And STDOUT should contain:
+      """
+      Registering https://gitlab.com/wp-cli/wp-cli-test/test-command.git as a VCS repository...
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And STDERR should contain:
+      """
+      Could not guess stable version from GitHub repository, falling back to master branch
+      """
+
+    When I run `wp package uninstall wp-cli-test/test-command`
+    Then STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+
+  @github-api
   Scenario: Install a package from a Git URL with mixed-case git name but lowercase composer.json name
     Given an empty directory
 
@@ -1315,3 +1415,20 @@ Feature: Install WP-CLI packages
       Error: ZipArchive failed to unzip 'package-dir/zero.zip': Not a zip archive (19).
       """
     And STDOUT should be empty
+
+  @github-api
+  Scenario: Install package with --no-interaction fails fast on Git authentication errors
+    Given an empty directory
+
+    # Try to install from a repository that requires authentication
+    # With --no-interaction and GIT_TERMINAL_PROMPT=0, Git will fail immediately
+    # instead of prompting for credentials
+    When I try `wp package install git@github.com:wp-cli/wp-cli-private-test.git --no-interaction`
+    Then the return code should be 1
+    # The command should fail fast without hanging
+    And STDERR should contain:
+      """
+      Package installation failed
+      """
+    # Git should report it couldn't authenticate, not prompt
+    And STDERR should match /fatal:|Could not read from remote repository|Repository not found/
