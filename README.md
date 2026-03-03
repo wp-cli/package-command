@@ -35,9 +35,9 @@ Learn how to create your own command from the
     | wp-cli/server-command | Daniel Bachhuber | dev-main | available | 2.x-dev        |
     +-----------------------+------------------+----------+-----------+----------------+
 
-    # Install the latest development version of the package.
+    # Install the latest stable version of the package.
     $ wp package install wp-cli/server-command
-    Installing package wp-cli/server-command (dev-main)
+    Installing package wp-cli/server-command (^2.0)
     Updating /home/person/.wp-cli/packages/composer.json to require the package...
     Using Composer to install the package...
     ---
@@ -237,10 +237,10 @@ for future authorization requests.
 
 **EXAMPLES**
 
-    # Install a package hosted at a git URL.
+    # Install the latest stable version of a package.
     $ wp package install runcommand/hook
 
-    # Install the latest stable version.
+    # Install the latest stable version (explicitly specified).
     $ wp package install wp-cli/server-command:@stable
 
     # Install a package hosted at a GitLab.com URL.
