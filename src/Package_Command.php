@@ -92,8 +92,9 @@ class Package_Command extends WP_CLI_Command {
 	 * @var array
 	 */
 	private $composer_type_package = [
-		'type' => 'composer',
-		'url'  => self::PACKAGE_INDEX_URL,
+		'type'      => 'composer',
+		'url'       => self::PACKAGE_INDEX_URL,
+		'canonical' => false,
 	];
 
 	/**
@@ -229,8 +230,15 @@ class Package_Command extends WP_CLI_Command {
 		$git_package = false;
 		$dir_package = false;
 		$version     = '';
+		// Parse version suffix from a git URL (e.g. https://github.com/vendor/package.git:dev-main).
+		if ( preg_match( '#^(.+\.git):([^:]+)$#', $package_name, $url_version_matches ) ) {
+			$package_name = $url_version_matches[1];
+			$version      = $url_version_matches[2];
+		}
 		if ( $this->is_git_repository( $package_name ) ) {
-			$version     = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+			if ( '' === $version ) {
+				$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+			}
 			$git_package = $package_name;
 			$matches     = [];
 			if ( preg_match( '#([^:\/]+\/[^\/]+)\.git#', $package_name, $matches ) ) {
@@ -373,12 +381,13 @@ class Package_Command extends WP_CLI_Command {
 			);
 		}
 		// If the composer file does not contain the current package index repository, refresh the repository definition.
-		if ( empty( $composer_backup_decoded['repositories']['wp-cli']['url'] ) || self::PACKAGE_INDEX_URL !== $composer_backup_decoded['repositories']['wp-cli']['url'] ) {
+		if ( empty( $composer_backup_decoded['repositories']['wp-cli']['url'] )
+			|| self::PACKAGE_INDEX_URL !== $composer_backup_decoded['repositories']['wp-cli']['url']
+			|| ( $composer_backup_decoded['repositories']['wp-cli']['canonical'] ?? true ) !== false ) {
 			WP_CLI::log( 'Updating package index repository url...' );
-			$package_args = $this->composer_type_package;
 			$json_manipulator->addRepository(
 				'wp-cli',
-				$package_args
+				$this->composer_type_package
 			);
 		}
 
@@ -1528,11 +1537,54 @@ class Package_Command extends WP_CLI_Command {
 		if ( empty( $composer_auth ) || ! is_array( $composer_auth ) ) {
 			$composer_auth = [];
 		}
+
+		// GitHub OAuth token.
 		$github_token = getenv( 'GITHUB_TOKEN' );
-		if ( ! isset( $composer_auth['github-oauth'] ) && is_string( $github_token ) ) {
+		if ( ! isset( $composer_auth['github-oauth'] ) && is_string( $github_token ) && '' !== $github_token ) {
 			$composer_auth['github-oauth'] = [ 'github.com' => $github_token ];
 			$changed                       = true;
 		}
+
+		// GitLab OAuth token.
+		$gitlab_oauth_token = getenv( 'GITLAB_OAUTH_TOKEN' );
+		if ( ! isset( $composer_auth['gitlab-oauth'] ) && is_string( $gitlab_oauth_token ) && '' !== $gitlab_oauth_token ) {
+			$composer_auth['gitlab-oauth'] = [ 'gitlab.com' => $gitlab_oauth_token ];
+			$changed                       = true;
+		}
+
+		// GitLab personal access token.
+		$gitlab_token = getenv( 'GITLAB_TOKEN' );
+		if ( ! isset( $composer_auth['gitlab-token'] ) && is_string( $gitlab_token ) && '' !== $gitlab_token ) {
+			$composer_auth['gitlab-token'] = [ 'gitlab.com' => $gitlab_token ];
+			$changed                       = true;
+		}
+
+		// Bitbucket OAuth consumer.
+		$bitbucket_key    = getenv( 'BITBUCKET_CONSUMER_KEY' );
+		$bitbucket_secret = getenv( 'BITBUCKET_CONSUMER_SECRET' );
+		if ( ! isset( $composer_auth['bitbucket-oauth'] )
+			&& is_string( $bitbucket_key ) && '' !== $bitbucket_key
+			&& is_string( $bitbucket_secret ) && '' !== $bitbucket_secret
+		) {
+			$composer_auth['bitbucket-oauth'] = [
+				'bitbucket.org' => [
+					'consumer-key'    => $bitbucket_key,
+					'consumer-secret' => $bitbucket_secret,
+				],
+			];
+			$changed                          = true;
+		}
+
+		// HTTP Basic Authentication.
+		$http_basic_auth = getenv( 'HTTP_BASIC_AUTH' );
+		if ( ! isset( $composer_auth['http-basic'] ) && is_string( $http_basic_auth ) && '' !== $http_basic_auth ) {
+			$http_basic_auth_decoded = json_decode( $http_basic_auth, true /*assoc*/ );
+			if ( is_array( $http_basic_auth_decoded ) ) {
+				$composer_auth['http-basic'] = $http_basic_auth_decoded;
+				$changed                     = true;
+			}
+		}
+
 		if ( $changed ) {
 			putenv( 'COMPOSER_AUTH=' . json_encode( $composer_auth ) );
 		}

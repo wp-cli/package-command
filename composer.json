@@ -40,10 +40,11 @@
       "package browse",
       "package get",
       "package install",
+      "package is-installed",
       "package list",
+      "package path",
       "package update",
-      "package uninstall",
-      "package is-installed"
+      "package uninstall"
     ]
   },
   "autoload": {
