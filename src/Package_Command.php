@@ -199,6 +199,9 @@ class Package_Command extends WP_CLI_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
+	 * [--interaction]
+	 * : Control interactive mode. Use `--no-interaction` to disable prompts (interactive by default). Useful for scripting.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Install the latest stable version of a package.
@@ -216,12 +219,19 @@ class Package_Command extends WP_CLI_Command {
 	public function install( $args, $assoc_args ) {
 		list( $package_name ) = $args;
 
-		$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$interaction = (bool) Utils\get_flag_value( $assoc_args, 'interaction', true );
+
+		if ( ! $interaction ) {
+			$this->set_non_interactive_mode();
+		}
 
 		$this->set_composer_auth_env_var();
 		$git_package = false;
 		$dir_package = false;
 		$version     = '';
+		// Append .git suffix for GitHub/GitLab URLs that are missing it.
+		$package_name = $this->maybe_add_git_suffix( $package_name );
 		// Parse version suffix from a git URL (e.g. https://github.com/vendor/package.git:dev-main).
 		if ( preg_match( '#^(.+\.git):([^:]+)$#', $package_name, $url_version_matches ) ) {
 			$package_name = $url_version_matches[1];
@@ -230,6 +240,11 @@ class Package_Command extends WP_CLI_Command {
 		if ( $this->is_git_repository( $package_name ) ) {
 			if ( '' === $version ) {
 				$version = '@stable';
+				if ( preg_match( '#^(?:https?://github\.com/|git@github\.com:)#i', $package_name ) ) {
+					$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+				} else {
+					$version = '@stable';
+				}
 			}
 			$git_package = $package_name;
 			$matches     = [];
@@ -636,6 +651,9 @@ class Package_Command extends WP_CLI_Command {
 	 * [<package-name>...]
 	 * : One or more package names to update. If not specified, all packages will be updated.
 	 *
+	 * [--interaction]
+	 * : Control interactive mode. Use `--no-interaction` to disable prompts (interactive by default). Useful for scripting.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Update all packages.
@@ -663,8 +681,17 @@ class Package_Command extends WP_CLI_Command {
 	 *     Generating autoload files
 	 *     ---
 	 *     Success: Package updated successfully.
+	 *
+	 * @param array<string>             $args       Positional arguments. One or more package names to update.
+	 * @param array{interaction?: bool} $assoc_args Associative arguments.
 	 */
-	public function update( $args = [] ) {
+	public function update( $args, $assoc_args = [] ) {
+		$interaction = (bool) Utils\get_flag_value( $assoc_args, 'interaction', true );
+
+		if ( ! $interaction ) {
+			$this->set_non_interactive_mode();
+		}
+
 		$this->set_composer_auth_env_var();
 
 		// Validate package names if provided
@@ -761,6 +788,9 @@ class Package_Command extends WP_CLI_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
+	 * [--interaction]
+	 * : Control interactive prompts. Use `--no-interaction` to disable interactive questions (useful for scripting).
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Uninstall package.
@@ -773,7 +803,12 @@ class Package_Command extends WP_CLI_Command {
 	public function uninstall( $args, $assoc_args ) {
 		list( $package_name ) = $args;
 
-		$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$interaction = (bool) Utils\get_flag_value( $assoc_args, 'interaction', true );
+
+		if ( ! $interaction ) {
+			$this->set_non_interactive_mode();
+		}
 
 		$this->set_composer_auth_env_var();
 		$package = $this->get_installed_package_by_name( $package_name );
@@ -1300,6 +1335,25 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
+	 * Appends the .git suffix to GitHub or GitLab URLs that are missing it.
+	 *
+	 * @param string $package_name Package name or URL to normalize.
+	 * @return string Normalized package name or URL.
+	 */
+	private function maybe_add_git_suffix( $package_name ) {
+		// Already has .git suffix (possibly followed by :version).
+		if ( preg_match( '#\.git(?::[^:]+)?$#i', $package_name ) ) {
+			return $package_name;
+		}
+		// Append .git for GitHub/GitLab HTTPS or SSH URLs, preserving any :version suffix.
+		// Pattern: (https?://github.com/<user>/<repo>[...subgroups...] or git@github.com:<user>/<repo>[...subgroups...])(:version)?
+		if ( preg_match( '#^((?:https?://(?:github|gitlab)\.com/|git@(?:github|gitlab)\.com:)[^/:]+(?:/[^/:]+)*)(:.*)?$#i', $package_name, $matches ) ) {
+			return $matches[1] . '.git' . ( $matches[2] ?? '' );
+		}
+		return $package_name;
+	}
+
+	/**
 	 * Checks that `$package_name` matches the name in composer.json at Github.com, and return corrected value if not.
 	 *
 	 * @param string $package_name Package name to check.
@@ -1718,5 +1772,22 @@ class Package_Command extends WP_CLI_Command {
 		WP_CLI::debug( "Detected package default branch: {$default_branch}", 'packages' );
 
 		return $default_branch;
+	}
+
+	/**
+	 * Sets environment variables to enable non-interactive mode.
+	 *
+	 * This prevents Git from prompting for credentials (e.g., SSH passwords),
+	 * which is useful for scripting and automation.
+	 *
+	 * Note: This uses putenv() which affects the entire PHP process, including
+	 * any Git operations spawned by Composer. This is intentional to ensure
+	 * non-interactive behavior propagates to all child processes.
+	 */
+	private function set_non_interactive_mode() {
+		// Prevent Git from prompting for credentials
+		putenv( 'GIT_TERMINAL_PROMPT=0' );
+		// Prevent SSH from prompting for passwords
+		putenv( 'GIT_SSH_COMMAND=ssh -o BatchMode=yes' );
 	}
 }

@@ -209,6 +209,25 @@ Feature: Manage WP-CLI packages
       {NO_SUCH_PACKAGE_COMPOSER_JSON}
       """
 
+  @github-api
+  Scenario: Uninstall a package with --no-interaction prevents Git credential prompts
+    Given an empty directory
+
+    # Install a real package first
+    When I run `wp package install danielbachhuber/wp-cli-reset-post-date-command`
+    Then STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    # Uninstall with --no-interaction should complete without hanging
+    When I run `wp package uninstall danielbachhuber/wp-cli-reset-post-date-command --no-interaction`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      Success: Uninstalled package.
+      """
+
   Scenario: List packages with --skip-update-check flag
     Given an empty directory
 
