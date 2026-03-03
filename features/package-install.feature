@@ -374,7 +374,7 @@ Feature: Install WP-CLI packages
   Scenario: Install a package from a GitLab URL without .git suffix and nested groups
     Given an empty directory
 
-    When I run `wp package install https://gitlab.com/wp-cli/wp-cli-test/test-command`
+    When I try `wp package install https://gitlab.com/wp-cli/wp-cli-test/test-command`
     Then STDOUT should contain:
       """
       Installing package wp-cli-test/test-command
@@ -386,6 +386,10 @@ Feature: Install WP-CLI packages
     And STDOUT should contain:
       """
       Success: Package installed.
+      """
+    And STDERR should contain:
+      """
+      Could not guess stable version from GitHub repository, falling back to master branch
       """
 
     When I run `wp package uninstall wp-cli-test/test-command`
