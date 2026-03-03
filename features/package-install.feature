@@ -356,7 +356,7 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should contain:
       """
-      Registering https://github.com/wp-cli/google-sitemap-generator-cli.git as a VCS repository...
+      Registering git@github.com:wp-cli/google-sitemap-generator-cli.git as a VCS repository...
       """
     And STDOUT should contain:
       """
