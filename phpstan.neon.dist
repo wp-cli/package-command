@@ -1,5 +1,5 @@
 parameters:
-  level: 1
+  level: 5
   paths:
     - src
     - package-command.php
@@ -7,6 +7,7 @@ parameters:
     - vendor/wp-cli/wp-cli/php
   scanFiles:
     - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+    - tests/phpstan/scan-files.php
   treatPhpDocTypesAsCertain: false
   ignoreErrors:
     # WP_CLI_VERSION is defined in wp-cli core at runtime

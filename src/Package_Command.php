@@ -3,7 +3,6 @@
 use Composer\Composer;
 use Composer\Config;
 use Composer\Config\JsonConfigSource;
-use Composer\DependencyResolver\Pool;
 use Composer\Factory;
 use Composer\IO\NullIO;
 use Composer\Installer;
@@ -93,8 +92,9 @@ class Package_Command extends WP_CLI_Command {
 	 * @var array
 	 */
 	private $composer_type_package = [
-		'type' => 'composer',
-		'url'  => self::PACKAGE_INDEX_URL,
+		'type'      => 'composer',
+		'url'       => self::PACKAGE_INDEX_URL,
+		'canonical' => false,
 	];
 
 	/**
@@ -222,6 +222,11 @@ class Package_Command extends WP_CLI_Command {
 		$git_package = false;
 		$dir_package = false;
 		$version     = '';
+		// Parse version suffix from a git URL (e.g. https://github.com/vendor/package.git:dev-main).
+		if ( preg_match( '#^(.+\.git):([^:]+)$#', $package_name, $url_version_matches ) ) {
+			$package_name = $url_version_matches[1];
+			$version      = $url_version_matches[2];
+		}
 		if ( $this->is_git_repository( $package_name ) ) {
 			if ( '' === $version ) {
 				$version = '@stable';
@@ -251,7 +256,7 @@ class Package_Command extends WP_CLI_Command {
 				$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
 				$headers      = $gitlab_token && strpos( $package_name, '://gitlab.com/' ) !== false ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
 				$response     = Utils\http_request( 'GET', $package_name, null, $headers, $options );
-				if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
+				if ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 					@unlink( $temp ); // @codingStandardsIgnoreLine
 					WP_CLI::error( sprintf( "Couldn't download package from '%s' (HTTP code %d).", $package_name, $response->status_code ) );
 				}
@@ -319,11 +324,9 @@ class Package_Command extends WP_CLI_Command {
 			}
 		}
 
-		if ( $this->is_composer_v2() ) {
-			$package_name = function_exists( 'mb_strtolower' )
-				? mb_strtolower( $package_name )
-				: strtolower( $package_name );
-		}
+		$package_name = function_exists( 'mb_strtolower' )
+			? mb_strtolower( $package_name )
+			: strtolower( $package_name );
 
 		if ( '' === $version ) {
 			$version = self::DEFAULT_DEV_BRANCH_CONSTRAINTS;
@@ -373,12 +376,13 @@ class Package_Command extends WP_CLI_Command {
 			);
 		}
 		// If the composer file does not contain the current package index repository, refresh the repository definition.
-		if ( empty( $composer_backup_decoded['repositories']['wp-cli']['url'] ) || self::PACKAGE_INDEX_URL !== $composer_backup_decoded['repositories']['wp-cli']['url'] ) {
+		if ( empty( $composer_backup_decoded['repositories']['wp-cli']['url'] )
+			|| self::PACKAGE_INDEX_URL !== $composer_backup_decoded['repositories']['wp-cli']['url']
+			|| ( $composer_backup_decoded['repositories']['wp-cli']['canonical'] ?? true ) !== false ) {
 			WP_CLI::log( 'Updating package index repository url...' );
-			$package_args = $this->composer_type_package;
 			$json_manipulator->addRepository(
 				'wp-cli',
-				$package_args
+				$this->composer_type_package
 			);
 		}
 
@@ -515,9 +519,119 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Updates installed WP-CLI packages to their latest version.
+	 * Gets information about an installed WP-CLI package.
 	 *
 	 * ## OPTIONS
+	 *
+	 * <name>
+	 * : Name of the package to get information for.
+	 *
+	 * [--fields=<fields>]
+	 * : Limit the output to specific fields. Defaults to all fields.
+	 *
+	 * [--format=<format>]
+	 * : Render output in a particular format.
+	 * ---
+	 * default: table
+	 * options:
+	 *   - table
+	 *   - csv
+	 *   - json
+	 *   - yaml
+	 * ---
+	 *
+	 * [--skip-update-check]
+	 * : Skip checking for updates. This is faster and avoids authentication issues with GitHub or Composer repositories.
+	 *
+	 * ## AVAILABLE FIELDS
+	 *
+	 * These fields will be displayed by default for each package:
+	 *
+	 * * name
+	 * * authors
+	 * * version
+	 * * update
+	 * * update_version
+	 *
+	 * These fields are optionally available:
+	 *
+	 * * description
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Get information about an installed package.
+	 *     $ wp package get wp-cli/scaffold-package-command
+	 *     +----------------+---------------------------------+
+	 *     | Field          | Value                           |
+	 *     +----------------+---------------------------------+
+	 *     | name           | wp-cli/scaffold-package-command |
+	 *     | authors        | Daniel Bachhuber                |
+	 *     | version        | dev-main                        |
+	 *     | update         | available                       |
+	 *     | update_version | 2.x-dev                         |
+	 *     +----------------+---------------------------------+
+	 *
+	 *     # Get the version of a package.
+	 *     $ wp package get wp-cli/server-command --fields=version --format=json
+	 *     {"version":"dev-main"}
+	 */
+	public function get( $args, $assoc_args ) {
+		list( $package_name ) = $args;
+		$this->set_composer_auth_env_var();
+
+		$package = $this->get_installed_package_by_name( $package_name );
+		if ( false === $package ) {
+			WP_CLI::error( sprintf( "Package '%s' is not installed.", $package_name ) );
+		}
+
+		$skip_update_check = Utils\get_flag_value( $assoc_args, 'skip-update-check', false );
+		$composer          = $this->get_composer();
+
+		$package_output                = [];
+		$package_output['name']        = $package->getPrettyName();
+		$package_output['description'] = $package->getDescription();
+		$package_output['authors']     = implode( ', ', array_column( (array) $package->getAuthors(), 'name' ) );
+		$package_output['version']     = $package->getPrettyVersion();
+		$update                        = 'none';
+		$update_version                = '';
+
+		if ( ! $skip_update_check ) {
+			try {
+				$latest = $this->find_latest_package( $package, $composer );
+				if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
+					$update         = 'available';
+					$update_version = $latest->getPrettyVersion();
+				}
+			} catch ( Exception $e ) {
+				WP_CLI::warning( $e->getMessage() );
+				$update         = 'error';
+				$update_version = $update;
+			}
+		}
+
+		$package_output['update']         = $update;
+		$package_output['update_version'] = $update_version;
+
+		$default_fields = [
+			'name',
+			'authors',
+			'version',
+			'update',
+			'update_version',
+		];
+
+		$defaults   = [
+			'fields' => implode( ',', $default_fields ),
+			'format' => 'table',
+		];
+		$assoc_args = array_merge( $defaults, $assoc_args );
+
+		$formatter = new \WP_CLI\Formatter( $assoc_args );
+		$formatter->display_item( $package_output );
+	}
+
+	/**
+	 * Updates installed WP-CLI packages to their latest version.
 	 *
 	 * [<package-name>...]
 	 * : One or more package names to update. If not specified, all packages will be updated.
@@ -825,8 +939,8 @@ class Package_Command extends WP_CLI_Command {
 	 * Displays a set of packages
 	 *
 	 * @param string $context
-	 * @param array
-	 * @param array
+	 * @param array $packages
+	 * @param array $assoc_args
 	 */
 	private function show_packages( $context, $packages, $assoc_args ) {
 		$default_fields = [];
@@ -869,7 +983,7 @@ class Package_Command extends WP_CLI_Command {
 				$update_version                = '';
 				if ( 'list' === $context && ! $skip_update_check ) {
 					try {
-						$latest = $this->find_latest_package( $package, $composer, null );
+						$latest = $this->find_latest_package( $package, $composer );
 						if ( $latest && $latest->getFullPrettyVersion() !== $package->getFullPrettyVersion() ) {
 							$update         = 'available';
 							$update_version = $latest->getPrettyVersion();
@@ -932,7 +1046,7 @@ class Package_Command extends WP_CLI_Command {
 		// Check if the package exists on Packagist.
 		$url      = "https://repo.packagist.org/p2/{$package_name}.json";
 		$response = Utils\http_request( 'GET', $url, null, [], $options );
-		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
+		if ( 20 === (int) substr( (string) $response->status_code, 0, 2 ) ) {
 			return $package_name;
 		}
 
@@ -941,7 +1055,7 @@ class Package_Command extends WP_CLI_Command {
 		$github_token = getenv( 'GITHUB_TOKEN' ); // Use GITHUB_TOKEN if available to avoid authorization failures or rate-limiting.
 		$headers      = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
 		$response     = Utils\http_request( 'GET', $url, null /*data*/, $headers, $options );
-		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
+		if ( 20 === (int) substr( (string) $response->status_code, 0, 2 ) ) {
 			return $url;
 		}
 
@@ -951,7 +1065,7 @@ class Package_Command extends WP_CLI_Command {
 		$headers      = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
 		$headers      = $gitlab_token && strpos( $package_name, '://gitlab.com/' ) !== false ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
 		$response     = Utils\http_request( 'GET', $url, null /*data*/, $headers, $options );
-		if ( 20 === (int) substr( $response->status_code, 0, 2 ) ) {
+		if ( 20 === (int) substr( (string) $response->status_code, 0, 2 ) ) {
 			return $url;
 		}
 
@@ -979,9 +1093,6 @@ class Package_Command extends WP_CLI_Command {
 			if ( in_array( $package->getPrettyName(), $installed_package_keys, true ) ) {
 				$installed_packages[] = $package;
 			} elseif ( false !== $idx ) { // Legacy incorrect name check.
-				if ( ! $this->is_composer_v2() ) {
-					WP_CLI::warning( sprintf( "Found package '%s' misnamed '%s' in '%s'.", $package->getPrettyName(), $installed_package_keys[ $idx ], $this->get_composer_json_path() ) );
-				}
 				$installed_packages[] = $package;
 			}
 		}
@@ -1133,12 +1244,11 @@ class Package_Command extends WP_CLI_Command {
 	 *
 	 * @param  PackageInterface $package
 	 * @param  Composer         $composer
-	 * @param  string           $phpVersion
-	 * @param  bool             $minorOnly
+	 * @param  bool             $minor_only
 	 *
-	 * @return PackageInterface|null
+	 * @return PackageInterface|false
 	 */
-	private function find_latest_package( PackageInterface $package, Composer $composer, $php_version, $minor_only = false ) {
+	private function find_latest_package( PackageInterface $package, Composer $composer, $minor_only = false ) {
 		// Find the latest version allowed in this pool/repository set.
 		$name             = $package->getPrettyName();
 		$version_selector = $this->get_version_selector( $composer );
@@ -1159,11 +1269,7 @@ class Package_Command extends WP_CLI_Command {
 			$target_version = '^' . $package->getVersion();
 		}
 
-		if ( $this->is_composer_v2() ) {
-			return $version_selector->findBestCandidate( $name, $target_version, $best_stability );
-		}
-
-		return $version_selector->findBestCandidate( $name, $target_version, $php_version, $best_stability );
+		return $version_selector->findBestCandidate( $name, $target_version, $best_stability );
 	}
 
 	/**
@@ -1171,18 +1277,12 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function get_version_selector( Composer $composer ) {
 		if ( ! $this->version_selector ) {
-			if ( $this->is_composer_v2() ) {
-				$repository_set = new Repository\RepositorySet(
-					$composer->getPackage()->getMinimumStability(),
-					$composer->getPackage()->getStabilityFlags()
-				);
-				$repository_set->addRepository( new CompositeRepository( $composer->getRepositoryManager()->getRepositories() ) );
-				$this->version_selector = new VersionSelector( $repository_set );
-			} else {
-				$pool = new Pool( $composer->getPackage()->getMinimumStability(), $composer->getPackage()->getStabilityFlags() );
-				$pool->addRepository( new CompositeRepository( $composer->getRepositoryManager()->getRepositories() ) );
-				$this->version_selector = new VersionSelector( $pool );
-			}
+			$repository_set = new Repository\RepositorySet(
+				$composer->getPackage()->getMinimumStability(),
+				$composer->getPackage()->getStabilityFlags()
+			);
+			$repository_set->addRepository( new CompositeRepository( $composer->getRepositoryManager()->getRepositories() ) );
+			$this->version_selector = new VersionSelector( $repository_set );
 		}
 
 		return $this->version_selector;
@@ -1216,7 +1316,7 @@ class Package_Command extends WP_CLI_Command {
 		$raw_content_url = "https://raw.githubusercontent.com/{$package_name}/{$this->get_raw_git_version( $version )}/composer.json";
 
 		$response = Utils\http_request( 'GET', $raw_content_url, null /*data*/, $headers, $options );
-		if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
+		if ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 			// Could not get composer.json. Possibly private so warn and return best guess from input (always xxx/xxx).
 			WP_CLI::warning(
 				sprintf(
@@ -1379,6 +1479,7 @@ class Package_Command extends WP_CLI_Command {
 		$url      = "https://api.github.com/repos/{$package_name}/releases/latest";
 		$options  = [ 'insecure' => $insecure ];
 		$response = Utils\http_request( 'GET', $url, null, [], $options );
+		if ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 
 		// Check for successful response and valid JSON
 		$package_data = json_decode( $response->body ?? '' );
@@ -1431,11 +1532,54 @@ class Package_Command extends WP_CLI_Command {
 		if ( empty( $composer_auth ) || ! is_array( $composer_auth ) ) {
 			$composer_auth = [];
 		}
+
+		// GitHub OAuth token.
 		$github_token = getenv( 'GITHUB_TOKEN' );
-		if ( ! isset( $composer_auth['github-oauth'] ) && is_string( $github_token ) ) {
+		if ( ! isset( $composer_auth['github-oauth'] ) && is_string( $github_token ) && '' !== $github_token ) {
 			$composer_auth['github-oauth'] = [ 'github.com' => $github_token ];
 			$changed                       = true;
 		}
+
+		// GitLab OAuth token.
+		$gitlab_oauth_token = getenv( 'GITLAB_OAUTH_TOKEN' );
+		if ( ! isset( $composer_auth['gitlab-oauth'] ) && is_string( $gitlab_oauth_token ) && '' !== $gitlab_oauth_token ) {
+			$composer_auth['gitlab-oauth'] = [ 'gitlab.com' => $gitlab_oauth_token ];
+			$changed                       = true;
+		}
+
+		// GitLab personal access token.
+		$gitlab_token = getenv( 'GITLAB_TOKEN' );
+		if ( ! isset( $composer_auth['gitlab-token'] ) && is_string( $gitlab_token ) && '' !== $gitlab_token ) {
+			$composer_auth['gitlab-token'] = [ 'gitlab.com' => $gitlab_token ];
+			$changed                       = true;
+		}
+
+		// Bitbucket OAuth consumer.
+		$bitbucket_key    = getenv( 'BITBUCKET_CONSUMER_KEY' );
+		$bitbucket_secret = getenv( 'BITBUCKET_CONSUMER_SECRET' );
+		if ( ! isset( $composer_auth['bitbucket-oauth'] )
+			&& is_string( $bitbucket_key ) && '' !== $bitbucket_key
+			&& is_string( $bitbucket_secret ) && '' !== $bitbucket_secret
+		) {
+			$composer_auth['bitbucket-oauth'] = [
+				'bitbucket.org' => [
+					'consumer-key'    => $bitbucket_key,
+					'consumer-secret' => $bitbucket_secret,
+				],
+			];
+			$changed                          = true;
+		}
+
+		// HTTP Basic Authentication.
+		$http_basic_auth = getenv( 'HTTP_BASIC_AUTH' );
+		if ( ! isset( $composer_auth['http-basic'] ) && is_string( $http_basic_auth ) && '' !== $http_basic_auth ) {
+			$http_basic_auth_decoded = json_decode( $http_basic_auth, true /*assoc*/ );
+			if ( is_array( $http_basic_auth_decoded ) ) {
+				$composer_auth['http-basic'] = $http_basic_auth_decoded;
+				$changed                     = true;
+			}
+		}
+
 		if ( $changed ) {
 			putenv( 'COMPOSER_AUTH=' . json_encode( $composer_auth ) );
 		}
@@ -1523,15 +1667,6 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Check whether we are dealing with Composer version 2.0.0+.
-	 *
-	 * @return bool
-	 */
-	private function is_composer_v2() {
-		return version_compare( Composer::getVersion(), '2.0.0', '>=' );
-	}
-
-	/**
 	 * Try to retrieve default branch via GitHub API.
 	 *
 	 * @param string $package_name GitHub package name to retrieve the default branch from.
@@ -1551,7 +1686,7 @@ class Package_Command extends WP_CLI_Command {
 
 		$github_api_repo_url = "https://api.github.com/repos/{$package_name}";
 		$response            = Utils\http_request( 'GET', $github_api_repo_url, null /*data*/, $headers, $options );
-		if ( 20 !== (int) substr( $response->status_code, 0, 2 ) ) {
+		if ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 			WP_CLI::warning(
 				sprintf(
 					"Couldn't fetch default branch for package '%s' (HTTP code %d). Presuming default branch is 'master'.",
