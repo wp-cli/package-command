@@ -400,6 +400,37 @@ Returns exit code 0 when installed, 1 when uninstalled.
     $ echo $?
     1
 
+
+
+### wp package path
+
+Gets the path to an installed WP-CLI package, or the package directory.
+
+~~~
+wp package path [<name>]
+~~~
+
+If you want to contribute to a package, this is a great way to jump to it.
+
+**OPTIONS**
+
+	[<name>]
+		Name of the package to get the directory for.
+
+**EXAMPLES**
+
+    # Get package path.
+    $ wp package path
+    /home/person/.wp-cli/packages/
+
+    # Get path to an installed package.
+    $ wp package path wp-cli/server-command
+    /home/person/.wp-cli/packages/vendor/wp-cli/server-command
+
+    # Change directory to package path.
+    $ cd $(wp package path) && pwd
+    /home/vagrant/.wp-cli/packages
+
 ## Installing
 
 This package is included with WP-CLI itself, no additional installation necessary.
