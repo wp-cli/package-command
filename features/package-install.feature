@@ -377,7 +377,7 @@ Feature: Install WP-CLI packages
     When I run `wp package install https://gitlab.com/wp-cli/wp-cli-test/test-command`
     Then STDOUT should contain:
       """
-      Installing package test-command
+      Installing package wp-cli-test/test-command
       """
     And STDOUT should contain:
       """
