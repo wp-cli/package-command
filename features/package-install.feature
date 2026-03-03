@@ -114,42 +114,43 @@ Feature: Install WP-CLI packages
       Version C.
       """
 
-  @require-php-5.6 @broken
+  # The package requires PHP 7.4
+  @require-php-7.4
   Scenario: Install a package with a dependency
     Given an empty directory
 
-    When I run `wp package install yoast/wp-cli-faker`
+    When I run `wp package install https://github.com/swissspidy/validate-readme-command.git`
     Then STDOUT should contain:
       """
-      Success: Package installed
+      Success: Package installed.
       """
-    And the {PACKAGE_PATH}/vendor/yoast directory should contain:
+    And the {PACKAGE_PATH}/vendor/swissspidy directory should contain:
       """
-      wp-cli-faker
+      validate-readme-command
       """
-    And the {PACKAGE_PATH}/vendor/fzaninotto directory should contain:
+    And the {PACKAGE_PATH}/vendor/michelf directory should contain:
       """
-      faker
+      php-markdown
       """
 
-    When I run `wp package is-installed yoast/wp-cli-faker`
+    When I run `wp package is-installed swissspidy/validate-readme-command`
     Then the return code should be 0
     And STDERR should be empty
     And STDOUT should be empty
 
     When I run `wp package list --fields=name`
     Then STDOUT should be a table containing rows:
-      | name                |
-      | yoast/wp-cli-faker  |
+      | name                               |
+      | swissspidy/validate-readme-command |
     And STDOUT should not contain:
       """
-      fzaninotto/faker
+      michelf
       """
 
-    When I run `wp package uninstall yoast/wp-cli-faker`
+    When I run `wp package uninstall swissspidy/validate-readme-command`
     Then STDOUT should contain:
       """
-      Removing require statement for package 'yoast/wp-cli-faker' from
+      Removing require statement for package 'swissspidy/validate-readme-command' from
       """
     And STDOUT should contain:
       """
@@ -157,23 +158,13 @@ Feature: Install WP-CLI packages
       """
     And the {PACKAGE_PATH}/vendor directory should not contain:
       """
-      yoast
-      """
-    And the {PACKAGE_PATH}/vendor directory should not contain:
-      """
-      fzaninotto
+      swissspidy
       """
 
-    When I try `wp package is-installed yoast/wp-cli-faker`
+    When I try `wp package is-installed swissspidy/validate-readme-command`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
-
-    When I run `wp package list`
-    Then STDOUT should not contain:
-      """
-      trendwerk/faker
-      """
 
   @github-api
   Scenario: Install a package from a Git URL
