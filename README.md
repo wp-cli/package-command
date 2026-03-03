@@ -194,7 +194,7 @@ These fields are optionally available:
 Installs a WP-CLI package.
 
 ~~~
-wp package install <name|git|path|zip> [--insecure]
+wp package install <name|git|path|zip> [--insecure] [--interaction]
 ~~~
 
 Packages are required to be a valid Composer package, and can be
@@ -231,6 +231,9 @@ for future authorization requests.
 
 	[--insecure]
 		Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+
+	[--interaction]
+		Control interactive mode. Use `--no-interaction` to disable prompts (interactive by default). Useful for scripting.
 
 **EXAMPLES**
 
@@ -370,11 +373,14 @@ If you want to contribute to a package, this is a great way to jump to it.
 Updates installed WP-CLI packages to their latest version.
 
 ~~~
-wp package update [<package-name>...]
+wp package update [<package-name>...] [--interaction]
 ~~~
 
 	[<package-name>...]
 		One or more package names to update. If not specified, all packages will be updated.
+
+	[--interaction]
+		Control interactive mode. Use `--no-interaction` to disable prompts (interactive by default). Useful for scripting.
 
 **EXAMPLES**
 
@@ -411,7 +417,7 @@ wp package update [<package-name>...]
 Uninstalls a WP-CLI package.
 
 ~~~
-wp package uninstall <name> [--insecure]
+wp package uninstall <name> [--insecure] [--interaction]
 ~~~
 
 **OPTIONS**
@@ -421,6 +427,9 @@ wp package uninstall <name> [--insecure]
 
 	[--insecure]
 		Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+
+	[--interaction]
+		Control interactive prompts. Use `--no-interaction` to disable interactive questions (useful for scripting).
 
 **EXAMPLES**
 
