@@ -1479,12 +1479,11 @@ class Package_Command extends WP_CLI_Command {
 		$url      = "https://api.github.com/repos/{$package_name}/releases/latest";
 		$options  = [ 'insecure' => $insecure ];
 		$response = Utils\http_request( 'GET', $url, null, [], $options );
-		if ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 
 		// Check for successful response and valid JSON
-		$package_data = json_decode( $response->body ?? '' );
+		$package_data = json_decode( $response->body );
 
-		if ( 20 !== (int) substr( $response->status_code, 0, 2 )
+		if ( 20 !== (int) substr( (string) $response->status_code, 0, 2 )
 			|| JSON_ERROR_NONE !== json_last_error()
 			|| null === $package_data
 			|| ! isset( $package_data->tag_name ) ) {
