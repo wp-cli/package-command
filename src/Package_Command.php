@@ -222,6 +222,8 @@ class Package_Command extends WP_CLI_Command {
 		$git_package = false;
 		$dir_package = false;
 		$version     = '';
+		// Append .git suffix for GitHub/GitLab URLs that are missing it.
+		$package_name = $this->maybe_add_git_suffix( $package_name );
 		// Parse version suffix from a git URL (e.g. https://github.com/vendor/package.git:dev-main).
 		if ( preg_match( '#^(.+\.git):([^:]+)$#', $package_name, $url_version_matches ) ) {
 			$package_name = $url_version_matches[1];
@@ -229,7 +231,11 @@ class Package_Command extends WP_CLI_Command {
 		}
 		if ( $this->is_git_repository( $package_name ) ) {
 			if ( '' === $version ) {
-				$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+				if ( preg_match( '#^(?:https?://github\.com/|git@github\.com:)#i', $package_name ) ) {
+					$version = "dev-{$this->get_github_default_branch( $package_name, $insecure )}";
+				} else {
+					$version = 'dev-master';
+				}
 			}
 			$git_package = $package_name;
 			$matches     = [];
@@ -1294,6 +1300,25 @@ class Package_Command extends WP_CLI_Command {
 	 */
 	private function is_git_repository( $package ) {
 		return '.git' === strtolower( substr( $package, -4, 4 ) );
+	}
+
+	/**
+	 * Appends the .git suffix to GitHub or GitLab URLs that are missing it.
+	 *
+	 * @param string $package_name Package name or URL to normalize.
+	 * @return string Normalized package name or URL.
+	 */
+	private function maybe_add_git_suffix( $package_name ) {
+		// Already has .git suffix (possibly followed by :version).
+		if ( preg_match( '#\.git(?::[^:]+)?$#i', $package_name ) ) {
+			return $package_name;
+		}
+		// Append .git for GitHub/GitLab HTTPS or SSH URLs, preserving any :version suffix.
+		// Pattern: (https?://github.com/<user>/<repo>[...subgroups...] or git@github.com:<user>/<repo>[...subgroups...])(:version)?
+		if ( preg_match( '#^((?:https?://(?:github|gitlab)\.com/|git@(?:github|gitlab)\.com:)[^/:]+(?:/[^/:]+)*)(:.*)?$#i', $package_name, $matches ) ) {
+			return $matches[1] . '.git' . ( $matches[2] ?? '' );
+		}
+		return $package_name;
 	}
 
 	/**
