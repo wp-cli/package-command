@@ -147,10 +147,10 @@ Feature: Install WP-CLI packages
       michelf
       """
 
-    When I run `wp package uninstall wp-cli-test/updateable-package`
+    When I run `wp package uninstall swissspidy/validate-readme-command`
     Then STDOUT should contain:
       """
-      Removing require statement for package 'wp-cli-test/updateable-package' from
+      Removing require statement for package 'swissspidy/validate-readme-command' from
       """
     And STDOUT should contain:
       """
@@ -158,10 +158,10 @@ Feature: Install WP-CLI packages
       """
     And the {PACKAGE_PATH}/vendor directory should not contain:
       """
-      wp-cli-test
+      swissspidy
       """
 
-    When I try `wp package is-installed wp-cli-test/updateable-package`
+    When I try `wp package is-installed swissspidy/validate-readme-command`
     Then the return code should be 1
     And STDERR should be empty
     And STDOUT should be empty
