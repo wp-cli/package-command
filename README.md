@@ -248,6 +248,30 @@ for future authorization requests.
 
 
 
+### wp package is-installed
+
+Checks if a given package is installed.
+
+~~~
+wp package is-installed <name>
+~~~
+
+Returns exit code 0 when installed, 1 when uninstalled.
+
+**OPTIONS**
+
+	<name>
+		The package to check.
+
+**EXAMPLES**
+
+    # Check whether "foo/bar" is installed; exit status 0 if installed, otherwise 1
+    $ wp package is-installed foo/bar
+    $ echo $?
+    1
+
+
+
 ### wp package list
 
 Lists installed WP-CLI packages.
@@ -307,6 +331,37 @@ These fields are optionally available:
     +-----------------------+------------------+----------+--------+----------------+
     | wp-cli/server-command | Daniel Bachhuber | dev-main | none   |                |
     +-----------------------+------------------+----------+--------+----------------+
+
+
+
+### wp package path
+
+Gets the path to an installed WP-CLI package, or the package directory.
+
+~~~
+wp package path [<name>]
+~~~
+
+If you want to contribute to a package, this is a great way to jump to it.
+
+**OPTIONS**
+
+	[<name>]
+		Name of the package to get the directory for.
+
+**EXAMPLES**
+
+    # Get package path.
+    $ wp package path
+    /home/person/.wp-cli/packages/
+
+    # Get path to an installed package.
+    $ wp package path wp-cli/server-command
+    /home/person/.wp-cli/packages/vendor/wp-cli/server-command
+
+    # Change directory to package path.
+    $ cd $(wp package path) && pwd
+    /home/vagrant/.wp-cli/packages
 
 
 
@@ -375,61 +430,6 @@ wp package uninstall <name> [--insecure]
     Removing repository details from /home/person/.wp-cli/packages/composer.json
     Removing package directories and regenerating autoloader...
     Success: Uninstalled package.
-
-
-
-### wp package is-installed
-
-Checks if a given package is installed.
-
-~~~
-wp package is-installed <name>
-~~~
-
-Returns exit code 0 when installed, 1 when uninstalled.
-
-**OPTIONS**
-
-	<name>
-		The package to check.
-
-**EXAMPLES**
-
-    # Check whether "foo/bar" is installed; exit status 0 if installed, otherwise 1
-    $ wp package is-installed foo/bar
-    $ echo $?
-    1
-
-
-
-### wp package path
-
-Gets the path to an installed WP-CLI package, or the package directory.
-
-~~~
-wp package path [<name>]
-~~~
-
-If you want to contribute to a package, this is a great way to jump to it.
-
-**OPTIONS**
-
-	[<name>]
-		Name of the package to get the directory for.
-
-**EXAMPLES**
-
-    # Get package path.
-    $ wp package path
-    /home/person/.wp-cli/packages/
-
-    # Get path to an installed package.
-    $ wp package path wp-cli/server-command
-    /home/person/.wp-cli/packages/vendor/wp-cli/server-command
-
-    # Change directory to package path.
-    $ cd $(wp package path) && pwd
-    /home/vagrant/.wp-cli/packages
 
 ## Installing
 
