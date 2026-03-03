@@ -1310,8 +1310,8 @@ class Package_Command extends WP_CLI_Command {
 			return $package_name;
 		}
 		// Append .git for GitHub/GitLab HTTPS or SSH URLs, preserving any :version suffix.
-		// Pattern: (https?://github.com/<user>/<repo> or git@github.com:<user>/<repo>)(:version)?
-		if ( preg_match( '#^((?:https?://(?:github|gitlab)\.com/|git@(?:github|gitlab)\.com:)[^/]+/[^/:]+)(:.*)?$#i', $package_name, $matches ) ) {
+		// Pattern: (https?://github.com/<user>/<repo>[...subgroups...] or git@github.com:<user>/<repo>[...subgroups...])(:version)?
+		if ( preg_match( '#^((?:https?://(?:github|gitlab)\.com/|git@(?:github|gitlab)\.com:)[^/:]+(?:/[^/:]+)*)(:.*)?$#i', $package_name, $matches ) ) {
 			return $matches[1] . '.git' . ( $matches[2] ?? '' );
 		}
 		return $package_name;
