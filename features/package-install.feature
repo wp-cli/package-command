@@ -115,7 +115,7 @@ Feature: Install WP-CLI packages
       """
 
   # The package requires PHP 7.4
-  @require-php-7.4
+  @require-php-7.4 @github-api
   Scenario: Install a package with a dependency
     Given an empty directory
 
