@@ -17,6 +17,7 @@ use Composer\Util\HttpDownloader;
 use WP_CLI\Package\ComposerIO;
 use WP_CLI\Extractor;
 use WP_CLI\Utils;
+use WP_CLI\Path;
 use WP_CLI\JsonManipulator;
 use WP_CLI\PackageManagerEventSubscriber;
 use WP_CLI\RequestsLibrary;
@@ -308,7 +309,7 @@ class Package_Command extends WP_CLI_Command {
 			}
 		} elseif ( is_dir( $package_name ) && file_exists( $package_name . '/composer.json' ) ) {
 			$dir_package = $package_name;
-			if ( ! Utils\is_path_absolute( $dir_package ) ) {
+			if ( ! Path::is_absolute( $dir_package ) ) {
 				$dir_package = getcwd() . DIRECTORY_SEPARATOR . $dir_package;
 			}
 			list( $package_name, $version ) = self::get_package_name_and_version_from_dir_package( $dir_package );
@@ -1192,9 +1193,9 @@ class Package_Command extends WP_CLI_Command {
 		if ( null === $composer_path || getenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' ) ) {
 
 			if ( getenv( 'WP_CLI_PACKAGES_DIR' ) ) {
-				$composer_path = Utils\trailingslashit( getenv( 'WP_CLI_PACKAGES_DIR' ) ) . 'composer.json';
+				$composer_path = Path::trailingslashit( getenv( 'WP_CLI_PACKAGES_DIR' ) ) . 'composer.json';
 			} else {
-				$composer_path = Utils\trailingslashit( Utils\get_home_dir() ) . '.wp-cli/packages/composer.json';
+				$composer_path = Path::trailingslashit( Path::get_home_dir() ) . '.wp-cli/packages/composer.json';
 			}
 
 			// `composer.json` and its directory might need to be created
@@ -1243,7 +1244,7 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::error( sprintf( "Composer directory '%s' for packages not found: %s", $composer_dir, $error['message'] ) );
 		}
 
-		$composer_path = Utils\trailingslashit( $composer_dir ) . Utils\basename( $composer_path );
+		$composer_path = Path::trailingslashit( $composer_dir ) . Path::basename( $composer_path );
 
 		$json_file = new JsonFile( $composer_path );
 
@@ -1643,7 +1644,7 @@ class Package_Command extends WP_CLI_Command {
 	 * See https://github.com/composer/ca-bundle/blob/1.1.0/src/CaBundle.php#L64
 	 */
 	private function avoid_composer_ca_bundle() {
-		if ( Utils\inside_phar() && ! getenv( 'SSL_CERT_FILE' ) && ! getenv( 'SSL_CERT_DIR' ) && ! ini_get( 'openssl.cafile' ) && ! ini_get( 'openssl.capath' ) ) {
+		if ( Path::inside_phar() && ! getenv( 'SSL_CERT_FILE' ) && ! getenv( 'SSL_CERT_DIR' ) && ! ini_get( 'openssl.cafile' ) && ! ini_get( 'openssl.capath' ) ) {
 			$certificate_path = Utils\extract_from_phar( RequestsLibrary::get_bundled_certificate_path() );
 			putenv( "SSL_CERT_FILE={$certificate_path}" );
 		}
