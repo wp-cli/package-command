@@ -957,7 +957,7 @@ Feature: Install WP-CLI packages
 
   Scenario: Install a package from a local zip
     Given an empty directory
-    And I run `wget -q -O google-sitemap-generator-cli.zip https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
+    And I run `curl -sS -L -o google-sitemap-generator-cli.zip https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
 
     When I run `wp package install google-sitemap-generator-cli.zip`
     Then STDOUT should contain:
