@@ -243,7 +243,7 @@ Feature: Install WP-CLI packages
       """
     And the {PACKAGE_PATH}composer.json file should not contain:
       """
-      "wp-cli/google-sitemap-generator-cli": "dev-master"
+      "wp-cli/google-sitemap-generator-cli":
       """
     And the {PACKAGE_PATH}composer.json file should not contain:
       """
@@ -1093,7 +1093,7 @@ Feature: Install WP-CLI packages
       Error: Couldn't download package from 'https://github.com/wp-cli/google-sitemap-generator.zip' (HTTP code 404).
       """
 
-    When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
+    When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli/archive/main.zip`
     Then STDOUT should contain:
       """
       Installing package wp-cli/google-sitemap-generator-cli (dev-
