@@ -37,7 +37,12 @@ class ComposerJsonTest extends TestCase {
 		}
 		$class_wp_cli_capture_exit->setValue( null, true );
 
-		$this->temp_dir = Utils\get_temp_dir() . uniqid( 'wp-cli-test-package-composer-json-', true ) . '/';
+		$temp_dir = Utils\get_temp_dir();
+		if ( Utils\is_windows() ) {
+			$temp_dir = realpath( $temp_dir ) ?: $temp_dir;
+			$temp_dir = str_replace( '\\', '/', $temp_dir );
+		}
+		$this->temp_dir = rtrim( $temp_dir, '/' ) . '/' . uniqid( 'wp-cli-test-package-composer-json-', true ) . '/';
 		mkdir( $this->temp_dir );
 	}
 
@@ -193,6 +198,10 @@ class ComposerJsonTest extends TestCase {
 	}
 
 	private function mac_safe_path( $path ) {
-		return preg_replace( '#^/private/(var|tmp)/#i', '/$1/', $path );
+		$path = preg_replace( '#^/private/(var|tmp)/#i', '/$1/', $path );
+		if ( Utils\is_windows() ) {
+			$path = str_replace( '\\', '/', $path );
+		}
+		return $path;
 	}
 }
