@@ -2171,7 +2171,7 @@ class JsonManipulatorTest extends TestCase
     "foo": "$1bar"
 }
 ';
-        $this->assertEquals( str_replace( "\r\n", "\n", $expected ), str_replace( "\r\n", "\n", $manipulator->getContents() ) );
+        $this->assertEquals( preg_replace( '/\R/', "\n", $expected ), preg_replace( '/\R/', "\n", $manipulator->getContents() ) );
     }
 
     public function testUpdateMainKey()
@@ -2305,7 +2305,7 @@ class JsonManipulatorTest extends TestCase
         $expected = '{
 }
 ';
-        $this->assertEquals( str_replace( "\r\n", "\n", $expected ), str_replace( "\r\n", "\n", $manipulator->getContents() ) );
+        $this->assertEquals( preg_replace( '/\R/', "\n", $expected ), preg_replace( '/\R/', "\n", $manipulator->getContents() ) );
     }
 
     public function testIndentDetection()
