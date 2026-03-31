@@ -37,7 +37,12 @@ class ComposerJsonTest extends TestCase {
 		}
 		$class_wp_cli_capture_exit->setValue( null, true );
 
-		$this->temp_dir = Utils\get_temp_dir() . uniqid( 'wp-cli-test-package-composer-json-', true ) . '/';
+		$temp_dir = Utils\get_temp_dir();
+		if ( Utils\is_windows() ) {
+			$temp_dir = realpath( $temp_dir ) ?: $temp_dir;
+			$temp_dir = str_replace( '\\', '/', $temp_dir );
+		}
+		$this->temp_dir = rtrim( $temp_dir, '/' ) . '/' . uniqid( 'wp-cli-test-package-composer-json-', true ) . '/';
 		mkdir( $this->temp_dir );
 	}
 
@@ -80,7 +85,7 @@ class ComposerJsonTest extends TestCase {
 		// Succeed.
 		$expected = $this->temp_dir . 'packages/composer.json';
 		$actual   = $create_default_composer_json->invoke( $package, $expected );
-		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
+		$this->assertSame( $this->mac_safe_path( realpath( $expected ) ?: $expected ), $this->mac_safe_path( realpath( $actual ) ?: $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );
 		unlink( $actual );
 		rmdir( dirname( $actual ) );
@@ -105,7 +110,7 @@ class ComposerJsonTest extends TestCase {
 		putenv( 'WP_CLI_PACKAGES_DIR' );
 		$expected = $this->temp_dir . '.wp-cli/packages/composer.json';
 		$actual   = $get_composer_json_path->invoke( $package );
-		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
+		$this->assertSame( $this->mac_safe_path( realpath( $expected ) ?: $expected ), $this->mac_safe_path( realpath( $actual ) ?: $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );
 		unlink( $actual );
 		rmdir( dirname( $actual ) );
@@ -115,7 +120,7 @@ class ComposerJsonTest extends TestCase {
 		putenv( 'WP_CLI_PACKAGES_DIR=' . $this->temp_dir . 'packages' );
 		$expected = $this->temp_dir . 'packages/composer.json';
 		$actual   = $get_composer_json_path->invoke( $package );
-		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
+		$this->assertSame( $this->mac_safe_path( realpath( $expected ) ?: $expected ), $this->mac_safe_path( realpath( $actual ) ?: $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );
 		unlink( $actual );
 		rmdir( dirname( $actual ) );
@@ -126,7 +131,7 @@ class ComposerJsonTest extends TestCase {
 		mkdir( $this->temp_dir . 'packages' );
 		touch( $expected );
 		$actual = $get_composer_json_path->invoke( $package );
-		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
+		$this->assertSame( $this->mac_safe_path( realpath( $expected ) ?: $expected ), $this->mac_safe_path( realpath( $actual ) ?: $actual ) );
 		$this->assertSame( 0, filesize( $actual ) );
 		unlink( $actual );
 		rmdir( dirname( $actual ) );
@@ -170,7 +175,7 @@ class ComposerJsonTest extends TestCase {
 		// Succeed with newly created.
 		$expected                           = $this->temp_dir . 'packages/composer.json';
 		list( $actual, $content, $decoded ) = $get_composer_json_path_backup_decoded->invoke( $package );
-		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
+		$this->assertSame( $this->mac_safe_path( realpath( $expected ) ?: $expected ), $this->mac_safe_path( realpath( $actual ) ?: $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );
 		$this->assertSame( file_get_contents( $actual ), $content );
 		$this->assertFalse( empty( $decoded ) );
@@ -182,7 +187,7 @@ class ComposerJsonTest extends TestCase {
 		mkdir( $this->temp_dir . 'packages' );
 		file_put_contents( $expected, '{}' );
 		list( $actual, $content, $decoded ) = $get_composer_json_path_backup_decoded->invoke( $package );
-		$this->assertSame( $expected, $this->mac_safe_path( $actual ) );
+		$this->assertSame( $this->mac_safe_path( realpath( $expected ) ?: $expected ), $this->mac_safe_path( realpath( $actual ) ?: $actual ) );
 		$this->assertSame( '{}', $content );
 		$this->assertTrue( empty( $decoded ) );
 		unlink( $expected );
@@ -193,6 +198,8 @@ class ComposerJsonTest extends TestCase {
 	}
 
 	private function mac_safe_path( $path ) {
-		return preg_replace( '#^/private/(var|tmp)/#i', '/$1/', $path );
+		$path = preg_replace( '#^/private/(var|tmp)/#i', '/$1/', $path );
+		$path = str_replace( '\\', '/', $path );
+		return $path;
 	}
 }
