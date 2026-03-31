@@ -526,7 +526,7 @@ class Package_Command extends WP_CLI_Command {
 	public function path( $args ) {
 		$packages_dir = WP_CLI::get_runner()->get_packages_dir_path();
 		if ( ! empty( $args ) ) {
-			$packages_dir .= 'vendor/' . $args[0];
+			$packages_dir .= 'vendor' . DIRECTORY_SEPARATOR . $args[0];
 			if ( ! is_dir( $packages_dir ) ) {
 				WP_CLI::error( 'Invalid package name.' );
 			}
@@ -1192,21 +1192,12 @@ class Package_Command extends WP_CLI_Command {
 
 		if ( null === $composer_path || getenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' ) ) {
 
-			if ( getenv( 'WP_CLI_PACKAGES_DIR' ) ) {
-				$composer_path = Path::trailingslashit( getenv( 'WP_CLI_PACKAGES_DIR' ) ) . 'composer.json';
-			} else {
-				$composer_path = Path::trailingslashit( Path::get_home_dir() ) . '.wp-cli/packages/composer.json';
-			}
+			$packages_dir  = WP_CLI::get_runner()->get_packages_dir_path();
+			$composer_path = rtrim( $packages_dir, '/\\' ) . DIRECTORY_SEPARATOR . 'composer.json';
 
 			// `composer.json` and its directory might need to be created
 			if ( ! file_exists( $composer_path ) ) {
 				$composer_path = $this->create_default_composer_json( $composer_path );
-			} else {
-				$composer_path = realpath( $composer_path );
-				if ( false === $composer_path ) {
-					$error = error_get_last();
-					WP_CLI::error( sprintf( "Composer path '%s' for packages/composer.json not found: %s", $composer_path, $error['message'] ) );
-				}
 			}
 		}
 
@@ -1238,11 +1229,7 @@ class Package_Command extends WP_CLI_Command {
 			}
 		}
 
-		$composer_dir = realpath( $composer_dir );
-		if ( false === $composer_dir ) {
-			$error = error_get_last();
-			WP_CLI::error( sprintf( "Composer directory '%s' for packages not found: %s", $composer_dir, $error['message'] ) );
-		}
+		// No realpath() here to preserve short names on Windows if applicable.
 
 		$composer_path = Path::trailingslashit( $composer_dir ) . Path::basename( $composer_path );
 
