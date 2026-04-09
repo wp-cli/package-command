@@ -25,7 +25,7 @@ class JsonManipulatorTest extends TestCase
     {
         $manipulator = new JsonManipulator($json);
         $this->assertTrue($manipulator->addLink($type, $package, $constraint));
-        $this->assertEquals($expected, $manipulator->getContents());
+        $this->assertJsonEquals($expected, $manipulator->getContents());
     }
 
     public static function linkProvider()
@@ -1297,7 +1297,7 @@ class JsonManipulatorTest extends TestCase
     {
         $manipulator = new JsonManipulator($json);
         $this->assertTrue($manipulator->addLink($type, $package, $constraint, $sortPackages));
-        $this->assertEquals($expected, $manipulator->getContents());
+        $this->assertJsonEquals($expected, $manipulator->getContents());
     }
 
     public static function providerAddLinkAndSortPackages()
@@ -1380,7 +1380,7 @@ class JsonManipulatorTest extends TestCase
 
         $this->assertEquals($expected, $manipulator->removeSubNode('repositories', $name));
         if (null !== $expectedContent) {
-            $this->assertEquals($expectedContent, $manipulator->getContents());
+            $this->assertJsonEquals($expectedContent, $manipulator->getContents());
         }
     }
 
@@ -2578,4 +2578,7 @@ class JsonManipulatorTest extends TestCase
 	}
 	// WP_CLI: end caseInsensitive.
 
+	private function assertJsonEquals( $expected, $actual ) {
+		$this->assertEquals( preg_replace( '/\R/', "\n", $expected ), preg_replace( '/\R/', "\n", $actual ) );
+	}
 }

@@ -531,7 +531,7 @@ class Package_Command extends WP_CLI_Command {
 				WP_CLI::error( 'Invalid package name.' );
 			}
 		}
-		WP_CLI::line( $packages_dir );
+		WP_CLI::line( Path::normalize( $packages_dir ) );
 	}
 
 	/**
@@ -1158,7 +1158,7 @@ class Package_Command extends WP_CLI_Command {
 	 * @return array Two-element array containing package name and version.
 	 */
 	private static function get_package_name_and_version_from_dir_package( $dir_package ) {
-		$composer_file = $dir_package . '/composer.json';
+		$composer_file = Path::normalize( $dir_package . '/composer.json' );
 		if ( ! file_exists( $composer_file ) ) {
 			WP_CLI::error( sprintf( "Invalid package: composer.json file '%s' not found.", $composer_file ) );
 		}

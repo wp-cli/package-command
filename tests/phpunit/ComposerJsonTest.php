@@ -198,8 +198,8 @@ class ComposerJsonTest extends TestCase {
 	}
 
 	private function mac_safe_path( $path ) {
+		$path = \WP_CLI\Path::normalize( $path );
 		$path = preg_replace( '#^/private/(var|tmp)/#i', '/$1/', $path );
-		$path = str_replace( '\\', '/', $path );
 		return $path;
 	}
 }
