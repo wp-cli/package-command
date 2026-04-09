@@ -208,8 +208,20 @@ class Package_Command extends WP_CLI_Command {
 	 *     # Install the latest stable version of a package.
 	 *     $ wp package install runcommand/hook
 	 *
+	 *     # Install a specific version.
+	 *     $ wp package install wp-cli/server-command:2.0.0
+	 *
+	 *     # Install with caret operator (allows non-breaking updates).
+	 *     $ wp package install wp-cli/server-command:^1.0
+	 *
+	 *     # Install with tilde operator (allows patch-level updates).
+	 *     $ wp package install wp-cli/server-command:~1.2
+	 *
 	 *     # Install the latest stable version (explicitly specified).
 	 *     $ wp package install wp-cli/server-command:@stable
+	 *
+	 *     # Install from a development branch.
+	 *     $ wp package install wp-cli/server-command:dev-main
 	 *
 	 *     # Install a package hosted at a GitLab.com URL.
 	 *     $ wp package install https://gitlab.com/foo/wp-cli-bar-command.git
