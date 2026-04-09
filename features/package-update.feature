@@ -62,7 +62,7 @@ Feature: Update WP-CLI packages
       | name                           | update    |
       | wp-cli-test/updateable-package | available |
 
-    When I run `sed -i.bak s/v1.0.0/\>=1.0.0/g {PACKAGE_PATH}/composer.json`
+    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}composer.json', str_replace( 'v1.0.0', '>=1.0.0', file_get_contents( '{PACKAGE_PATH}composer.json' ) ) );" --skip-wordpress`
     Then the return code should be 0
 
     When I run `cat {PACKAGE_PATH}/composer.json`
@@ -114,7 +114,7 @@ Feature: Update WP-CLI packages
       Success: Package installed.
       """
 
-    When I run `sed -i.bak s/v1.0.0/\>=1.0.0/g {PACKAGE_PATH}/composer.json`
+    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}composer.json', str_replace( 'v1.0.0', '>=1.0.0', file_get_contents( '{PACKAGE_PATH}composer.json' ) ) );" --skip-wordpress`
     Then the return code should be 0
 
     When I run `wp package update wp-cli-test/updateable-package`
@@ -147,7 +147,7 @@ Feature: Update WP-CLI packages
       Success: Package installed.
       """
 
-    When I run `sed -i.bak s/v1.0.0/\>=1.0.0/g {PACKAGE_PATH}/composer.json`
+    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}composer.json', str_replace( 'v1.0.0', '>=1.0.0', file_get_contents( '{PACKAGE_PATH}composer.json' ) ) );" --skip-wordpress`
     Then the return code should be 0
 
     When I run `wp package update wp-cli-test/updateable-package danielbachhuber/wp-cli-reset-post-date-command`
