@@ -1202,9 +1202,9 @@ Feature: Install WP-CLI packages
       """
       {PACKAGE_PATH}composer.json to require the package...
       """
+    And STDOUT should match /Registering .*?path-command as a path repository\.\.\./
     And STDOUT should contain:
       """
-      Registering {CURRENT_PATH}/path-command as a path repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -1291,9 +1291,9 @@ Feature: Install WP-CLI packages
       """
       {PACKAGE_PATH}composer.json to require the package...
       """
+    And STDOUT should match /Registering .*?path-command as a path repository\.\.\./
     And STDOUT should contain:
       """
-      Registering {CURRENT_PATH}/path-command as a path repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
