@@ -1333,6 +1333,10 @@ class Package_Command extends WP_CLI_Command {
 		if ( preg_match( '#\.git(?::[^:]+)?$#i', $package_name ) ) {
 			return $package_name;
 		}
+		// Skip if it looks like a zip file.
+		if ( preg_match( '#\.zip$#i', $package_name ) ) {
+			return $package_name;
+		}
 		// Append .git for GitHub/GitLab HTTPS or SSH URLs, preserving any :version suffix.
 		// Pattern: (https?://github.com/<user>/<repo>[...subgroups...] or git@github.com:<user>/<repo>[...subgroups...])(:version)?
 		if ( preg_match( '#^((?:https?://(?:github|gitlab)\.com/|git@(?:github|gitlab)\.com:)[^/:]+(?:/[^/:]+)*)(:.*)?$#i', $package_name, $matches ) ) {
