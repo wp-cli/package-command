@@ -358,7 +358,7 @@ class Package_Command extends WP_CLI_Command {
 		$this->register_revert_shutdown_function( $json_path, $composer_backup, $revert );
 
 		// Add the 'require' to composer.json
-		WP_CLI::log( sprintf( 'Updating %s to require the package...', $json_path ) );
+		WP_CLI::log( sprintf( 'Updating %s to require the package...', Path::normalize( $json_path ) ) );
 		$json_manipulator = new JsonManipulator( $composer_backup );
 		$json_manipulator->addMainKey( 'name', 'wp-cli/wp-cli' );
 		$json_manipulator->addMainKey( 'version', self::get_wp_cli_version_composer() );
@@ -835,12 +835,12 @@ class Package_Command extends WP_CLI_Command {
 		$this->register_revert_shutdown_function( $json_path, $composer_backup, $revert );
 
 		// Remove the 'require' from composer.json.
-		WP_CLI::log( sprintf( 'Removing require statement for package \'%s\' from %s', $package_name, $json_path ) );
+		WP_CLI::log( sprintf( 'Removing require statement for package \'%s\' from %s', $package_name, Path::normalize( $json_path ) ) );
 		$manipulator = new JsonManipulator( $composer_backup );
 		$manipulator->removeSubNode( 'require', $package_name, true /*caseInsensitive*/ );
 
 		// Remove the 'repository' details from composer.json.
-		WP_CLI::log( sprintf( 'Removing repository details from %s', $json_path ) );
+		WP_CLI::log( sprintf( 'Removing repository details from %s', Path::normalize( $json_path ) ) );
 		$manipulator->removeSubNode( 'repositories', $package_name, true /*caseInsensitive*/ );
 
 		file_put_contents( $json_path, $manipulator->getContents() );
