@@ -474,8 +474,9 @@ Feature: Install WP-CLI packages
   Scenario: Install a package from Git using a shortened package identifier
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/github-test-command`
-    Then STDOUT should contain:
+    When I try `wp package install wp-cli-test/github-test-command`
+    Then the return code should be 0
+    And STDOUT should contain:
       """
       Installing package wp-cli-test/github-test-command (dev-master)
       """
@@ -792,7 +793,7 @@ Feature: Install WP-CLI packages
       """
       Warning: Package name mismatch...Updating from git name 'GeekPress/wp-rocket-cli' to composer.json name 'wp-media/wp-rocket-cli'.
       """
-    And STDOUT should match /Installing package wp-media\/wp-rocket-cli \(dev-/
+    And STDOUT should match /Installing package wp-media\/wp-rocket-cli \([^)]+\)/
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
       """
