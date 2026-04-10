@@ -370,7 +370,7 @@ class Package_Command extends WP_CLI_Command {
 		$this->register_revert_shutdown_function( $json_path, $composer_backup, $revert );
 
 		// Add the 'require' to composer.json
-		WP_CLI::log( sprintf( 'Updating %s to require the package...', $json_path ) );
+		WP_CLI::log( sprintf( 'Updating %s to require the package...', Path::normalize( $json_path ) ) );
 		$json_manipulator = new JsonManipulator( $composer_backup );
 		$json_manipulator->addMainKey( 'name', 'wp-cli/wp-cli' );
 		$json_manipulator->addMainKey( 'version', self::get_wp_cli_version_composer() );
@@ -538,12 +538,12 @@ class Package_Command extends WP_CLI_Command {
 	public function path( $args ) {
 		$packages_dir = WP_CLI::get_runner()->get_packages_dir_path();
 		if ( ! empty( $args ) ) {
-			$packages_dir .= 'vendor/' . $args[0];
+			$packages_dir .= 'vendor' . DIRECTORY_SEPARATOR . $args[0];
 			if ( ! is_dir( $packages_dir ) ) {
 				WP_CLI::error( 'Invalid package name.' );
 			}
 		}
-		WP_CLI::line( $packages_dir );
+		WP_CLI::line( Path::normalize( $packages_dir ) );
 	}
 
 	/**
@@ -847,12 +847,12 @@ class Package_Command extends WP_CLI_Command {
 		$this->register_revert_shutdown_function( $json_path, $composer_backup, $revert );
 
 		// Remove the 'require' from composer.json.
-		WP_CLI::log( sprintf( 'Removing require statement for package \'%s\' from %s', $package_name, $json_path ) );
+		WP_CLI::log( sprintf( 'Removing require statement for package \'%s\' from %s', $package_name, Path::normalize( $json_path ) ) );
 		$manipulator = new JsonManipulator( $composer_backup );
 		$manipulator->removeSubNode( 'require', $package_name, true /*caseInsensitive*/ );
 
 		// Remove the 'repository' details from composer.json.
-		WP_CLI::log( sprintf( 'Removing repository details from %s', $json_path ) );
+		WP_CLI::log( sprintf( 'Removing repository details from %s', Path::normalize( $json_path ) ) );
 		$manipulator->removeSubNode( 'repositories', $package_name, true /*caseInsensitive*/ );
 
 		file_put_contents( $json_path, $manipulator->getContents() );
@@ -1170,7 +1170,7 @@ class Package_Command extends WP_CLI_Command {
 	 * @return array Two-element array containing package name and version.
 	 */
 	private static function get_package_name_and_version_from_dir_package( $dir_package ) {
-		$composer_file = $dir_package . '/composer.json';
+		$composer_file = Path::normalize( $dir_package . '/composer.json' );
 		if ( ! file_exists( $composer_file ) ) {
 			WP_CLI::error( sprintf( "Invalid package: composer.json file '%s' not found.", $composer_file ) );
 		}
@@ -1204,21 +1204,12 @@ class Package_Command extends WP_CLI_Command {
 
 		if ( null === $composer_path || getenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' ) ) {
 
-			if ( getenv( 'WP_CLI_PACKAGES_DIR' ) ) {
-				$composer_path = Path::trailingslashit( getenv( 'WP_CLI_PACKAGES_DIR' ) ) . 'composer.json';
-			} else {
-				$composer_path = Path::trailingslashit( Path::get_home_dir() ) . '.wp-cli/packages/composer.json';
-			}
+			$packages_dir  = WP_CLI::get_runner()->get_packages_dir_path();
+			$composer_path = rtrim( $packages_dir, '/\\' ) . DIRECTORY_SEPARATOR . 'composer.json';
 
 			// `composer.json` and its directory might need to be created
 			if ( ! file_exists( $composer_path ) ) {
 				$composer_path = $this->create_default_composer_json( $composer_path );
-			} else {
-				$composer_path = realpath( $composer_path );
-				if ( false === $composer_path ) {
-					$error = error_get_last();
-					WP_CLI::error( sprintf( "Composer path '%s' for packages/composer.json not found: %s", $composer_path, $error['message'] ) );
-				}
 			}
 		}
 
@@ -1250,11 +1241,7 @@ class Package_Command extends WP_CLI_Command {
 			}
 		}
 
-		$composer_dir = realpath( $composer_dir );
-		if ( false === $composer_dir ) {
-			$error = error_get_last();
-			WP_CLI::error( sprintf( "Composer directory '%s' for packages not found: %s", $composer_dir, $error['message'] ) );
-		}
+		// No realpath() here to preserve short names on Windows if applicable.
 
 		$composer_path = Path::trailingslashit( $composer_dir ) . Path::basename( $composer_path );
 
@@ -1356,6 +1343,10 @@ class Package_Command extends WP_CLI_Command {
 	private function maybe_add_git_suffix( $package_name ) {
 		// Already has .git suffix (possibly followed by :version).
 		if ( preg_match( '#\.git(?::[^:]+)?$#i', $package_name ) ) {
+			return $package_name;
+		}
+		// Skip if it looks like a zip file.
+		if ( preg_match( '#\.zip$#i', $package_name ) ) {
 			return $package_name;
 		}
 		// Append .git for GitHub/GitLab HTTPS or SSH URLs, preserving any :version suffix.

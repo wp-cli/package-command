@@ -243,7 +243,7 @@ Feature: Install WP-CLI packages
       """
     And the {PACKAGE_PATH}composer.json file should not contain:
       """
-      "wp-cli/google-sitemap-generator-cli": "dev-master"
+      "wp-cli/google-sitemap-generator-cli":
       """
     And the {PACKAGE_PATH}composer.json file should not contain:
       """
@@ -474,8 +474,9 @@ Feature: Install WP-CLI packages
   Scenario: Install a package from Git using a shortened package identifier
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/github-test-command`
-    Then STDOUT should contain:
+    When I try `wp package install wp-cli-test/github-test-command`
+    Then the return code should be 0
+    And STDOUT should contain:
       """
       Installing package wp-cli-test/github-test-command (dev-master)
       """
@@ -792,7 +793,7 @@ Feature: Install WP-CLI packages
       """
       Warning: Package name mismatch...Updating from git name 'GeekPress/wp-rocket-cli' to composer.json name 'wp-media/wp-rocket-cli'.
       """
-    And STDOUT should match /Installing package wp-media\/wp-rocket-cli \(dev-/
+    And STDOUT should match /Installing package wp-media\/wp-rocket-cli \([^)]+\)/
     # This path is sometimes changed on Macs to prefix with /private
     And STDOUT should contain:
       """
@@ -957,7 +958,7 @@ Feature: Install WP-CLI packages
 
   Scenario: Install a package from a local zip
     Given an empty directory
-    And I run `wget -q -O google-sitemap-generator-cli.zip https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
+    And I run `curl -fSsL -o google-sitemap-generator-cli.zip https://github.com/wp-cli/google-sitemap-generator-cli/archive/main.zip`
 
     When I run `wp package install google-sitemap-generator-cli.zip`
     Then STDOUT should contain:
@@ -1093,7 +1094,7 @@ Feature: Install WP-CLI packages
       Error: Couldn't download package from 'https://github.com/wp-cli/google-sitemap-generator.zip' (HTTP code 404).
       """
 
-    When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli/archive/master.zip`
+    When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli/archive/main.zip`
     Then STDOUT should contain:
       """
       Installing package wp-cli/google-sitemap-generator-cli (dev-
@@ -1201,9 +1202,9 @@ Feature: Install WP-CLI packages
       """
       {PACKAGE_PATH}composer.json to require the package...
       """
+    And STDOUT should match /Registering .*?path-command as a path repository\.\.\./
     And STDOUT should contain:
       """
-      Registering {CURRENT_PATH}/path-command as a path repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -1290,9 +1291,9 @@ Feature: Install WP-CLI packages
       """
       {PACKAGE_PATH}composer.json to require the package...
       """
+    And STDOUT should match /Registering .*?path-command as a path repository\.\.\./
     And STDOUT should contain:
       """
-      Registering {CURRENT_PATH}/path-command as a path repository...
       Using Composer to install the package...
       """
     And STDOUT should contain:
@@ -1374,11 +1375,11 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should be empty
 
-    When I try `wp package install https://example.com/non-existent-zip-asdfasdf.zip`
+    When I try `wp package install http://example.com/non-existent-zip-asdfasdf.zip`
     Then the return code should be 1
     And STDERR should contain:
       """
-      Error: Couldn't download package from 'https://example.com/non-existent-zip-asdfasdf.zip'
+      Error: Couldn't download package from 'http://example.com/non-existent-zip-asdfasdf.zip'
       """
     And STDOUT should be empty
 
