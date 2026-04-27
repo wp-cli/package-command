@@ -1419,7 +1419,7 @@ Feature: Install WP-CLI packages
 
   Scenario: Reject a ZIP package whose composer.json name contains path-traversal components
     Given an empty directory
-    And a create-traversal-zip.php file:
+    And a create-malicious-package-zip.php file:
       """
       <?php
       $zip = new ZipArchive();
@@ -1428,7 +1428,7 @@ Feature: Install WP-CLI packages
       $zip->addFromString( 'traversal/vendor/autoload.php', '<?php /* COMPROMISED */ ?>' );
       $zip->close();
       """
-    When I run `php create-traversal-zip.php`
+    When I run `php create-malicious-package-zip.php`
 
     When I try `wp package install traversal.zip`
     Then the return code should be 1
