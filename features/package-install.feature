@@ -1417,6 +1417,27 @@ Feature: Install WP-CLI packages
       """
     And STDOUT should be empty
 
+  Scenario: Reject a ZIP package whose composer.json name contains path-traversal components
+    Given an empty directory
+    And a create-traversal-zip.php file:
+      """
+      <?php
+      $zip = new ZipArchive();
+      $zip->open( 'traversal.zip', ZipArchive::CREATE );
+      $zip->addFromString( 'traversal/composer.json', '{"name":"..","description":"path traversal test","type":"wp-cli-package"}' );
+      $zip->addFromString( 'traversal/vendor/autoload.php', '<?php /* COMPROMISED */ ?>' );
+      $zip->close();
+      """
+    When I run `php create-traversal-zip.php`
+
+    When I try `wp package install traversal.zip`
+    Then the return code should be 1
+    And STDERR should contain:
+      """
+      Error: Invalid package name '..':
+      """
+    And STDOUT should be empty
+
   @github-api
   Scenario: Install package with --no-interaction fails fast on Git authentication errors
     Given an empty directory

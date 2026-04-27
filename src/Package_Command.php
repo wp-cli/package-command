@@ -8,6 +8,7 @@ use Composer\IO\NullIO;
 use Composer\Installer;
 use Composer\Json\JsonFile;
 use Composer\Package\BasePackage;
+use Composer\Package\Loader\ValidatingArrayLoader;
 use Composer\Package\PackageInterface;
 use Composer\Package\Version\VersionSelector;
 use Composer\Repository;
@@ -302,6 +303,10 @@ class Package_Command extends WP_CLI_Command {
 				// Move to a location based on the package name
 				$local_dir          = rtrim( WP_CLI::get_runner()->get_packages_dir_path(), '/' ) . '/local/';
 				$actual_dir_package = $local_dir . str_replace( '/', '-', $package_name );
+				// Guard against path traversal: ensure destination stays within local_dir.
+				if ( ! self::is_child_path( $actual_dir_package, $local_dir ) ) {
+					throw new Exception( 'Invalid package: resolved destination path escapes the packages directory.' );
+				}
 				Extractor::copy_overwrite_files( $dir_package, $actual_dir_package );
 				Extractor::rmdir( $dir_package );
 				// Behold, the extracted package
@@ -1182,11 +1187,31 @@ class Package_Command extends WP_CLI_Command {
 			WP_CLI::error( sprintf( "Invalid package: no name in composer.json file '%s'.", $composer_file ) );
 		}
 		$package_name = $composer_data['name'];
-		$version      = self::DEFAULT_DEV_BRANCH_CONSTRAINTS;
+		$naming_error = ValidatingArrayLoader::hasPackageNamingError( $package_name );
+		if ( null !== $naming_error ) {
+			WP_CLI::error( sprintf( "Invalid package name '%s': %s", $package_name, $naming_error ) );
+		}
+		$version = self::DEFAULT_DEV_BRANCH_CONSTRAINTS;
 		if ( ! empty( $composer_data['version'] ) ) {
 			$version = $composer_data['version'];
 		}
 		return [ $package_name, $version ];
+	}
+
+	/**
+	 * Checks whether a path is a direct child of (or equal to) a given parent directory.
+	 *
+	 * Uses string-based normalisation so it works even when the paths do not
+	 * exist on the filesystem yet.
+	 *
+	 * @param string $path Path to test.
+	 * @param string $parent_dir Parent directory to test against.
+	 * @return bool True when $path is inside $parent_dir.
+	 */
+	private static function is_child_path( $path, $parent_dir ) {
+		$normalized_path   = rtrim( Path::normalize( $path ), '/' ) . '/';
+		$normalized_parent = rtrim( Path::normalize( $parent_dir ), '/' ) . '/';
+		return 0 === strpos( $normalized_path, $normalized_parent );
 	}
 
 	/**
