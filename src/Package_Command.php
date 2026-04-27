@@ -1199,7 +1199,7 @@ class Package_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Checks whether a path is a direct child of (or equal to) a given parent directory.
+	 * Checks whether a path is inside (or equal to) a given parent directory.
 	 *
 	 * Uses string-based normalisation so it works even when the paths do not
 	 * exist on the filesystem yet.

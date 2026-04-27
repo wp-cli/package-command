@@ -1437,6 +1437,11 @@ Feature: Install WP-CLI packages
       Error: Invalid package name '..':
       """
     And STDOUT should be empty
+    And the {PACKAGE_PATH}vendor/autoload.php file should not contain:
+      """
+      COMPROMISED
+      """
+    And the {PACKAGE_PATH}local directory should not exist
 
   @github-api
   Scenario: Install package with --no-interaction fails fast on Git authentication errors
