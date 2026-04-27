@@ -1430,7 +1430,7 @@ Feature: Install WP-CLI packages
       """
     When I run `php create-malicious-package-zip.php`
 
-    When I try `wp package install traversal.zip`
+    And I try `wp package install traversal.zip`
     Then the return code should be 1
     And STDERR should contain:
       """
