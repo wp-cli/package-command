@@ -283,7 +283,7 @@ class Package_Command extends WP_CLI_Command {
 					'insecure' => $insecure,
 				];
 				$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
-				$headers      = $gitlab_token && strpos( $package_name, '://gitlab.com/' ) !== false ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
+				$headers      = $gitlab_token && 'gitlab.com' === strtolower( (string) Utils\parse_url( $package_name, PHP_URL_HOST ) ) ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
 				$response     = Utils\http_request( 'GET', $package_name, null, $headers, $options );
 				if ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 					@unlink( $temp ); // @codingStandardsIgnoreLine
@@ -1115,8 +1115,7 @@ class Package_Command extends WP_CLI_Command {
 		// Fall back to GitLab URL if we had no match yet.
 		$url          = "https://gitlab.com/{$package_name}.git";
 		$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
-		$headers      = $github_token ? [ 'Authorization' => 'token ' . $github_token ] : [];
-		$headers      = $gitlab_token && strpos( $package_name, '://gitlab.com/' ) !== false ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
+		$headers      = $gitlab_token ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
 		$response     = Utils\http_request( 'GET', $url, null /*data*/, $headers, $options );
 		if ( 20 === (int) substr( (string) $response->status_code, 0, 2 ) ) {
 			return $url;
@@ -1467,7 +1466,7 @@ class Package_Command extends WP_CLI_Command {
 	 *                             to false.
 	 */
 	private function check_git_package_name( $package_name, $url = '', $version = '', $insecure = false ) {
-		if ( $url && ( ( strpos( $url, '://gitlab.com/' ) !== false ) || ( strpos( $url, 'git@gitlab.com:' ) !== false ) ) ) {
+		if ( $url && ( ( 'gitlab.com' === strtolower( (string) Utils\parse_url( $url, PHP_URL_HOST ) ) ) || ( 0 === strpos( $url, 'git@gitlab.com:' ) ) ) ) {
 			$matches = [];
 			preg_match( '#gitlab.com[:/](.*?)\.git#', $url, $matches );
 			return $this->check_gitlab_package_name( $matches[1], $version, $insecure );
