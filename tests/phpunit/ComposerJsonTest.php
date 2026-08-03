@@ -87,6 +87,9 @@ class ComposerJsonTest extends TestCase {
 		$actual   = $create_default_composer_json->invoke( $package, $expected );
 		$this->assertSame( $this->mac_safe_path( realpath( $expected ) ?: $expected ), $this->mac_safe_path( realpath( $actual ) ?: $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );
+		if ( ! Utils\is_windows() ) {
+			$this->assertSame( '0700', substr( sprintf( '%o', fileperms( dirname( $actual ) ) ), -4 ) );
+		}
 		unlink( $actual );
 		rmdir( dirname( $actual ) );
 	}
