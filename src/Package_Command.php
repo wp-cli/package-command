@@ -1283,10 +1283,6 @@ class Package_Command extends WP_CLI_Command {
 
 		$composer_dir = pathinfo( $composer_path, PATHINFO_DIRNAME );
 		if ( ! is_dir( $composer_dir ) ) {
-			// 0755 rather than 0700: the risk being guarded against is another local user
-			// *writing* into the packages directory, whose `vendor/autoload.php` is required on
-			// every WP-CLI run. Read access was never the problem, and revoking it breaks setups
-			// that point `WP_CLI_PACKAGES_DIR` at a location shared between users.
 			if ( ! @mkdir( $composer_dir, 0755, true ) ) { // @codingStandardsIgnoreLine
 				$error = error_get_last();
 				WP_CLI::error( sprintf( "Composer directory '%s' for packages couldn't be created: %s", $composer_dir, $error['message'] ) );
