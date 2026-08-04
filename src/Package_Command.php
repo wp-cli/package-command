@@ -1283,7 +1283,7 @@ class Package_Command extends WP_CLI_Command {
 
 		$composer_dir = pathinfo( $composer_path, PATHINFO_DIRNAME );
 		if ( ! is_dir( $composer_dir ) ) {
-			if ( ! @mkdir( $composer_dir, 0700, true ) ) { // @codingStandardsIgnoreLine
+			if ( ! @mkdir( $composer_dir, 0755, true ) ) { // @codingStandardsIgnoreLine
 				$error = error_get_last();
 				WP_CLI::error( sprintf( "Composer directory '%s' for packages couldn't be created: %s", $composer_dir, $error['message'] ) );
 			}

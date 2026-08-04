@@ -88,7 +88,15 @@ class ComposerJsonTest extends TestCase {
 		$this->assertSame( $this->mac_safe_path( realpath( $expected ) ?: $expected ), $this->mac_safe_path( realpath( $actual ) ?: $actual ) );
 		$this->assertTrue( false !== strpos( file_get_contents( $actual ), 'wp-cli/wp-cli' ) );
 		if ( ! Utils\is_windows() ) {
-			$this->assertSame( '0700', substr( sprintf( '%o', fileperms( dirname( $actual ) ) ), -4 ) );
+			// The invariant that matters is that no other local user can write into the packages
+			// directory, whose `vendor/autoload.php` is required on every WP-CLI run. The exact
+			// mode depends on the umask, so assert the write bits rather than the literal mode.
+			$perms = fileperms( dirname( $actual ) ) & 0777;
+			$this->assertSame(
+				0,
+				$perms & 0022,
+				sprintf( 'Packages directory must not be group- or world-writable, got %o.', $perms )
+			);
 		}
 		unlink( $actual );
 		rmdir( dirname( $actual ) );
