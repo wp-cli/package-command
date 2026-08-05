@@ -28,10 +28,10 @@ Feature: Update WP-CLI packages
   Scenario: Update a package with an update available
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/updateable-package:v1.0.0`
+    When I run `wp package install wp-cli-test/updateable-package:v3.0.0`
     Then STDOUT should contain:
       """
-      Installing package wp-cli-test/updateable-package (v1.0.0)
+      Installing package wp-cli-test/updateable-package (v3.0.0)
       """
     And STDOUT should contain:
       """
@@ -41,13 +41,13 @@ Feature: Update WP-CLI packages
     When I run `cat {PACKAGE_PATH}/composer.json`
     Then STDOUT should contain:
       """
-      "wp-cli-test/updateable-package": "v1.0.0"
+      "wp-cli-test/updateable-package": "v3.0.0"
       """
 
-    When I run `wp help updateable-package v1`
+    When I run `wp help updateable-package v3`
     Then STDOUT should contain:
       """
-      wp updateable-package v1
+      wp updateable-package v3
       """
 
     When I run `wp package update`
@@ -62,13 +62,13 @@ Feature: Update WP-CLI packages
       | name                           | update    |
       | wp-cli-test/updateable-package | available |
 
-    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}composer.json', str_replace( 'v1.0.0', '>=1.0.0', file_get_contents( '{PACKAGE_PATH}composer.json' ) ) );" --skip-wordpress`
+    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}composer.json', str_replace( 'v3.0.0', '>=3.0.0', file_get_contents( '{PACKAGE_PATH}composer.json' ) ) );" --skip-wordpress`
     Then the return code should be 0
 
     When I run `cat {PACKAGE_PATH}/composer.json`
     Then STDOUT should contain:
       """
-      "wp-cli-test/updateable-package": ">=1.0.0"
+      "wp-cli-test/updateable-package": ">=3.0.0"
       """
 
     When I run `wp package list --fields=name,update`
@@ -102,7 +102,7 @@ Feature: Update WP-CLI packages
   Scenario: Update a specific package by name
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/updateable-package:v1.0.0`
+    When I run `wp package install wp-cli-test/updateable-package:v3.0.0`
     Then STDOUT should contain:
       """
       Success: Package installed.
@@ -114,7 +114,7 @@ Feature: Update WP-CLI packages
       Success: Package installed.
       """
 
-    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}composer.json', str_replace( 'v1.0.0', '>=1.0.0', file_get_contents( '{PACKAGE_PATH}composer.json' ) ) );" --skip-wordpress`
+    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}composer.json', str_replace( 'v3.0.0', '>=3.0.0', file_get_contents( '{PACKAGE_PATH}composer.json' ) ) );" --skip-wordpress`
     Then the return code should be 0
 
     When I run `wp package update wp-cli-test/updateable-package`
@@ -135,7 +135,7 @@ Feature: Update WP-CLI packages
   Scenario: Update multiple specific packages by name
     Given an empty directory
 
-    When I run `wp package install wp-cli-test/updateable-package:v1.0.0`
+    When I run `wp package install wp-cli-test/updateable-package:v3.0.0`
     Then STDOUT should contain:
       """
       Success: Package installed.
@@ -147,7 +147,7 @@ Feature: Update WP-CLI packages
       Success: Package installed.
       """
 
-    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}composer.json', str_replace( 'v1.0.0', '>=1.0.0', file_get_contents( '{PACKAGE_PATH}composer.json' ) ) );" --skip-wordpress`
+    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}composer.json', str_replace( 'v3.0.0', '>=3.0.0', file_get_contents( '{PACKAGE_PATH}composer.json' ) ) );" --skip-wordpress`
     Then the return code should be 0
 
     When I run `wp package update wp-cli-test/updateable-package danielbachhuber/wp-cli-reset-post-date-command`
