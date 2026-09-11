@@ -1045,6 +1045,34 @@ Feature: Install WP-CLI packages
     And STDERR should be empty
     And STDOUT should be empty
 
+  Scenario: Install a package from a remote zip URL with files at archive root
+    Given an empty directory
+    And a composer-flat.json file:
+      """
+      {
+        "name": "wp-cli-test/remote-zip-flat-command",
+        "description": "Dummy flat-layout ZIP package for acceptance tests.",
+        "type": "wp-cli-package"
+      }
+      """
+    And I run `php -r '$zip = new ZipArchive(); $zip->open( "remote-zip-flat-command.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE ); $zip->addFromString( "composer.json", file_get_contents( "composer-flat.json" ) ); $zip->close();'`
+    And a PHP built-in web server
+
+    When I run `wp package install http://localhost:8080/remote-zip-flat-command.zip`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli-test/remote-zip-flat-command
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package is-installed wp-cli-test/remote-zip-flat-command`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
   Scenario: Install from a remote zip URL with invalid zip contents
     Given an empty directory
     And an invalid.zip file:
