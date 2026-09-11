@@ -1018,6 +1018,25 @@ Feature: Install WP-CLI packages
       """
 
   @github-api
+  Scenario: Install a package from a remote zip URL
+    Given an empty directory
+
+    When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli/archive/main.zip`
+    Then STDOUT should contain:
+      """
+      Installing package wp-cli/google-sitemap-generator-cli
+      """
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+
+    When I run `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    Then the return code should be 0
+    And STDERR should be empty
+    And STDOUT should be empty
+
+  @github-api
   Scenario: Install a package from Git using a shortened mixed-case package identifier but lowercase composer.json name
     Given an empty directory
 

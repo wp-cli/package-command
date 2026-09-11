@@ -276,7 +276,7 @@ class Package_Command extends WP_CLI_Command {
 			// Download the remote ZIP file to a temp directory
 			$temp = false;
 			if ( false !== strpos( $package_name, '://' ) ) {
-				$temp         = Utils\get_temp_dir() . uniqid( 'wp-cli-package_', true /*more_entropy*/ ) . '.zip';
+				$temp         = Utils\make_temp_file( 'wp-cli-package_', '.zip' );
 				$options      = [
 					'timeout'  => 600,
 					'filename' => $temp,
@@ -291,7 +291,7 @@ class Package_Command extends WP_CLI_Command {
 				}
 				$package_name = $temp;
 			}
-			$dir_package = Utils\get_temp_dir() . uniqid( 'wp-cli-package_', true /*more_entropy*/ );
+			$dir_package = Utils\make_temp_dir( 'wp-cli-package_' );
 			try {
 				// Extract the package to get the package name
 				Extractor::extract( $package_name, $dir_package );
