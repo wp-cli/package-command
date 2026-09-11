@@ -1017,21 +1017,30 @@ Feature: Install WP-CLI packages
       wp-cli/google-sitemap-generator-cli
       """
 
-  @github-api
   Scenario: Install a package from a remote zip URL
     Given an empty directory
+    And a remote-zip-test-command/composer.json file:
+      """
+      {
+        "name": "wp-cli-test/remote-zip-test-command",
+        "description": "Dummy package served over HTTP as a ZIP archive for acceptance tests.",
+        "type": "wp-cli-package"
+      }
+      """
+    And I run `php -r '$zip = new ZipArchive(); $zip->open( "remote-zip-test-command.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE ); $zip->addFromString( "remote-zip-test-command/composer.json", file_get_contents( "remote-zip-test-command/composer.json" ) ); $zip->close();'`
+    And a PHP built-in web server
 
-    When I run `wp package install https://github.com/wp-cli/google-sitemap-generator-cli/archive/main.zip`
+    When I run `wp package install http://localhost:8080/remote-zip-test-command.zip`
     Then STDOUT should contain:
       """
-      Installing package wp-cli/google-sitemap-generator-cli
+      Installing package wp-cli-test/remote-zip-test-command
       """
     And STDOUT should contain:
       """
       Success: Package installed.
       """
 
-    When I run `wp package is-installed wp-cli/google-sitemap-generator-cli`
+    When I run `wp package is-installed wp-cli-test/remote-zip-test-command`
     Then the return code should be 0
     And STDERR should be empty
     And STDOUT should be empty
