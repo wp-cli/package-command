@@ -1036,6 +1036,21 @@ Feature: Install WP-CLI packages
     And STDERR should be empty
     And STDOUT should be empty
 
+  Scenario: Install from a remote zip URL with invalid zip contents
+    Given an empty directory
+    And an invalid.zip file:
+      """
+      this is not a zip archive
+      """
+    And a PHP built-in web server
+
+    When I try `wp package install http://localhost:8080/invalid.zip`
+    Then the return code should be 1
+    And STDERR should contain:
+      """
+      ZipArchive failed to unzip
+      """
+
   @github-api
   Scenario: Install a package from Git using a shortened mixed-case package identifier but lowercase composer.json name
     Given an empty directory
