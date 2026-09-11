@@ -1455,4 +1455,4 @@ Feature: Install WP-CLI packages
       Package installation failed
       """
     # Git should report it couldn't authenticate, not prompt
-    And STDERR should match /fatal:|Could not read from remote repository|Repository not found/
+    And STDOUT should match /fatal:|Could not read from remote repository|Repository not found/
