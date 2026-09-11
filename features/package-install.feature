@@ -1051,6 +1051,17 @@ Feature: Install WP-CLI packages
       ZipArchive failed to unzip
       """
 
+  Scenario: Install from a remote zip URL that returns 404
+    Given an empty directory
+    And a PHP built-in web server
+
+    When I try `wp package install http://localhost:8080/missing.zip`
+    Then the return code should be 1
+    And STDERR should contain:
+      """
+      Couldn't download package from 'http://localhost:8080/missing.zip' (HTTP code 404).
+      """
+
   @github-api
   Scenario: Install a package from Git using a shortened mixed-case package identifier but lowercase composer.json name
     Given an empty directory
