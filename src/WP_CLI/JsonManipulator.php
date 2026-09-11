@@ -14,14 +14,37 @@
 
 namespace WP_CLI; // WP_CLI
 
-use Composer\Json\JsonFile; // WP_CLI
-use Composer\Repository\PlatformRepository;
 
 /**
  * @author Jordi Boggiano <j.boggiano@seld.be>
  */
 class JsonManipulator
 {
+    // WP_CLI: begin
+    private static function parseJson($json)
+    {
+        $decoded = json_decode($json, true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            throw new \InvalidArgumentException('Parse error: ' . json_last_error_msg());
+        }
+        return $decoded;
+    }
+
+    private static function encode($value)
+    {
+        $json = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (false === $json) {
+            throw new \InvalidArgumentException('Failed to encode JSON: ' . json_last_error_msg());
+        }
+        return $json;
+    }
+
+    private static function isPlatformPackage($name)
+    {
+        return (bool) preg_match('{^(?:php(?:-64bit|-ipv6|-zts|-debug)?|hhvm|(?:ext|lib)-[a-z0-9](?:[_.-]?[a-z0-9]+)*|composer(?:-(?:plugin|runtime)-api)?)$}iD', $name);
+    }
+    // WP_CLI: end
+
     private static $DEFINES = '(?(DEFINE)
        (?<number>   -? (?= [1-9]|0(?!\d) ) \d+ (\.\d+)? ([eE] [+-]? \d+)? )
        (?<boolean>   true | false | null )
@@ -57,7 +80,7 @@ class JsonManipulator
 
     public function addLink($type, $package, $constraint, $sortPackages = false, $caseInsensitive = false) // WP_CLI: caseInsensitive.
     {
-        $decoded = JsonFile::parseJson($this->contents);
+        $decoded = self::parseJson($this->contents);
 
         // no link of that type yet
         if (!isset($decoded[$type])) {
@@ -65,7 +88,7 @@ class JsonManipulator
         }
 
         $regex = '{'.self::$DEFINES.'^(?P<start>\s*\{\s*(?:(?&string)\s*:\s*(?&json)\s*,\s*)*?)'.
-            '(?P<property>'.preg_quote(JsonFile::encode($type)).'\s*:\s*)(?P<value>(?&json))(?P<end>.*)}sx';
+            '(?P<property>'.preg_quote(self::encode($type)).'\s*:\s*)(?P<value>(?&json))(?P<end>.*)}sx';
         if (!$this->pregMatch($regex, $this->contents, $matches)) {
             return false;
         }
@@ -88,7 +111,7 @@ class JsonManipulator
             $existingPackage = $packageMatches['package'];
             $packageRegex = str_replace('/', '\\\\?/', preg_quote($existingPackage));
             $links = preg_replace_callback('{'.self::$DEFINES.'"'.$packageRegex.'"(?P<separator>\s*:\s*)(?&string)}ix', function ($m) use ($existingPackage, $constraint) {
-                return JsonFile::encode(str_replace('\\/', '/', $existingPackage)) . $m['separator'] . '"' . $constraint . '"';
+                return self::encode(str_replace('\\/', '/', $existingPackage)) . $m['separator'] . '"' . $constraint . '"';
             }, $links);
         } else {
             if ($this->pregMatch('#^\s*\{\s*\S+.*?(\s*\}\s*)$#s', $links, $match)) {
@@ -96,13 +119,13 @@ class JsonManipulator
                 $links = preg_replace(
                     '{'.preg_quote($match[1]).'$}',
                     // addcslashes is used to double up backslashes/$ since preg_replace resolves them as back references otherwise, see #1588
-                    addcslashes(',' . $this->newline . $this->indent . $this->indent . JsonFile::encode($package).': '.JsonFile::encode($constraint) . $match[1], '\\$'),
+                    addcslashes(',' . $this->newline . $this->indent . $this->indent . self::encode($package).': '.self::encode($constraint) . $match[1], '\\$'),
                     $links
                 );
             } else {
                 // links empty
                 $links = '{' . $this->newline .
-                    $this->indent . $this->indent . JsonFile::encode($package).': '.JsonFile::encode($constraint) . $this->newline .
+                    $this->indent . $this->indent . self::encode($package).': '.self::encode($constraint) . $this->newline .
                     $this->indent . '}';
             }
         }
@@ -128,7 +151,7 @@ class JsonManipulator
     private function sortPackages(array &$packages = array())
     {
         $prefix = function ($requirement) {
-            if (PlatformRepository::isPlatformPackage($requirement)) {
+            if (self::isPlatformPackage($requirement)) {
                 return preg_replace(
                     array(
                         '/^php/',
@@ -196,7 +219,7 @@ class JsonManipulator
 
     public function addSubNode($mainNode, $name, $value, $caseInsensitive = false) // WP_CLI: caseInsensitive.
     {
-        $decoded = JsonFile::parseJson($this->contents);
+        $decoded = self::parseJson($this->contents);
 
         $subName = null;
         if (in_array($mainNode, array('config', 'extra')) && false !== strpos($name, '.')) {
@@ -216,7 +239,7 @@ class JsonManipulator
 
         // main node content not match-able
         $nodeRegex = '{'.self::$DEFINES.'^(?P<start> \s* \{ \s* (?: (?&string) \s* : (?&json) \s* , \s* )*?'.
-            preg_quote(JsonFile::encode($mainNode)).'\s*:\s*)(?P<content>(?&object))(?P<end>.*)}sx';
+            preg_quote(self::encode($mainNode)).'\s*:\s*)(?P<content>(?&object))(?P<end>.*)}sx';
 
         try {
             if (!$this->pregMatch($nodeRegex, $this->contents, $match)) {
@@ -276,7 +299,7 @@ class JsonManipulator
                 // child missing but non empty children
                 $children = preg_replace(
                     '#'.$whitespace.'}$#',
-                    addcslashes(',' . $this->newline . $this->indent . $this->indent . JsonFile::encode($name).': '.$this->format($value, 1) . $whitespace . '}', '\\$'),
+                    addcslashes(',' . $this->newline . $this->indent . $this->indent . self::encode($name).': '.$this->format($value, 1) . $whitespace . '}', '\\$'),
                     $children
                 );
             } else {
@@ -285,7 +308,7 @@ class JsonManipulator
                 }
 
                 // children present but empty
-                $children = '{' . $this->newline . $this->indent . $this->indent . JsonFile::encode($name).': '.$this->format($value, 1) . $whitespace . '}';
+                $children = '{' . $this->newline . $this->indent . $this->indent . self::encode($name).': '.$this->format($value, 1) . $whitespace . '}';
             }
         }
 
@@ -298,7 +321,7 @@ class JsonManipulator
 
     public function removeSubNode($mainNode, $name, $caseInsensitive = false) // WP_CLI: caseInsensitive.
     {
-        $decoded = JsonFile::parseJson($this->contents);
+        $decoded = self::parseJson($this->contents);
 
         // no node or empty node
         if (empty($decoded[$mainNode])) {
@@ -309,7 +332,7 @@ class JsonManipulator
 		if ( $caseInsensitive ) {
 			// This is more or less a copy of the code at the start of `addLink()` above.
 			$regex = '{'.self::$DEFINES.'^(?P<start>\s*\{\s*(?:(?&string)\s*:\s*(?&json)\s*,\s*)*?)'.
-				'(?P<property>'.preg_quote(JsonFile::encode($mainNode)).'\s*:\s*)(?P<value>(?&json))(?P<end>.*)}sx';
+				'(?P<property>'.preg_quote(self::encode($mainNode)).'\s*:\s*)(?P<value>(?&json))(?P<end>.*)}sx';
 			if (!$this->pregMatch($regex, $this->contents, $matches)) {
 				return true;
 			}
@@ -332,7 +355,7 @@ class JsonManipulator
 
         // no node content match-able
         $nodeRegex = '{'.self::$DEFINES.'^(?P<start> \s* \{ \s* (?: (?&string) \s* : (?&json) \s* , \s* )*?'.
-            preg_quote(JsonFile::encode($mainNode)).'\s*:\s*)(?P<content>(?&object))(?P<end>.*)}sx';
+            preg_quote(self::encode($mainNode)).'\s*:\s*)(?P<content>(?&object))(?P<end>.*)}sx';
         try {
             if (!$this->pregMatch($nodeRegex, $this->contents, $match)) {
                 return false;
@@ -418,19 +441,19 @@ class JsonManipulator
 
     public function addMainKey($key, $content)
     {
-        $decoded = JsonFile::parseJson($this->contents);
+        $decoded = self::parseJson($this->contents);
         $content = $this->format($content);
 
         // key exists already
         $regex = '{'.self::$DEFINES.'^(?P<start>\s*\{\s*(?:(?&string)\s*:\s*(?&json)\s*,\s*)*?)'.
-            '(?P<key>'.preg_quote(JsonFile::encode($key)).'\s*:\s*(?&json))(?P<end>.*)}sx';
+            '(?P<key>'.preg_quote(self::encode($key)).'\s*:\s*(?&json))(?P<end>.*)}sx';
         if (isset($decoded[$key]) && $this->pregMatch($regex, $this->contents, $matches)) {
             // invalid match due to un-regexable content, abort
             if (!@json_decode('{'.$matches['key'].'}')) {
                 return false;
             }
 
-            $this->contents = $matches['start'] . JsonFile::encode($key).': '.$content . $matches['end'];
+            $this->contents = $matches['start'] . self::encode($key).': '.$content . $matches['end'];
 
             return true;
         }
@@ -439,7 +462,7 @@ class JsonManipulator
         if ($this->pregMatch('#[^{\s](\s*)\}$#', $this->contents, $match)) {
             $this->contents = preg_replace(
                 '#'.$match[1].'\}$#',
-                addcslashes(',' . $this->newline . $this->indent . JsonFile::encode($key). ': '. $content . $this->newline . '}', '\\$'),
+                addcslashes(',' . $this->newline . $this->indent . self::encode($key). ': '. $content . $this->newline . '}', '\\$'),
                 $this->contents
             );
 
@@ -449,7 +472,7 @@ class JsonManipulator
         // append at the end of the file
         $this->contents = preg_replace(
             '#\}$#',
-            addcslashes($this->indent . JsonFile::encode($key). ': '.$content . $this->newline . '}', '\\$'),
+            addcslashes($this->indent . self::encode($key). ': '.$content . $this->newline . '}', '\\$'),
             $this->contents
         );
 
@@ -458,7 +481,7 @@ class JsonManipulator
 
     public function removeMainKey($key)
     {
-        $decoded = JsonFile::parseJson($this->contents);
+        $decoded = self::parseJson($this->contents);
 
         if (!isset($decoded[$key])) {
             return true;
@@ -466,7 +489,7 @@ class JsonManipulator
 
         // key exists already
         $regex = '{'.self::$DEFINES.'^(?P<start>\s*\{\s*(?:(?&string)\s*:\s*(?&json)\s*,\s*)*?)'.
-            '(?P<removal>'.preg_quote(JsonFile::encode($key)).'\s*:\s*(?&json))\s*,?\s*(?P<end>.*)}sx';
+            '(?P<removal>'.preg_quote(self::encode($key)).'\s*:\s*(?&json))\s*,?\s*(?P<end>.*)}sx';
         if ($this->pregMatch($regex, $this->contents, $matches)) {
             // invalid match due to un-regexable content, abort
             if (!@json_decode('{'.$matches['removal'].'}')) {
@@ -505,13 +528,13 @@ class JsonManipulator
             $out = '{' . $this->newline;
             $elems = array();
             foreach ($data as $key => $val) {
-                $elems[] = str_repeat($this->indent, $depth + 2) . JsonFile::encode($key). ': '.$this->format($val, $depth + 1);
+                $elems[] = str_repeat($this->indent, $depth + 2) . self::encode($key). ': '.$this->format($val, $depth + 1);
             }
 
             return $out . implode(','.$this->newline, $elems) . $this->newline . str_repeat($this->indent, $depth + 1) . '}';
         }
 
-        return JsonFile::encode($data);
+        return self::encode($data);
     }
 
     protected function detectIndenting()
