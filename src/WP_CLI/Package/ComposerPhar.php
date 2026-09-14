@@ -11,6 +11,9 @@ use WP_CLI\Utils;
  */
 class ComposerPhar {
 
+	const VERSIONS_URL = 'https://getcomposer.org/versions';
+	const VERSIONS_TTL = 86400;
+
 	private $insecure;
 	private $path;
 
@@ -35,16 +38,11 @@ class ComposerPhar {
 
 		$cache   = WP_CLI::get_cache();
 		$version = null;
-		try {
-			$versions = json_decode( $this->request( 'https://getcomposer.org/versions' )->body, true );
-			foreach ( $versions['stable'] ?? [] as $release ) {
-				if ( preg_match( '/^2\.\d+\.\d+$/D', $release['version'] ) && $release['min-php'] <= PHP_VERSION_ID ) {
-					$version = $release['version'];
-					break;
-				}
+		foreach ( $this->versions( $cache )['stable'] ?? [] as $release ) {
+			if ( preg_match( '/^2\.\d+\.\d+$/D', $release['version'] ) && $release['min-php'] <= PHP_VERSION_ID ) {
+				$version = $release['version'];
+				break;
 			}
-		} catch ( \Exception $e ) {
-			WP_CLI::debug( $e->getMessage(), 'packages' );
 		}
 		if ( null === $version ) {
 			// Offline or getcomposer.org unreachable: reuse the newest Composer already in the cache.
@@ -96,6 +94,43 @@ class ComposerPhar {
 		}
 		$this->path = $path;
 		return $path;
+	}
+
+	/**
+	 * The release list from getcomposer.org. A copy lives in the cache for a day, so a run of package
+	 * commands costs one request; when the network is down, a stale copy still names the version to use.
+	 *
+	 * @return array Decoded list, empty when neither the network nor the cache has one.
+	 */
+	private function versions( $cache ) {
+		$key = 'composer/versions.json';
+		if ( $cache->is_enabled() ) {
+			$fresh = $cache->read( $key, self::VERSIONS_TTL );
+			if ( false !== $fresh && is_array( json_decode( $fresh, true ) ) ) {
+				return json_decode( $fresh, true );
+			}
+		}
+		try {
+			$body     = $this->request( self::VERSIONS_URL )->body;
+			$versions = json_decode( $body, true );
+			if ( ! is_array( $versions ) ) {
+				throw new RuntimeException( 'Composer version list is not valid JSON.' );
+			}
+			if ( $cache->is_enabled() ) {
+				$cache->write( $key, $body );
+			}
+			return $versions;
+		} catch ( \Exception $e ) {
+			WP_CLI::debug( $e->getMessage(), 'packages' );
+		}
+		if ( $cache->is_enabled() ) {
+			$stale = $cache->read( $key );
+			if ( false !== $stale && is_array( json_decode( $stale, true ) ) ) {
+				WP_CLI::debug( 'Using the cached Composer version list; getcomposer.org is unreachable.', 'packages' );
+				return json_decode( $stale, true );
+			}
+		}
+		return [];
 	}
 
 	/**
