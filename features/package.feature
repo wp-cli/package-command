@@ -68,16 +68,21 @@ Feature: Manage WP-CLI packages
     And I run `wp package path`
     Then save STDOUT as {PACKAGE_PATH}
 
-    When I run `cp {PACKAGE_PATH}/composer.json before.json`
-    And I try `wp package install runcommand/hook:999999.0.0`
+    When I run `wp eval "echo md5_file( '{PACKAGE_PATH}/composer.json' );" --skip-wordpress`
+    Then save STDOUT as {COMPOSER_JSON_MD5}
+
+    When I try `wp package install runcommand/hook:999999.0.0`
     Then the return code should not be 0
     And STDERR should contain:
       """
       Reverted composer.json.
       """
 
-    When I run `cmp before.json {PACKAGE_PATH}/composer.json`
-    Then the return code should be 0
+    When I run `wp eval "echo md5_file( '{PACKAGE_PATH}/composer.json' );" --skip-wordpress`
+    Then STDOUT should be:
+      """
+      {COMPOSER_JSON_MD5}
+      """
 
     Given a kept/composer.json file:
       """
@@ -91,16 +96,21 @@ Feature: Manage WP-CLI packages
       """
 
     When I run `wp eval "file_put_contents( '{PACKAGE_PATH}/composer.json', str_replace( '1.0.0', '999999.0.0', file_get_contents( '{PACKAGE_PATH}/composer.json' ) ) );" --skip-wordpress`
-    And I run `cp {PACKAGE_PATH}/composer.json before.json`
-    And I try `wp package uninstall runcommand/hook`
+    And I run `wp eval "echo md5_file( '{PACKAGE_PATH}/composer.json' );" --skip-wordpress`
+    Then save STDOUT as {COMPOSER_JSON_MD5}
+
+    When I try `wp package uninstall runcommand/hook`
     Then the return code should not be 0
     And STDERR should contain:
       """
       Reverted composer.json.
       """
 
-    When I run `cmp before.json {PACKAGE_PATH}/composer.json`
-    Then the return code should be 0
+    When I run `wp eval "echo md5_file( '{PACKAGE_PATH}/composer.json' );" --skip-wordpress`
+    Then STDOUT should be:
+      """
+      {COMPOSER_JSON_MD5}
+      """
 
   @github-api
   Scenario: Try to run with a bad WP_CLI_PACKAGES_DIR/composer.json
@@ -332,9 +342,10 @@ Feature: Manage WP-CLI packages
       {SUITE_CACHE_DIR}/composer/composer-
       """
 
-    When I run `ls {SUITE_CACHE_DIR}/composer/composer-*.phar`
+    When I run `wp eval "echo current( glob( '{SUITE_CACHE_DIR}/composer/composer-*.phar' ) );" --skip-wordpress`
     Then save STDOUT as {COMPOSER_PHAR}
     And the {COMPOSER_PHAR} file should exist
+    And the {SUITE_CACHE_DIR}/composer/versions.json file should exist
 
     When I run `wp package update`
     Then STDERR should be empty
@@ -355,7 +366,7 @@ Feature: Manage WP-CLI packages
       """
 
     When I run `wp package install ./local-package`
-    And I run `ls {SUITE_CACHE_DIR}/composer/composer-*.phar`
+    And I run `wp eval "echo current( glob( '{SUITE_CACHE_DIR}/composer/composer-*.phar' ) );" --skip-wordpress`
     Then save STDOUT as {COMPOSER_PHAR}
 
     When I run `wp package uninstall local/binary-test`
