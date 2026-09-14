@@ -1099,6 +1099,16 @@ Feature: Install WP-CLI packages
       Couldn't download package from 'http://localhost:8080/missing.zip' (HTTP code 404).
       """
 
+  Scenario: Install from a remote zip URL that cannot be reached
+    Given an empty directory
+
+    When I try `wp package install http://localhost:1/unreachable.zip`
+    Then the return code should be 1
+    And STDERR should contain:
+      """
+      Error: Failed to get url 'http://localhost:1/unreachable.zip'
+      """
+
   @github-api
   Scenario: Install a package from Git using a shortened mixed-case package identifier but lowercase composer.json name
     Given an empty directory
