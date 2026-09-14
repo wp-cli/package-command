@@ -46,11 +46,13 @@ class ComposerPhar {
 		}
 		if ( null === $version ) {
 			// Offline or getcomposer.org unreachable: reuse the newest Composer already in the cache.
-			$cached = self::cached_versions( $cache );
-			if ( $cached ) {
-				$this->path = $cache->has( "composer/composer-{$cached[0]}.phar" );
-				WP_CLI::debug( "Using cached Composer {$cached[0]}; version list unavailable.", 'packages' );
-				return $this->path;
+			foreach ( self::cached_versions( $cache ) as $cached ) {
+				$path = $cache->has( "composer/composer-{$cached}.phar" ); // False once the cache's expiry has passed.
+				if ( $path ) {
+					$this->path = $path;
+					WP_CLI::debug( "Using cached Composer {$cached}; version list unavailable.", 'packages' );
+					return $path;
+				}
 			}
 			$version = 'latest-stable';
 		}
