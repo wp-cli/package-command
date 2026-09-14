@@ -1028,7 +1028,7 @@ Feature: Install WP-CLI packages
       }
       """
     And I run `php -r '$zip = new ZipArchive(); $zip->open( "remote-zip-test-command.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE ); $zip->addFromString( "remote-zip-test-command/composer.json", file_get_contents( "remote-zip-test-command/composer.json" ) ); $zip->close();'`
-    And I launch in the background `php -S localhost:8080 -t .`
+    And a PHP built-in web server
 
     When I run `wp package install http://localhost:8080/remote-zip-test-command.zip`
     Then STDOUT should contain:
@@ -1056,7 +1056,7 @@ Feature: Install WP-CLI packages
       }
       """
     And I run `php -r '$zip = new ZipArchive(); $zip->open( "remote-zip-flat-command.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE ); $zip->addFromString( "composer.json", file_get_contents( "composer-flat.json" ) ); $zip->close();'`
-    And I launch in the background `php -S localhost:8080 -t .`
+    And a PHP built-in web server
 
     When I run `wp package install http://localhost:8080/remote-zip-flat-command.zip`
     Then STDOUT should contain:
@@ -1079,7 +1079,7 @@ Feature: Install WP-CLI packages
       """
       this is not a zip archive
       """
-    And I launch in the background `php -S localhost:8080 -t .`
+    And a PHP built-in web server
 
     When I try `wp package install http://localhost:8080/invalid.zip`
     Then the return code should be 1
@@ -1090,7 +1090,7 @@ Feature: Install WP-CLI packages
 
   Scenario: Install from a remote zip URL that returns 404
     Given an empty directory
-    And I launch in the background `php -S localhost:8080 -t .`
+    And a PHP built-in web server
 
     When I try `wp package install http://localhost:8080/missing.zip`
     Then the return code should be 1
