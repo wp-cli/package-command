@@ -278,13 +278,19 @@ class Package_Command extends WP_CLI_Command {
 			if ( false !== strpos( $package_name, '://' ) ) {
 				$temp         = Utils\make_temp_file( 'wp-cli-package_', '.zip' );
 				$options      = [
-					'timeout'  => 600,
-					'filename' => $temp,
-					'insecure' => $insecure,
+					'timeout'       => 600,
+					'filename'      => $temp,
+					'insecure'      => $insecure,
+					'halt_on_error' => false, // Handle failures here so the temp file is cleaned up.
 				];
 				$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
 				$headers      = $gitlab_token && 'gitlab.com' === strtolower( (string) Utils\parse_url( $package_name, PHP_URL_HOST ) ) ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
-				$response     = Utils\http_request( 'GET', $package_name, null, $headers, $options );
+				try {
+					$response = Utils\http_request( 'GET', $package_name, null, $headers, $options );
+				} catch ( Exception $e ) {
+					@unlink( $temp ); // @codingStandardsIgnoreLine
+					WP_CLI::error( $e->getMessage() );
+				}
 				if ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 					@unlink( $temp ); // @codingStandardsIgnoreLine
 					WP_CLI::error( sprintf( "Couldn't download package from '%s' (HTTP code %d).", $package_name, $response->status_code ) );
