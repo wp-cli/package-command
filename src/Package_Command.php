@@ -795,12 +795,14 @@ class Package_Command extends WP_CLI_Command {
 
 		file_put_contents( $json_path, $manipulator->getContents() );
 		WP_CLI::log( 'Removing package directories and regenerating autoloader...' );
+		WP_CLI::log( '---' );
 		$res = false;
 		try {
-			$res = ( new ComposerPhar( $insecure ) )->run( [ 'update', '--prefer-source' ], dirname( $json_path ), true );
+			$res = ( new ComposerPhar( $insecure ) )->run( [ 'update', '--prefer-source' ], dirname( $json_path ) );
 		} catch ( Exception $e ) {
 			WP_CLI::warning( $e->getMessage() );
 		}
+		WP_CLI::log( '---' );
 
 		if ( 0 === $res ) {
 			$revert = false;
