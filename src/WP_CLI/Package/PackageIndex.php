@@ -22,13 +22,21 @@ class PackageIndex {
 	public function packages() {
 		$base     = 'https://wp-cli.org/package-index/';
 		$index    = $this->fetch( $base . 'packages.json' );
-		$packages = self::parse( $index );
-		foreach ( $index['includes'] ?? [] as $file => $metadata ) {
-			$packages = array_replace( $packages, self::parse( $this->fetch( $base . $file ) ) );
+		$packages = self::parse( $index['data'] );
+		foreach ( $index['data']['includes'] ?? [] as $file => $metadata ) {
+			$include = $this->fetch( $base . $file );
+			// The index names each include by its SHA-1, as Composer repositories do; a mismatch is a bad download.
+			if ( isset( $metadata['sha1'] ) && ! hash_equals( strtolower( (string) $metadata['sha1'] ), sha1( $include['body'] ) ) ) {
+				throw new RuntimeException( "Package index include failed SHA-1 verification: {$file}" );
+			}
+			$packages = array_replace( $packages, self::parse( $include['data'] ) );
 		}
 		return $packages;
 	}
 
+	/**
+	 * @return array{data: array, body: string} Decoded JSON and the bytes it came from.
+	 */
 	private function fetch( $url ) {
 		$response = Utils\http_request(
 			'GET',
@@ -44,7 +52,10 @@ class PackageIndex {
 		if ( 200 !== $response->status_code || ! is_array( $data ) ) {
 			throw new RuntimeException( "Failed to read package index: {$url}" );
 		}
-		return $data;
+		return [
+			'data' => $data,
+			'body' => (string) $response->body,
+		];
 	}
 
 	/**
