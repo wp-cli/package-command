@@ -49,11 +49,17 @@ class InstalledPackages {
 		$package['update']         = null === $outdated ? 'error' : 'none';
 		$package['update_version'] = null === $outdated ? 'error' : '';
 		foreach ( $outdated['installed'] ?? [] as $candidate ) {
-			if ( strtolower( $package['name'] ) === strtolower( $candidate['name'] ) && $candidate['latest'] !== $package['version'] ) {
-				$package['update']         = 'available';
-				$package['update_version'] = $candidate['latest'];
+			if ( strtolower( $package['name'] ) !== strtolower( $candidate['name'] ) ) {
+				continue;
+			}
+			// Composer appends the source reference to dev versions ("dev-main 180a970"); the column shows the version.
+			$latest = explode( ' ', trim( (string) $candidate['latest'] ), 2 )[0];
+			if ( 'up-to-date' === ( $candidate['latest-status'] ?? '' ) || $candidate['latest'] === $package['version'] ) {
 				break;
 			}
+			$package['update']         = 'available';
+			$package['update_version'] = $latest;
+			break;
 		}
 		return $package;
 	}

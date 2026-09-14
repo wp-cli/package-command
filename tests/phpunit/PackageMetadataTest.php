@@ -82,5 +82,24 @@ class PackageMetadataTest extends TestCase {
 		$this->assertSame( '', InstalledPackages::with_update( $package, [] )['update_version'] );
 		$this->assertSame( 'error', InstalledPackages::with_update( $package, null )['update'] );
 		$this->assertSame( 'error', InstalledPackages::with_update( $package, null )['update_version'] );
+
+		$dev     = [
+			'name'    => 'vendor/branch',
+			'version' => 'dev-main',
+		];
+		$updates = [
+			'installed' => [
+				[
+					'name'          => 'vendor/branch',
+					'latest'        => 'dev-main 180a970',
+					'latest-status' => 'semver-safe-update',
+				],
+			],
+		];
+		$updated = InstalledPackages::with_update( $dev, $updates );
+		$this->assertSame( 'available', $updated['update'] );
+		$this->assertSame( 'dev-main', $updated['update_version'] );
+		$updates['installed'][0]['latest-status'] = 'up-to-date';
+		$this->assertSame( 'none', InstalledPackages::with_update( $dev, $updates )['update'] );
 	}
 }
