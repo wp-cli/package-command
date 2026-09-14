@@ -409,7 +409,7 @@ class Package_Command extends WP_CLI_Command {
 		// Try running the installer, but revert composer.json if failed
 		WP_CLI::log( 'Using Composer to install the package...' );
 		WP_CLI::log( '---' );
-		$res = 1;
+		$res = false;
 		try {
 			$res = ( new ComposerPhar( $insecure ) )->run( [ 'update', '--prefer-source' ], dirname( $json_path ) );
 		} catch ( Exception $e ) {
@@ -424,7 +424,7 @@ class Package_Command extends WP_CLI_Command {
 			$revert = false;
 			WP_CLI::success( 'Package installed.' );
 		} else {
-			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
+			$res_msg = false === $res ? '' : " (Composer return code {$res})"; // False: Composer never started.
 			WP_CLI::debug( "composer.json content:\n" . file_get_contents( $json_path ), 'packages' );
 			WP_CLI::error( "Package installation failed{$res_msg}." );
 		}
@@ -684,7 +684,7 @@ class Package_Command extends WP_CLI_Command {
 
 		WP_CLI::log( 'Using Composer to update packages...' );
 		WP_CLI::log( '---' );
-		$res = 1;
+		$res = false;
 		try {
 			$res = ( new ComposerPhar() )->run( array_merge( [ 'update' ], $packages_to_update, [ '--prefer-source' ] ), $packages_dir );
 			foreach ( InstalledPackages::read( $installed_path ) as $name => $package ) {
@@ -723,7 +723,7 @@ class Package_Command extends WP_CLI_Command {
 				WP_CLI::success( 'Packages updated.' );
 			}
 		} else {
-			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
+			$res_msg = false === $res ? '' : " (Composer return code {$res})"; // False: Composer never started.
 			WP_CLI::error( "Failed to update packages{$res_msg}." );
 		}
 	}
@@ -795,7 +795,7 @@ class Package_Command extends WP_CLI_Command {
 
 		file_put_contents( $json_path, $manipulator->getContents() );
 		WP_CLI::log( 'Removing package directories and regenerating autoloader...' );
-		$res = 1;
+		$res = false;
 		try {
 			$res = ( new ComposerPhar( $insecure ) )->run( [ 'update', '--prefer-source' ], dirname( $json_path ), true );
 		} catch ( Exception $e ) {
@@ -806,7 +806,7 @@ class Package_Command extends WP_CLI_Command {
 			$revert = false;
 			WP_CLI::success( 'Uninstalled package.' );
 		} else {
-			$res_msg = $res ? " (Composer return code {$res})" : ''; // $res may be null apparently.
+			$res_msg = false === $res ? '' : " (Composer return code {$res})"; // False: Composer never started.
 			WP_CLI::error( "Package removal failed{$res_msg}." );
 		}
 	}
