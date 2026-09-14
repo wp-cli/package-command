@@ -687,21 +687,31 @@ class Package_Command extends WP_CLI_Command {
 		$res = false;
 		try {
 			$res = ( new ComposerPhar() )->run( array_merge( [ 'update' ], $packages_to_update, [ '--prefer-source' ] ), $packages_dir );
-			foreach ( InstalledPackages::read( $installed_path ) as $name => $package ) {
-				if ( isset( $before[ $name ] ) && ( $before[ $name ]['version'] !== $package['version'] || $before[ $name ]['source_reference'] !== $package['source_reference'] ) ) {
-					$updated_packages[] = $name;
-				}
-			}
 		} catch ( Exception $e ) {
 			WP_CLI::warning( $e->getMessage() );
 		}
 		WP_CLI::log( '---' );
 
+		// Composer succeeded; what it changed is a report, and an unreadable report does not undo the update.
+		$report = true;
+		if ( 0 === $res ) {
+			try {
+				foreach ( InstalledPackages::read( $installed_path ) as $name => $package ) {
+					if ( isset( $before[ $name ] ) && ( $before[ $name ]['version'] !== $package['version'] || $before[ $name ]['source_reference'] !== $package['source_reference'] ) ) {
+						$updated_packages[] = $name;
+					}
+				}
+			} catch ( Exception $e ) {
+				WP_CLI::warning( $e->getMessage() );
+				$report = false;
+			}
+		}
+
 		// TODO: The --insecure (to be added here) flag should cause another Composer run with verify disabled.
 
 		if ( 0 === $res ) {
 			$num_packages = count( $packages_to_update );
-			if ( $num_packages > 0 ) {
+			if ( $num_packages > 0 && $report ) {
 				// When specific packages were requested, report on actual updates
 				$num_updated = count( array_intersect( $packages_to_update, $updated_packages ) );
 				if ( 0 === $num_updated ) {
