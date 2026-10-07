@@ -1743,12 +1743,6 @@ class Package_Command extends WP_CLI_Command {
 		$revert_fail_msg = "Failed to revert composer.json.\n";
 		$memory_msg      = "WP-CLI ran out of memory. Please see https://bit.ly/wpclimem for further help.\n";
 		$memory_string   = 'Allowed memory size of';
-		$error_array     = [
-			'type'    => 42,
-			'message' => 'Some random dummy string to take up memory',
-			'file'    => 'Another random string, which would be a filename this time',
-			'line'    => 314,
-		];
 
 		register_shutdown_function(
 			static function () use (
@@ -1758,8 +1752,7 @@ class Package_Command extends WP_CLI_Command {
 				$revert_msg,
 				$revert_fail_msg,
 				$memory_msg,
-				$memory_string,
-				$error_array
+				$memory_string
 			) {
 				if ( $revert ) {
 					if ( false !== file_put_contents( $json_path, $composer_backup ) ) {
