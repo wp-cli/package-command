@@ -1,0 +1,15 @@
+{
+  "packages": {
+    "Vendor/Command": {
+      "v1.0.0": {
+        "name": "Vendor/Command",
+        "description": "A command",
+        "authors": [{"name": "First Author"}, {"name": "Second Author"}]
+      },
+      "dev-main": {"name": "Vendor/Command"}
+    },
+    "vendor/other": {
+      "dev-master": {"name": "vendor/other"}
+    }
+  }
+}

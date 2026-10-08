@@ -61,43 +61,55 @@ Feature: Manage WP-CLI packages
     When I run `wp --require=bad-command.php package list`
     Then STDERR should be empty
 
-  @require-php-7.2 @broken
-  Scenario: Revert the WP-CLI packages composer.json when fail to install/uninstall a package due to memory limit
+  Scenario: Revert composer.json when Composer cannot resolve an install or uninstall
     Given an empty directory
-    When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=10M -ddisable_functions=ini_set} package install runcommand/hook`
+
+    When I run `wp package list --skip-update-check`
+    And I run `wp package path`
+    Then save STDOUT as {PACKAGE_PATH}
+
+    When I run `wp eval "echo md5_file( '{PACKAGE_PATH}/composer.json' );" --skip-wordpress`
+    Then save STDOUT as {COMPOSER_JSON_MD5}
+
+    When I try `wp package install runcommand/hook:999999.0.0`
     Then the return code should not be 0
     And STDERR should contain:
       """
       Reverted composer.json.
       """
 
-    When I run `wp package install runcommand/hook`
+    When I run `wp eval "echo md5_file( '{PACKAGE_PATH}/composer.json' );" --skip-wordpress`
+    Then STDOUT should be:
+      """
+      {COMPOSER_JSON_MD5}
+      """
+
+    Given a kept/composer.json file:
+      """
+      {"name":"local/kept","version":"1.0.0"}
+      """
+    When I run `wp package install ./kept`
+    And I run `wp package install runcommand/hook`
     Then STDOUT should contain:
       """
       Success: Package installed.
       """
 
-    When I try `{INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=10M -ddisable_functions=ini_set} package uninstall runcommand/hook`
+    When I run `wp eval "file_put_contents( '{PACKAGE_PATH}/composer.json', str_replace( '1.0.0', '999999.0.0', file_get_contents( '{PACKAGE_PATH}/composer.json' ) ) );" --skip-wordpress`
+    And I run `wp eval "echo md5_file( '{PACKAGE_PATH}/composer.json' );" --skip-wordpress`
+    Then save STDOUT as {COMPOSER_JSON_MD5}
+
+    When I try `wp package uninstall runcommand/hook`
     Then the return code should not be 0
     And STDERR should contain:
       """
       Reverted composer.json.
       """
 
-    # Create a default composer.json first to compare.
-    When I run `WP_CLI_PACKAGES_DIR={RUN_DIR}/mypackages wp package list`
-    Then the {RUN_DIR}/mypackages/composer.json file should exist
-    And save the {RUN_DIR}/mypackages/composer.json file as {MYPACKAGES_COMPOSER_JSON}
-
-    When I try `WP_CLI_PACKAGES_DIR={RUN_DIR}/mypackages {INVOKE_WP_CLI_WITH_PHP_ARGS--dmemory_limit=10M -ddisable_functions=ini_set} package install runcommand/hook`
-    Then the return code should not be 0
-    And STDERR should contain:
+    When I run `wp eval "echo md5_file( '{PACKAGE_PATH}/composer.json' );" --skip-wordpress`
+    Then STDOUT should be:
       """
-      Reverted composer.json.
-      """
-    And the mypackages/composer.json file should be:
-      """
-      {MYPACKAGES_COMPOSER_JSON}
+      {COMPOSER_JSON_MD5}
       """
 
   @github-api
@@ -170,12 +182,9 @@ Feature: Manage WP-CLI packages
     Then the return code should be 1
     And STDERR should contain:
       """
-      Error: Package installation failed.
+      Error: Package installation failed (Composer return code 1).
       """
-    And STDERR should contain:
-      """
-      Repository not found
-      """
+    And STDOUT should match /Repository not found|Could not read from remote repository/
     And STDERR should contain:
       """
       Reverted composer.json.
@@ -193,12 +202,9 @@ Feature: Manage WP-CLI packages
     Then the return code should be 1
     And STDERR should contain:
       """
-      Error: Failed to update packages.
+      Error: Failed to update packages (Composer return code 1).
       """
-    And STDERR should contain:
-      """
-      Repository not found
-      """
+    And STDOUT should match /Repository not found|Could not read from remote repository/
     And STDERR should not contain:
       """
       Reverted composer.json.
@@ -316,3 +322,68 @@ Feature: Manage WP-CLI packages
 
     When I run `wp package uninstall runcommand/hook`
     Then STDERR should be empty
+
+  Scenario: Download Composer once into the WP-CLI cache
+    When I run `wp package path`
+    Then save STDOUT as {PACKAGE_PATH}
+
+    Given an empty directory
+    And an empty cache
+    And a local-package/composer.json file:
+      """
+      {"name":"local/cache-test","version":"1.0.0"}
+      """
+
+    When I run `wp package install ./local-package`
+    Then STDERR should be empty
+    And STDOUT should match /Downloading Composer 2\.[0-9.]+ to .*composer\/composer-2\.[0-9.]+\.phar/
+    And STDOUT should contain:
+      """
+      {SUITE_CACHE_DIR}/composer/composer-
+      """
+
+    When I run `wp eval "echo current( glob( '{SUITE_CACHE_DIR}/composer/composer-*.phar' ) );" --skip-wordpress`
+    Then save STDOUT as {COMPOSER_PHAR}
+    And the {COMPOSER_PHAR} file should exist
+    And the {SUITE_CACHE_DIR}/composer/versions.json file should exist
+
+    When I run `wp package update`
+    Then STDERR should be empty
+    And STDOUT should not contain:
+      """
+      Downloading Composer
+      """
+
+  Scenario: Install using an explicitly configured Composer Phar
+    When I run `wp package path`
+    Then save STDOUT as {PACKAGE_PATH}
+
+    Given an empty directory
+    And an empty cache
+    And a local-package/composer.json file:
+      """
+      {"name":"local/binary-test","version":"1.0.0"}
+      """
+
+    When I run `wp package install ./local-package`
+    And I run `wp eval "echo current( glob( '{SUITE_CACHE_DIR}/composer/composer-*.phar' ) );" --skip-wordpress`
+    Then save STDOUT as {COMPOSER_PHAR}
+
+    When I run `wp package uninstall local/binary-test`
+    And I run `WP_CLI_COMPOSER_BINARY={COMPOSER_PHAR} wp package install ./local-package`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      Success: Package installed.
+      """
+    And STDOUT should not contain:
+      """
+      Downloading Composer
+      """
+
+    When I run `WP_CLI_COMPOSER_BINARY={RUN_DIR}/missing wp package list --skip-update-check`
+    Then STDERR should be empty
+    And STDOUT should contain:
+      """
+      local/binary-test
+      """
