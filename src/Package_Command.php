@@ -169,10 +169,16 @@ class Package_Command extends WP_CLI_Command {
 	 * Packages are required to be a valid Composer package, and can be
 	 * specified as:
 	 *
-	 * * Package name from WP-CLI's package index.
+	 * * Package name, such as `wp-cli/server-command`.
 	 * * Git URL accessible by the current shell user.
 	 * * Path to a directory on the local machine.
 	 * * Local or remote .zip file.
+	 *
+	 * A package name is looked up in WP-CLI's package index, which is deprecated,
+	 * and then on Packagist. If neither has it, WP-CLI tries
+	 * `https://github.com/<package-name>.git` and then
+	 * `https://gitlab.com/<package-name>.git`. Set the `GITHUB_TOKEN` or
+	 * `GITLAB_TOKEN` environment variable to avoid rate limiting on that check.
 	 *
 	 * Packages are installed to `~/.wp-cli/packages/` by default. Use the
 	 * `WP_CLI_PACKAGES_DIR` environment variable to provide a custom path.
