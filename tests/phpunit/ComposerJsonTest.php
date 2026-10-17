@@ -208,6 +208,31 @@ class ComposerJsonTest extends TestCase {
 		putenv( false === $env_wp_cli_packages_dir ? 'WP_CLI_PACKAGES_DIR' : "WP_CLI_PACKAGES_DIR=$env_wp_cli_packages_dir" );
 	}
 
+	public function test_installed_packages_filters_dependencies_and_accepts_legacy_names() {
+		$env_test = getenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' );
+		$env_dir  = getenv( 'WP_CLI_PACKAGES_DIR' );
+		putenv( 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH=1' );
+		putenv( 'WP_CLI_PACKAGES_DIR=' . $this->temp_dir );
+		mkdir( $this->temp_dir . 'vendor/composer', 0755, true );
+		file_put_contents( $this->temp_dir . 'composer.json', '{"require":{"Vendor/Command":"*"}}' );
+		file_put_contents( $this->temp_dir . 'vendor/composer/installed.json', '{"packages":[{"name":"vendor/command","version":"1.0.0"},{"name":"vendor/dependency","version":"2.0.0"}]}' );
+		$method = new ReflectionMethod( 'Package_Command', 'get_installed_packages' );
+		if ( PHP_VERSION_ID < 80100 ) {
+			$method->setAccessible( true );
+		}
+		try {
+			$packages = $method->invoke( new Package_Command() );
+			$this->assertSame( [ 'vendor/command' ], array_column( $packages, 'name' ) );
+		} finally {
+			unlink( $this->temp_dir . 'composer.json' );
+			unlink( $this->temp_dir . 'vendor/composer/installed.json' );
+			rmdir( $this->temp_dir . 'vendor/composer' );
+			rmdir( $this->temp_dir . 'vendor' );
+			putenv( false === $env_test ? 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH' : 'WP_CLI_TEST_PACKAGE_GET_COMPOSER_JSON_PATH=' . $env_test );
+			putenv( false === $env_dir ? 'WP_CLI_PACKAGES_DIR' : 'WP_CLI_PACKAGES_DIR=' . $env_dir );
+		}
+	}
+
 	private function mac_safe_path( $path ) {
 		$path = \WP_CLI\Path::normalize( $path );
 		$path = preg_replace( '#^/private/(var|tmp)/#i', '/$1/', $path );
