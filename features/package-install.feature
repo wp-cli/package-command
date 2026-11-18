@@ -1027,7 +1027,15 @@ Feature: Install WP-CLI packages
         "type": "wp-cli-package"
       }
       """
-    And I run `php -r '$zip = new ZipArchive(); $zip->open( "remote-zip-test-command.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE ); $zip->addFromString( "remote-zip-test-command/composer.json", file_get_contents( "remote-zip-test-command/composer.json" ) ); $zip->close();'`
+    And a create-zip.php file:
+      """
+      <?php
+      $zip = new ZipArchive();
+      $zip->open( 'remote-zip-test-command.zip', ZipArchive::CREATE | ZipArchive::OVERWRITE );
+      $zip->addFromString( 'remote-zip-test-command/composer.json', file_get_contents( 'remote-zip-test-command/composer.json' ) );
+      $zip->close();
+      """
+    And I run `php create-zip.php`
     And a PHP built-in web server
 
     When I run `wp package install http://localhost:8080/remote-zip-test-command.zip`
@@ -1055,7 +1063,15 @@ Feature: Install WP-CLI packages
         "type": "wp-cli-package"
       }
       """
-    And I run `php -r '$zip = new ZipArchive(); $zip->open( "remote-zip-flat-command.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE ); $zip->addFromString( "composer.json", file_get_contents( "composer-flat.json" ) ); $zip->close();'`
+    And a create-zip.php file:
+      """
+      <?php
+      $zip = new ZipArchive();
+      $zip->open( 'remote-zip-flat-command.zip', ZipArchive::CREATE | ZipArchive::OVERWRITE );
+      $zip->addFromString( 'composer.json', file_get_contents( 'composer-flat.json' ) );
+      $zip->close();
+      """
+    And I run `php create-zip.php`
     And a PHP built-in web server
 
     When I run `wp package install http://localhost:8080/remote-zip-flat-command.zip`
