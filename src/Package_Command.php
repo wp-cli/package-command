@@ -1305,6 +1305,13 @@ class Package_Command extends WP_CLI_Command {
 
 		$composer_path = Path::trailingslashit( $composer_dir ) . Path::basename( $composer_path );
 
+		// Make sure the file exists before writing to it, as Composer's
+		// atomic file replacement otherwise triggers a (silenced) `stat()`
+		// warning for the missing file.
+		if ( ! file_exists( $composer_path ) ) {
+			@touch( $composer_path ); // @codingStandardsIgnoreLine
+		}
+
 		$json_file = new JsonFile( $composer_path );
 
 		$repositories = (object) [
