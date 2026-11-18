@@ -1308,8 +1308,9 @@ class Package_Command extends WP_CLI_Command {
 		// Make sure the file exists before writing to it, as Composer's
 		// atomic file replacement otherwise triggers a (silenced) `stat()`
 		// warning for the missing file.
+		$created = false;
 		if ( ! file_exists( $composer_path ) ) {
-			@touch( $composer_path ); // @codingStandardsIgnoreLine
+			$created = @touch( $composer_path ); // @codingStandardsIgnoreLine
 		}
 
 		$json_file = new JsonFile( $composer_path );
@@ -1335,6 +1336,10 @@ class Package_Command extends WP_CLI_Command {
 		try {
 			$json_file->write( $options );
 		} catch ( Exception $e ) {
+			// Don't leave an empty composer.json behind, so that a later run can retry.
+			if ( $created ) {
+				@unlink( $composer_path ); // @codingStandardsIgnoreLine
+			}
 			WP_CLI::error( $e->getMessage() );
 		}
 
