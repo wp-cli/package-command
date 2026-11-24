@@ -22,6 +22,10 @@ wp package
 WP-CLI packages are community-maintained projects built on WP-CLI. They can
 contain WP-CLI commands, but they can also just extend WP-CLI in some way.
 
+Composer is downloaded on first use to the WP-CLI cache (`WP_CLI_CACHE_DIR`).
+Set `WP_CLI_COMPOSER_BINARY` to a readable Composer Phar or executable to use
+an existing installation instead.
+
 Learn how to create your own command from the
 [Commands Cookbook](https://make.wordpress.org/cli/handbook/guides/commands-cookbook/)
 
