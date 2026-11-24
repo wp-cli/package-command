@@ -109,4 +109,94 @@ class ComposerPharTest extends TestCase {
 		$this->expectException( RuntimeException::class );
 		( new ComposerPhar() )->run_json( [ 'outdated' ], $this->directory );
 	}
+
+	public function test_stale_version_list_falls_back_to_cached_phar() {
+		putenv( 'WP_CLI_COMPOSER_BINARY' );
+		$cache_dir = $this->directory . '/cache';
+		$requests  = [];
+		$composer  = $this->composer_phar(
+			$cache_dir,
+			static function ( $url ) use ( &$requests ) {
+				$requests[] = $url;
+				throw new RuntimeException( "Could not download {$url}." );
+			}
+		);
+		mkdir( $cache_dir . '/composer', 0777, true );
+		file_put_contents( $cache_dir . '/composer/versions.json', self::versions_json() );
+		touch( $cache_dir . '/composer/versions.json', time() - 2 * ComposerPhar::VERSIONS_TTL );
+		file_put_contents( $cache_dir . '/composer/composer-2.8.0.phar', '' );
+		try {
+			$this->assertSame( $cache_dir . '/composer/composer-2.8.0.phar', $composer->locate( true ) );
+			$this->assertSame( [ ComposerPhar::VERSIONS_URL ], $requests );
+		} finally {
+			$this->remove_cache( $cache_dir );
+		}
+	}
+
+	public function test_download_is_published_to_the_cache() {
+		putenv( 'WP_CLI_COMPOSER_BINARY' );
+		$cache_dir = $this->directory . '/cache';
+		$phar      = '<?php echo "composer";';
+		$composer  = $this->composer_phar(
+			$cache_dir,
+			static function ( $url, $options ) use ( $phar ) {
+				if ( ComposerPhar::VERSIONS_URL === $url ) {
+					return (object) [ 'body' => self::versions_json() ];
+				}
+				if ( isset( $options['filename'] ) ) {
+					file_put_contents( $options['filename'], $phar );
+					return (object) [ 'body' => '' ];
+				}
+				return (object) [ 'body' => hash( 'sha256', $phar ) . '  composer.phar' ];
+			}
+		);
+		try {
+			$path = $composer->locate( true );
+			$this->assertSame( $cache_dir . '/composer/composer-2.9.0.phar', $path );
+			$this->assertSame( $phar, file_get_contents( $path ) );
+			$this->assertSame( [ $path, $cache_dir . '/composer/versions.json' ], glob( $cache_dir . '/composer/*' ) );
+		} finally {
+			$this->remove_cache( $cache_dir );
+		}
+	}
+
+	private static function versions_json() {
+		return json_encode(
+			[
+				'stable' => [
+					[
+						'version' => '2.9.0',
+						'min-php' => 70205,
+					],
+				],
+			]
+		);
+	}
+
+	private function composer_phar( $cache_dir, callable $request ) {
+		return new class( new WP_CLI\FileCache( $cache_dir, 15552000, 314572800 ), $request ) extends ComposerPhar {
+			private $file_cache;
+			private $request;
+
+			public function __construct( $file_cache, $request ) {
+				parent::__construct();
+				$this->file_cache = $file_cache;
+				$this->request    = $request;
+			}
+
+			protected function cache() {
+				return $this->file_cache;
+			}
+
+			protected function request( $url, $options = [] ) {
+				return ( $this->request )( $url, $options );
+			}
+		};
+	}
+
+	private function remove_cache( $cache_dir ) {
+		array_map( 'unlink', glob( $cache_dir . '/composer/*' ) ?: [] );
+		rmdir( $cache_dir . '/composer' );
+		rmdir( $cache_dir );
+	}
 }

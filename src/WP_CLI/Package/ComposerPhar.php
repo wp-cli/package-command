@@ -36,33 +36,40 @@ class ComposerPhar {
 			return $this->path;
 		}
 
-		$cache   = WP_CLI::get_cache();
-		$version = null;
-		foreach ( $this->versions( $cache )['stable'] ?? [] as $release ) {
+		$cache                    = $this->cache();
+		$version                  = null;
+		list( $versions, $fresh ) = $this->versions( $cache );
+		foreach ( $versions['stable'] ?? [] as $release ) {
 			if ( preg_match( '/^2\.\d+\.\d+$/D', $release['version'] ) && $release['min-php'] <= PHP_VERSION_ID ) {
 				$version = $release['version'];
 				break;
 			}
 		}
-		if ( null === $version ) {
+
+		if ( null !== $version ) {
+			$path = $cache->has( "composer/composer-{$version}.phar" );
+			if ( $path ) {
+				$this->path = $path;
+				return $path;
+			}
+		}
+
+		if ( ! $fresh ) {
 			// Offline or getcomposer.org unreachable: reuse the newest Composer already in the cache.
 			foreach ( self::cached_versions( $cache ) as $cached ) {
 				$path = $cache->has( "composer/composer-{$cached}.phar" ); // False once the cache's expiry has passed.
 				if ( $path ) {
 					$this->path = $path;
-					WP_CLI::debug( "Using cached Composer {$cached}; version list unavailable.", 'packages' );
+					WP_CLI::debug( "Using cached Composer {$cached}; version list unavailable or stale.", 'packages' );
 					return $path;
 				}
 			}
-			$version = 'latest-stable';
 		}
 
-		$key  = "composer/composer-{$version}.phar";
-		$path = $cache->has( $key );
-		if ( $path ) {
-			$this->path = $path;
-			return $path;
+		if ( null === $version ) {
+			$version = 'latest-stable';
 		}
+		$key = "composer/composer-{$version}.phar";
 
 		$temp_dir = Utils\get_temp_dir() . uniqid( 'wp-cli-composer-', true );
 		if ( ! mkdir( $temp_dir, 0700 ) ) {
@@ -89,10 +96,7 @@ class ComposerPhar {
 		}
 		chmod( $temp, 0755 );
 		if ( $cache->is_enabled() ) {
-			if ( ! $cache->import( $key, $temp ) ) {
-				throw new RuntimeException( 'Could not cache Composer.' );
-			}
-			chmod( $path, 0755 );
+			$this->publish( $temp, $path );
 		}
 		$this->path = $path;
 		return $path;
@@ -102,14 +106,15 @@ class ComposerPhar {
 	 * The release list from getcomposer.org. A copy lives in the cache for a day, so a run of package
 	 * commands costs one request; when the network is down, a stale copy still names the version to use.
 	 *
-	 * @return array Decoded list, empty when neither the network nor the cache has one.
+	 * @return array{0:array,1:bool} Decoded list (empty when neither the network nor the cache has one),
+	 *                               and whether it is current rather than a stale copy.
 	 */
 	private function versions( $cache ) {
 		$key = 'composer/versions.json';
 		if ( $cache->is_enabled() ) {
 			$fresh = $cache->read( $key, self::VERSIONS_TTL );
 			if ( false !== $fresh && is_array( json_decode( $fresh, true ) ) ) {
-				return json_decode( $fresh, true );
+				return [ json_decode( $fresh, true ), true ];
 			}
 		}
 		try {
@@ -121,7 +126,7 @@ class ComposerPhar {
 			if ( $cache->is_enabled() ) {
 				$cache->write( $key, $body );
 			}
-			return $versions;
+			return [ $versions, true ];
 		} catch ( \Exception $e ) {
 			WP_CLI::debug( $e->getMessage(), 'packages' );
 		}
@@ -129,10 +134,35 @@ class ComposerPhar {
 			$stale = $cache->read( $key );
 			if ( false !== $stale && is_array( json_decode( $stale, true ) ) ) {
 				WP_CLI::debug( 'Using the cached Composer version list; getcomposer.org is unreachable.', 'packages' );
-				return json_decode( $stale, true );
+				return [ json_decode( $stale, true ), false ];
 			}
 		}
-		return [];
+		return [ [], false ];
+	}
+
+	/**
+	 * Moves a verified download into the cache under a temporary name first, so that a concurrent
+	 * process never sees a partially copied Phar at the final path.
+	 */
+	private function publish( $source, $destination ) {
+		$dir = dirname( $destination );
+		if ( ! is_dir( $dir ) && ! @mkdir( $dir, 0777, true ) && ! is_dir( $dir ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			throw new RuntimeException( 'Could not cache Composer.' );
+		}
+		$partial = $destination . '.' . uniqid( '', true ) . '.part';
+		if ( ! copy( $source, $partial ) ) {
+			throw new RuntimeException( 'Could not cache Composer.' );
+		}
+		chmod( $partial, 0755 );
+		if ( ! @rename( $partial, $destination ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			if ( file_exists( $partial ) ) {
+				unlink( $partial );
+			}
+			// On Windows the rename fails while another process runs a copy it just published.
+			if ( ! is_file( $destination ) ) {
+				throw new RuntimeException( 'Could not cache Composer.' );
+			}
+		}
 	}
 
 	/**
@@ -154,7 +184,14 @@ class ComposerPhar {
 		return array_reverse( $versions );
 	}
 
-	private function request( $url, $options = [] ) {
+	/**
+	 * @return \WP_CLI\FileCache
+	 */
+	protected function cache() {
+		return WP_CLI::get_cache();
+	}
+
+	protected function request( $url, $options = [] ) {
 		$response = Utils\http_request(
 			'GET',
 			$url,
