@@ -22,6 +22,10 @@ wp package
 WP-CLI packages are community-maintained projects built on WP-CLI. They can
 contain WP-CLI commands, but they can also just extend WP-CLI in some way.
 
+Composer is downloaded on first use to the WP-CLI cache (`WP_CLI_CACHE_DIR`).
+Set `WP_CLI_COMPOSER_BINARY` to a readable Composer Phar or executable to use
+an existing installation instead.
+
 Learn how to create your own command from the
 [Commands Cookbook](https://make.wordpress.org/cli/handbook/guides/commands-cookbook/)
 
@@ -391,11 +395,14 @@ If you want to contribute to a package, this is a great way to jump to it.
 Updates installed WP-CLI packages to their latest version.
 
 ~~~
-wp package update [<package-name>...] [--interaction]
+wp package update [<package-name>...] [--insecure] [--interaction]
 ~~~
 
 	[<package-name>...]
 		One or more package names to update. If not specified, all packages will be updated.
+
+	[--insecure]
+		Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 
 	[--interaction]
 		Control interactive mode. Use `--no-interaction` to disable prompts (interactive by default). Useful for scripting.

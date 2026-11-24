@@ -179,6 +179,12 @@ Feature: Update WP-CLI packages
       Success: Package already at latest version.
       """
 
+    When I run `wp package update danielbachhuber/wp-cli-reset-post-date-command --insecure`
+    Then STDOUT should contain:
+      """
+      Success: Package already at latest version.
+      """
+
   Scenario: Error when trying to update a non-existent package
     Given an empty directory
 
