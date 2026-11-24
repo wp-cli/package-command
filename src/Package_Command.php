@@ -632,6 +632,9 @@ class Package_Command extends WP_CLI_Command {
 	 * [<package-name>...]
 	 * : One or more package names to update. If not specified, all packages will be updated.
 	 *
+	 * [--insecure]
+	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+	 *
 	 * [--interaction]
 	 * : Control interactive mode. Use `--no-interaction` to disable prompts (interactive by default). Useful for scripting.
 	 *
@@ -663,11 +666,12 @@ class Package_Command extends WP_CLI_Command {
 	 *     ---
 	 *     Success: Package updated successfully.
 	 *
-	 * @param array<string>             $args       Positional arguments. One or more package names to update.
-	 * @param array{interaction?: bool} $assoc_args Associative arguments.
+	 * @param array<string>                             $args       Positional arguments. One or more package names to update.
+	 * @param array{interaction?: bool, insecure?: bool} $assoc_args Associative arguments.
 	 */
 	public function update( $args, $assoc_args = [] ) {
 		$interaction = (bool) Utils\get_flag_value( $assoc_args, 'interaction', true );
+		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
 
 		if ( ! $interaction ) {
 			$this->set_non_interactive_mode();
@@ -698,7 +702,7 @@ class Package_Command extends WP_CLI_Command {
 		WP_CLI::log( '---' );
 		$res = false;
 		try {
-			$res = ( new ComposerPhar() )->run( array_merge( [ 'update' ], $packages_to_update, [ '--prefer-source' ] ), $packages_dir );
+			$res = ( new ComposerPhar( $insecure ) )->run( array_merge( [ 'update' ], $packages_to_update, [ '--prefer-source' ] ), $packages_dir );
 		} catch ( Exception $e ) {
 			WP_CLI::warning( $e->getMessage() );
 		}
@@ -719,7 +723,7 @@ class Package_Command extends WP_CLI_Command {
 			}
 		}
 
-		// TODO: The --insecure (to be added here) flag should cause another Composer run with verify disabled.
+		// TODO: The --insecure flag should cause another Composer run with verify disabled.
 
 		if ( 0 === $res ) {
 			$num_packages = count( $packages_to_update );

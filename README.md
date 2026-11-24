@@ -395,11 +395,14 @@ If you want to contribute to a package, this is a great way to jump to it.
 Updates installed WP-CLI packages to their latest version.
 
 ~~~
-wp package update [<package-name>...] [--interaction]
+wp package update [<package-name>...] [--insecure] [--interaction]
 ~~~
 
 	[<package-name>...]
 		One or more package names to update. If not specified, all packages will be updated.
+
+	[--insecure]
+		Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 
 	[--interaction]
 		Control interactive mode. Use `--no-interaction` to disable prompts (interactive by default). Useful for scripting.
