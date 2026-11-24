@@ -156,10 +156,16 @@ class Package_Command extends WP_CLI_Command {
 	 * Packages are required to be a valid Composer package, and can be
 	 * specified as:
 	 *
-	 * * Package name from WP-CLI's package index.
+	 * * Package name, such as `wp-cli/server-command`.
 	 * * Git URL accessible by the current shell user.
 	 * * Path to a directory on the local machine.
 	 * * Local or remote .zip file.
+	 *
+	 * A package name is looked up in WP-CLI's package index, which is deprecated,
+	 * and then on Packagist. If neither has it, WP-CLI tries
+	 * `https://github.com/<package-name>.git` and then
+	 * `https://gitlab.com/<package-name>.git`. Set the `GITHUB_TOKEN` or
+	 * `GITLAB_TOKEN` environment variable to avoid rate limiting on that check.
 	 *
 	 * Packages are installed to `~/.wp-cli/packages/` by default. Use the
 	 * `WP_CLI_PACKAGES_DIR` environment variable to provide a custom path.
@@ -263,22 +269,28 @@ class Package_Command extends WP_CLI_Command {
 			// Download the remote ZIP file to a temp directory
 			$temp = false;
 			if ( false !== strpos( $package_name, '://' ) ) {
-				$temp         = Utils\get_temp_dir() . uniqid( 'wp-cli-package_', true /*more_entropy*/ ) . '.zip';
+				$temp         = Utils\make_temp_file( 'wp-cli-package_', '.zip' );
 				$options      = [
-					'timeout'  => 600,
-					'filename' => $temp,
-					'insecure' => $insecure,
+					'timeout'       => 600,
+					'filename'      => $temp,
+					'insecure'      => $insecure,
+					'halt_on_error' => false, // Handle failures here so the temp file is cleaned up.
 				];
 				$gitlab_token = getenv( 'GITLAB_TOKEN' ); // Use GITLAB_TOKEN if available to avoid authorization failures or rate-limiting.
 				$headers      = $gitlab_token && 'gitlab.com' === strtolower( (string) Utils\parse_url( $package_name, PHP_URL_HOST ) ) ? [ 'PRIVATE-TOKEN' => $gitlab_token ] : [];
-				$response     = Utils\http_request( 'GET', $package_name, null, $headers, $options );
+				try {
+					$response = Utils\http_request( 'GET', $package_name, null, $headers, $options );
+				} catch ( Exception $e ) {
+					@unlink( $temp ); // @codingStandardsIgnoreLine
+					WP_CLI::error( $e->getMessage() );
+				}
 				if ( 20 !== (int) substr( (string) $response->status_code, 0, 2 ) ) {
 					@unlink( $temp ); // @codingStandardsIgnoreLine
 					WP_CLI::error( sprintf( "Couldn't download package from '%s' (HTTP code %d).", $package_name, $response->status_code ) );
 				}
 				$package_name = $temp;
 			}
-			$dir_package = Utils\get_temp_dir() . uniqid( 'wp-cli-package_', true /*more_entropy*/ );
+			$dir_package = Utils\make_temp_dir( 'wp-cli-package_' );
 			try {
 				// Extract the package to get the package name
 				Extractor::extract( $package_name, $dir_package );
@@ -1539,12 +1551,6 @@ class Package_Command extends WP_CLI_Command {
 		$revert_fail_msg = "Failed to revert composer.json.\n";
 		$memory_msg      = "WP-CLI ran out of memory. Please see https://bit.ly/wpclimem for further help.\n";
 		$memory_string   = 'Allowed memory size of';
-		$error_array     = [
-			'type'    => 42,
-			'message' => 'Some random dummy string to take up memory',
-			'file'    => 'Another random string, which would be a filename this time',
-			'line'    => 314,
-		];
 
 		register_shutdown_function(
 			static function () use (
@@ -1554,8 +1560,7 @@ class Package_Command extends WP_CLI_Command {
 				$revert_msg,
 				$revert_fail_msg,
 				$memory_msg,
-				$memory_string,
-				$error_array
+				$memory_string
 			) {
 				if ( $revert ) {
 					if ( false !== file_put_contents( $json_path, $composer_backup ) ) {
