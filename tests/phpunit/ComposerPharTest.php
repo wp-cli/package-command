@@ -38,14 +38,16 @@ class ComposerPharTest extends TestCase {
 		$binary = $this->directory . '/composer.phar';
 		putenv( 'WP_CLI_COMPOSER_BINARY=' . $binary );
 		putenv( 'WP_CLI_PHP_ARGS=-d memory_limit=123M' );
+		// The override is resolved with realpath(), e.g. /var to /private/var on macOS, or 8.3 short names on Windows.
+		$resolved = (string) realpath( $binary );
 		$composer = new ComposerPhar();
 		$command  = $composer->command( [ 'update', 'vendor/package:^1.0' ], $this->directory . '/with spaces', true );
 		$this->assertSame(
-			Utils\esc_cmd( '%s', WP_CLI::get_php_binary() ) . ' -d memory_limit=123M ' . Utils\esc_cmd( '%s', $binary ) . ' ' . implode( ' ', array_map( 'escapeshellarg', [ 'update', 'vendor/package:^1.0', '--working-dir=' . $this->directory . '/with spaces', '--no-interaction', '--no-ansi', '--no-progress', '--quiet' ] ) ),
+			Utils\esc_cmd( '%s', WP_CLI::get_php_binary() ) . ' -d memory_limit=123M ' . Utils\esc_cmd( '%s', $resolved ) . ' ' . implode( ' ', array_map( 'escapeshellarg', [ 'update', 'vendor/package:^1.0', '--working-dir=' . $this->directory . '/with spaces', '--no-interaction', '--no-ansi', '--no-progress', '--quiet' ] ) ),
 			$command
 		);
 		$argv = $composer->run_json( [ 'outdated', '--format=json' ], $this->directory );
-		$this->assertSame( [ $binary, 'outdated', '--format=json', '--working-dir=' . $this->directory, '--no-interaction', '--no-ansi' ], $argv );
+		$this->assertSame( [ $resolved, 'outdated', '--format=json', '--working-dir=' . $this->directory, '--no-interaction', '--no-ansi' ], $argv );
 	}
 
 	public function test_executable_does_not_use_php_arguments() {
@@ -53,7 +55,7 @@ class ComposerPharTest extends TestCase {
 		putenv( 'WP_CLI_COMPOSER_BINARY=' . $binary );
 		putenv( 'WP_CLI_PHP_ARGS=-d memory_limit=123M' );
 		$command = ( new ComposerPhar() )->command( [ 'update' ], $this->directory );
-		$this->assertSame( 0, strpos( $command, Utils\esc_cmd( '%s', $binary ) . ' ' ) );
+		$this->assertSame( 0, strpos( $command, Utils\esc_cmd( '%s', (string) realpath( $binary ) ) . ' ' ) );
 		$this->assertFalse( strpos( $command, 'memory_limit' ) );
 	}
 
